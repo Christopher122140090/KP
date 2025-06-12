@@ -1,0 +1,30 @@
+{
+  "project_info": {
+    "project_number": "228835360001",
+    "firebase_url": "https://pam-21-default-rtdb.asia-southeast1.firebasedatabase.app",
+    "project_id": "pam-21",
+    "storage_bucket": "pam-21.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:228835360001:android:30c847fe9f3712219a2f00",
+        "android_client_info": {
+          "package_name": "com.hadiyarajesh.composetemplate"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCSOjvqYzv6C4ifkCPlQiKUPmQ0KTCOa4Q"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
