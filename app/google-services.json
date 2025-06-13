@@ -1,27 +1,36 @@
 {
   "project_info": {
-    "project_number": "228835360001",
-    "firebase_url": "https://pam-21-default-rtdb.asia-southeast1.firebasedatabase.app",
-    "project_id": "pam-21",
-    "storage_bucket": "pam-21.firebasestorage.app"
+    "project_number": "86590863876",
+    "project_id": "rosalisca-group",
+    "storage_bucket": "rosalisca-group.firebasestorage.app"
   },
   "client": [
     {
       "client_info": {
-        "mobilesdk_app_id": "1:228835360001:android:30c847fe9f3712219a2f00",
+        "mobilesdk_app_id": "1:86590863876:android:09cb099fa12435844c9351",
         "android_client_info": {
-          "package_name": "com.hadiyarajesh.composetemplate"
+          "package_name": "com.rosaliscagroup.admin"
         }
       },
-      "oauth_client": [],
+      "oauth_client": [
+        {
+          "client_id": "86590863876-ivplg8s9ahrmnbesnniace14lg2nvsr1.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
       "api_key": [
         {
-          "current_key": "AIzaSyCSOjvqYzv6C4ifkCPlQiKUPmQ0KTCOa4Q"
+          "current_key": "AIzaSyBVDSxLkDtt3mduSnIqa7TKOdFvJPQTJFI"
         }
       ],
       "services": {
         "appinvite_service": {
-          "other_platform_oauth_client": []
+          "other_platform_oauth_client": [
+            {
+              "client_id": "86590863876-ivplg8s9ahrmnbesnniace14lg2nvsr1.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
         }
       }
     }

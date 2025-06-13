@@ -14,7 +14,7 @@ android {
     compileSdk = 35
 
     defaultConfig {
-        applicationId = "com.hadiyarajesh.composetemplate"
+        applicationId = "com.rosaliscagroup.admin"
         minSdk = 23 // dinaikkan dari 21 ke 23 agar kompatibel dengan Firebase Auth
         targetSdk = 35
         versionCode = 1

@@ -159,11 +159,13 @@ fun LoginScreen(
                                 .background(Color(0xFFF5F5F5), RoundedCornerShape(8.dp)),
                             shape = RoundedCornerShape(8.dp),
                             enabled = !loginState.isLoading,
-                            colors = OutlinedTextFieldDefaults.colors(
-                                focusedBorderColor = Color(0xFF276BB4),
-                                unfocusedBorderColor = Color(0xFFBDBDBD),
-                                errorBorderColor = Color(0xFFF44336),
-                                unfocusedContainerColor = Color(0xFFF5F5F5)
+                            colors = TextFieldDefaults.colors(
+                                focusedContainerColor = Color(0xFFF5F5F5),
+                                unfocusedContainerColor = Color(0xFFF5F5F5),
+                                errorContainerColor = Color(0xFFF5F5F5),
+                                focusedIndicatorColor = Color(0xFF276BB4),
+                                unfocusedIndicatorColor = Color(0xFFBDBDBD),
+                                errorIndicatorColor = Color(0xFFF44336)
                             )
                         )
 
@@ -185,11 +187,13 @@ fun LoginScreen(
                                 .background(Color(0xFFF5F5F5), RoundedCornerShape(8.dp)),
                             shape = RoundedCornerShape(8.dp),
                             enabled = !loginState.isLoading,
-                            colors = OutlinedTextFieldDefaults.colors(
-                                focusedBorderColor = Color(0xFF276BB4),
-                                unfocusedBorderColor = Color(0xFFBDBDBD),
-                                errorBorderColor = Color(0xFFF44336),
-                                unfocusedContainerColor = Color(0xFFF5F5F5)
+                            colors = TextFieldDefaults.colors(
+                                focusedContainerColor = Color(0xFFF5F5F5),
+                                unfocusedContainerColor = Color(0xFFF5F5F5),
+                                errorContainerColor = Color(0xFFF5F5F5),
+                                focusedIndicatorColor = Color(0xFF276BB4),
+                                unfocusedIndicatorColor = Color(0xFFBDBDBD),
+                                errorIndicatorColor = Color(0xFFF44336)
                             )
                         )
 

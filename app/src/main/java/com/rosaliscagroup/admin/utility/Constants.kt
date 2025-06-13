@@ -8,3 +8,5 @@ object Constants {
     // This URL returns a random image from Picsum
     const val IMAGE_URL = "https://picsum.photos/720/720"
 }
+
+
