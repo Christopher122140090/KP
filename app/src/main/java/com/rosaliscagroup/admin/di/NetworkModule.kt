@@ -1,7 +1,7 @@
-package com.hadiyarajesh.composetemplate.di
+package com.rosaliscagroup.admin.di
 
-import com.hadiyarajesh.composetemplate.BuildConfig
-import com.hadiyarajesh.composetemplate.utility.Constants
+import com.hadiyarajesh.admin.BuildConfig
+import com.rosaliscagroup.admin.utility.Constants
 import com.squareup.moshi.Moshi
 import dagger.Module
 import dagger.Provides

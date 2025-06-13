@@ -1,6 +1,6 @@
-package com.hadiyarajesh.composetemplate.ui.barang
+package com.rosaliscagroup.admin.ui.barang
 
-import com.hadiyarajesh.composetemplate.ui.barang.dummy.BarangLab
+import com.rosaliscagroup.admin.ui.barang.dummy.BarangLab
 
 class CekBarangLabTableScreen(daftarBarang: List<BarangLab>) {
 

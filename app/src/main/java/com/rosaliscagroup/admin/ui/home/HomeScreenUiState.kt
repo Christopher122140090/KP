@@ -1,6 +1,6 @@
-package com.hadiyarajesh.composetemplate.ui.home
+package com.rosaliscagroup.admin.ui.home
 
-import com.hadiyarajesh.composetemplate.data.entity.Image
+import com.rosaliscagroup.admin.data.entity.Image
 
 /**
  * Sealed class to represent UI states in [HomeScreen]

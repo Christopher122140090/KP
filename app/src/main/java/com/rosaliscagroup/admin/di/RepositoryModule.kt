@@ -1,7 +1,7 @@
-package com.hadiyarajesh.composetemplate.di
+package com.rosaliscagroup.admin.di
 
-import com.hadiyarajesh.composetemplate.repository.HomeRepository
-import com.hadiyarajesh.composetemplate.repository.HomeRepositoryImpl
+import com.rosaliscagroup.admin.repository.HomeRepository
+import com.rosaliscagroup.admin.repository.HomeRepositoryImpl
 import dagger.Binds
 import dagger.Module
 import dagger.hilt.InstallIn

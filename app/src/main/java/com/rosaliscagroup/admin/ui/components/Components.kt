@@ -1,4 +1,4 @@
-package com.hadiyarajesh.composetemplate.ui.components
+package com.rosaliscagroup.admin.ui.components
 
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.ColumnScope

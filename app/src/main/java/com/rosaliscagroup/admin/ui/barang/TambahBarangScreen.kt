@@ -1,4 +1,4 @@
-package com.hadiyarajesh.composetemplate.ui.barang
+package com.rosaliscagroup.admin.ui.barang
 
 import android.widget.Toast
 import androidx.compose.foundation.background
@@ -22,7 +22,7 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import java.text.SimpleDateFormat
 import java.util.*
 import com.google.firebase.auth.FirebaseAuth
-import com.hadiyarajesh.composetemplate.ui.barang.dummy.BarangLab
+import com.rosaliscagroup.admin.ui.barang.dummy.BarangLab
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -330,4 +330,3 @@ fun TambahBarangScreenPreview() {
         onSimpan = { _, _, _, _, _, _, _ -> }
     )
 }
-

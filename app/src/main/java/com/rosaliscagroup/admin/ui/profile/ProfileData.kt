@@ -1,4 +1,4 @@
-package com.hadiyarajesh.composetemplate.ui.profile
+package com.rosaliscagroup.admin.ui.profile
 
 data class ProfileData(
     val name: String,

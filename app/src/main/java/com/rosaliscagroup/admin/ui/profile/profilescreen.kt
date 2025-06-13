@@ -1,4 +1,4 @@
-package com.hadiyarajesh.composetemplate.ui.profile
+package com.rosaliscagroup.admin.ui.profile
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*

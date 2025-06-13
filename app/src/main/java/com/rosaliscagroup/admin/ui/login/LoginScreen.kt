@@ -1,4 +1,5 @@
-package com.hadiyarajesh.composetemplate.ui.login
+package com.rosaliscagroup.admin.ui.login
+
 
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
@@ -22,9 +23,8 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.hadiyarajesh.composetemplate.R
+import com.hadiyarajesh.admin.R
 import com.google.firebase.auth.FirebaseAuth
-import kotlinx.coroutines.delay
 
 data class LoginState(
     val isLoading: Boolean = false,

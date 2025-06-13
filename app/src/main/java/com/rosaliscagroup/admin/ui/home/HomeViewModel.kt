@@ -1,10 +1,10 @@
-package com.hadiyarajesh.composetemplate.ui.home
+package com.rosaliscagroup.admin.ui.home
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.hadiyarajesh.composetemplate.data.entity.Image
-import com.hadiyarajesh.composetemplate.repository.HomeRepository
-import com.hadiyarajesh.composetemplate.ui.barang.BarangRepository
+import com.rosaliscagroup.admin.data.entity.Image
+import com.rosaliscagroup.admin.repository.HomeRepository
+import com.rosaliscagroup.admin.ui.barang.BarangRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow

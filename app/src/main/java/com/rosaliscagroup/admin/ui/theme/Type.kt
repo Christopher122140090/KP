@@ -1,4 +1,4 @@
-package com.hadiyarajesh.composetemplate.ui.theme
+package com.rosaliscagroup.admin.ui.theme
 
 import androidx.compose.material3.Typography
 import androidx.compose.ui.text.TextStyle

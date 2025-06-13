@@ -1,4 +1,4 @@
-package com.hadiyarajesh.composetemplate.ui.components
+package com.rosaliscagroup.admin.ui.components
 
 import androidx.compose.animation.AnimatedContentTransitionScope
 import androidx.compose.animation.AnimatedContentTransitionScope.SlideDirection
@@ -6,7 +6,7 @@ import androidx.compose.animation.core.EaseIn
 import androidx.compose.animation.core.EaseOut
 import androidx.compose.animation.core.tween
 import androidx.navigation.NavBackStackEntry
-import com.hadiyarajesh.composetemplate.utility.Constants
+import com.rosaliscagroup.admin.utility.Constants
 
 fun AnimatedContentTransitionScope<NavBackStackEntry>.slideIntoContainerAnimation(
     towards: SlideDirection = SlideDirection.End

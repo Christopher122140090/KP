@@ -1,7 +1,7 @@
-package com.hadiyarajesh.composetemplate.repository
+package com.rosaliscagroup.admin.repository
 
-import com.hadiyarajesh.composetemplate.data.dao.ImageDao
-import com.hadiyarajesh.composetemplate.data.entity.Image
+import com.rosaliscagroup.admin.data.dao.ImageDao
+import com.rosaliscagroup.admin.data.entity.Image
 import kotlinx.coroutines.flow.Flow
 import javax.inject.Inject
 import javax.inject.Singleton

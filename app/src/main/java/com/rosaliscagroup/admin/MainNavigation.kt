@@ -1,4 +1,4 @@
-package com.hadiyarajesh.composetemplate
+package com.rosaliscagroup.admin
 
 import android.annotation.SuppressLint
 import androidx.compose.foundation.background
@@ -23,18 +23,18 @@ import androidx.navigation.NavController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
-import com.hadiyarajesh.composetemplate.ui.barang.BarangTable
+import com.rosaliscagroup.admin.ui.barang.BarangTable
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
-import com.hadiyarajesh.composetemplate.setting.SettingPage
-import com.hadiyarajesh.composetemplate.ui.home.HomeRoute
-import com.hadiyarajesh.composetemplate.ui.barang.TambahBarangScreen
-import com.hadiyarajesh.composetemplate.ui.barang.dummy.BarangLab
-import com.hadiyarajesh.composetemplate.ui.profile.ProfileData
-import com.hadiyarajesh.composetemplate.ui.profile.ProfileScreen
-import com.hadiyarajesh.composetemplate.ui.login.LoginScreen
-import com.hadiyarajesh.composetemplate.ui.barang.BarangRepository
-import com.hadiyarajesh.composetemplate.ui.barang.CekBarangScreen
+import com.rosaliscagroup.admin.setting.SettingPage
+import com.rosaliscagroup.admin.ui.home.HomeRoute
+import com.rosaliscagroup.admin.ui.barang.TambahBarangScreen
+import com.rosaliscagroup.admin.ui.barang.dummy.BarangLab
+import com.rosaliscagroup.admin.ui.profile.ProfileData
+import com.rosaliscagroup.admin.ui.profile.ProfileScreen
+import com.rosaliscagroup.admin.ui.login.LoginScreen
+import com.rosaliscagroup.admin.ui.barang.BarangRepository
+import com.rosaliscagroup.admin.ui.barang.CekBarangScreen
 import kotlinx.coroutines.flow.emptyFlow
 
 // Data class untuk state login
@@ -42,6 +42,7 @@ data class LoginState(
     val isLoading: Boolean = false,
     val errorMessage: String? = null
 )
+
 
 // Komponen AppBar untuk semua layar
 @OptIn(ExperimentalMaterial3Api::class)

@@ -1,11 +1,11 @@
-package com.hadiyarajesh.composetemplate.di
+package com.rosaliscagroup.admin.di
 
 import android.content.Context
 import androidx.room.Room
-import com.hadiyarajesh.composetemplate.R
-import com.hadiyarajesh.composetemplate.data.AppDatabase
-import com.hadiyarajesh.composetemplate.data.RoomDbInitializer
-import com.hadiyarajesh.composetemplate.data.dao.ImageDao
+import com.hadiyarajesh.admin.R
+import com.rosaliscagroup.admin.data.AppDatabase
+import com.rosaliscagroup.admin.data.RoomDbInitializer
+import com.rosaliscagroup.admin.data.dao.ImageDao
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn

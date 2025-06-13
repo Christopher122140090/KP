@@ -1,9 +1,9 @@
-package com.hadiyarajesh.composetemplate.data
+package com.rosaliscagroup.admin.data
 
 import androidx.room.Database
 import androidx.room.RoomDatabase
-import com.hadiyarajesh.composetemplate.data.dao.ImageDao
-import com.hadiyarajesh.composetemplate.data.entity.Image
+import com.rosaliscagroup.admin.data.dao.ImageDao
+import com.rosaliscagroup.admin.data.entity.Image
 
 @Database(
     version = 1,

@@ -1,12 +1,12 @@
-package com.hadiyarajesh.composetemplate.data
+package com.rosaliscagroup.admin.data
 
 import android.content.Context
 import androidx.room.RoomDatabase
 import androidx.sqlite.db.SupportSQLiteDatabase
-import com.hadiyarajesh.composetemplate.R
-import com.hadiyarajesh.composetemplate.data.dao.ImageDao
-import com.hadiyarajesh.composetemplate.data.entity.Image
-import com.hadiyarajesh.composetemplate.utility.Constants
+import com.hadiyarajesh.admin.R
+import com.rosaliscagroup.admin.data.dao.ImageDao
+import com.rosaliscagroup.admin.data.entity.Image
+import com.rosaliscagroup.admin.utility.Constants
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob

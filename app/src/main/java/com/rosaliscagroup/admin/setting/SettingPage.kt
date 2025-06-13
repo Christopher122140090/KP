@@ -1,4 +1,4 @@
-package com.hadiyarajesh.composetemplate.setting
+package com.rosaliscagroup.admin.setting
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -15,8 +15,8 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ExitToApp
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.ArrowBack
-import com.hadiyarajesh.composetemplate.ui.profile.ProfileScreen
-import com.hadiyarajesh.composetemplate.ui.profile.ProfileData
+import com.rosaliscagroup.admin.ui.profile.ProfileScreen
+import com.rosaliscagroup.admin.ui.profile.ProfileData
 import androidx.compose.foundation.shape.RoundedCornerShape
 import com.google.firebase.auth.FirebaseAuth
 

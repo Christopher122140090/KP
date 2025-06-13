@@ -1,4 +1,4 @@
-package com.hadiyarajesh.composetemplate.ui.home
+package com.rosaliscagroup.admin.ui.home
 
 import android.widget.Toast
 import androidx.compose.foundation.Image
@@ -25,9 +25,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.geometry.CornerRadius
-import androidx.compose.ui.geometry.Offset
-import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
@@ -36,11 +33,11 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import com.hadiyarajesh.composetemplate.R
-import com.hadiyarajesh.composetemplate.data.entity.Image
-import com.hadiyarajesh.composetemplate.ui.components.ErrorItem
-import com.hadiyarajesh.composetemplate.ui.components.LoadingIndicator
-import com.hadiyarajesh.composetemplate.utility.Constants
+import com.hadiyarajesh.admin.R
+import com.rosaliscagroup.admin.data.entity.Image
+import com.rosaliscagroup.admin.ui.components.ErrorItem
+import com.rosaliscagroup.admin.ui.components.LoadingIndicator
+import com.rosaliscagroup.admin.utility.Constants
 import com.google.accompanist.systemuicontroller.rememberSystemUiController
 
 @Composable

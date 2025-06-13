@@ -10,7 +10,7 @@ plugins {
 }
 
 android {
-    namespace = "com.hadiyarajesh.composetemplate"
+    namespace = "com.hadiyarajesh.admin"
     compileSdk = 35
 
     defaultConfig {

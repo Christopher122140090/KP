@@ -1,4 +1,4 @@
-package com.hadiyarajesh.composetemplate
+package com.rosaliscagroup.admin
 
 import android.app.Application
 import dagger.hilt.android.HiltAndroidApp

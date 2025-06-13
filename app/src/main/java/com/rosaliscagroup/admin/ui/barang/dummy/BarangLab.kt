@@ -1,4 +1,4 @@
-package com.hadiyarajesh.composetemplate.ui.barang.dummy
+package com.rosaliscagroup.admin.ui.barang.dummy
 
 data class BarangLab(
     val id: String = "", // id unik untuk setiap barang

@@ -1,4 +1,4 @@
-package com.hadiyarajesh.composetemplate
+package com.rosaliscagroup.admin
 
 import android.os.Bundle
 import androidx.activity.ComponentActivity

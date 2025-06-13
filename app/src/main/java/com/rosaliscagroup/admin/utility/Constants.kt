@@ -1,4 +1,5 @@
-package com.hadiyarajesh.composetemplate.utility
+package com.rosaliscagroup.admin.utility
+
 
 object Constants {
     const val API_BASE_URL = "API_BASE_URL"

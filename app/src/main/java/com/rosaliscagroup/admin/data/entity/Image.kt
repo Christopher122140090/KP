@@ -1,4 +1,4 @@
-package com.hadiyarajesh.composetemplate.data.entity
+package com.rosaliscagroup.admin.data.entity
 
 import androidx.room.Entity
 import androidx.room.PrimaryKey
