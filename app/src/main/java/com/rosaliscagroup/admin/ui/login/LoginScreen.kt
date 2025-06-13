@@ -15,6 +15,7 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
@@ -24,7 +25,16 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.hadiyarajesh.admin.R
+import com.google.android.gms.auth.api.signin.GoogleSignIn
+import com.google.android.gms.auth.api.signin.GoogleSignInClient
+import com.google.android.gms.auth.api.signin.GoogleSignInOptions
+import com.google.android.gms.common.api.ApiException
 import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.auth.GoogleAuthProvider
+import android.app.Activity
+import android.content.Intent
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 
 data class LoginState(
     val isLoading: Boolean = false,
@@ -40,6 +50,8 @@ fun LoginScreen(
     var email by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
     var loginState by remember { mutableStateOf(LoginState()) }
+    var googleLoading by remember { mutableStateOf(false) }
+    var googleError by remember { mutableStateOf<String?>(null) }
 
     LaunchedEffect(loginState.isLoading) {
         if (loginState.isLoading) {
@@ -249,6 +261,90 @@ fun LoginScreen(
                                     // TODO: Handle forgot password click
                                 }
                         )
+
+                        val context = LocalContext.current
+                        val activity = context as? Activity
+                        val googleSignInClient = remember {
+                            val gso = GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
+                                .requestIdToken(context.getString(R.string.default_web_client_id))
+                                .requestEmail()
+                                .build()
+                            GoogleSignIn.getClient(context, gso)
+                        }
+                        val launcher = rememberLauncherForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
+                            googleLoading = false
+                            if (result.resultCode == Activity.RESULT_OK) {
+                                val task = GoogleSignIn.getSignedInAccountFromIntent(result.data)
+                                try {
+                                    val account = task.getResult(ApiException::class.java)!!
+                                    val credential = GoogleAuthProvider.getCredential(account.idToken, null)
+                                    googleLoading = true
+                                    FirebaseAuth.getInstance().signInWithCredential(credential)
+                                        .addOnCompleteListener(activity!!) { task ->
+                                            googleLoading = false
+                                            if (task.isSuccessful) {
+                                                val user = FirebaseAuth.getInstance().currentUser
+                                                onLoginSuccess(user?.email ?: "", "google")
+                                            } else {
+                                                googleError = task.exception?.localizedMessage ?: "Login Google gagal"
+                                            }
+                                        }
+                                } catch (e: ApiException) {
+                                    googleError = e.localizedMessage ?: "Login Google gagal"
+                                }
+                            } else {
+                                googleError = "Login Google dibatalkan"
+                            }
+                        }
+
+                        // Tambahkan tombol Google Sign-In di bawah form login
+                        Column(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalAlignment = Alignment.CenterHorizontally
+                        ) {
+                            if (googleError != null) {
+                                Text(
+                                    text = googleError!!,
+                                    color = MaterialTheme.colorScheme.error,
+                                    style = MaterialTheme.typography.bodySmall.copy(fontSize = 14.sp),
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .padding(bottom = 8.dp)
+                                )
+                            }
+                            Button(
+                                onClick = {
+                                    googleError = null
+                                    googleLoading = true
+                                    googleSignInClient.signOut().addOnCompleteListener {
+                                        val signInIntent = googleSignInClient.signInIntent
+                                        launcher.launch(signInIntent)
+                                    }
+                                },
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(top = 16.dp),
+                                colors = ButtonDefaults.buttonColors(containerColor = Color.White),
+                                enabled = !googleLoading
+                            ) {
+                                if (googleLoading) {
+                                    CircularProgressIndicator(
+                                        modifier = Modifier.size(24.dp),
+                                        color = Color.Gray,
+                                        strokeWidth = 2.dp
+                                    )
+                                } else {
+                                    Icon(
+                                        painter = painterResource(id = R.drawable.ic_google_logo),
+                                        contentDescription = "Google Sign-In",
+                                        tint = Color.Unspecified,
+                                        modifier = Modifier.size(24.dp) // Ubah ukuran logo Google di sini
+                                    )
+                                    Spacer(modifier = Modifier.width(8.dp))
+                                    Text("Login dengan Google", color = Color.Black)
+                                }
+                            }
+                        }
                     }
                 }
             }

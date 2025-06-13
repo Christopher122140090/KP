@@ -89,6 +89,9 @@ dependencies {
     implementation("com.google.firebase:firebase-analytics")
     // Firebase Auth
     implementation("com.google.firebase:firebase-auth-ktx")
+    implementation("com.google.firebase:firebase-auth:22.3.0")
+    implementation("com.google.android.gms:play-services-auth:21.0.0")
+    implementation("com.google.android.libraries.identity.googleid:googleid:1.1.1")
 
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.test.ext.junit)
