@@ -201,32 +201,8 @@ fun DashboardPieChart(kondisiStat: Map<String, Int>) {
     }
 }
 
-@Composable
-private fun HomeScreenContent(
-    modifier: Modifier = Modifier
-) {
-    val context = LocalContext.current
 
-    Column(
-        modifier = modifier,
-        verticalArrangement = Arrangement.SpaceBetween,
-        horizontalAlignment = Alignment.CenterHorizontally
-    ) {
-        // Top section: Image and Welcome Text
-        Column(
-            verticalArrangement = Arrangement.Top,
-            modifier = Modifier
-                .weight(1f)
-                .fillMaxWidth()
-                .padding(top = 40.dp) // Turunkan agar rapi di bawah box biru
-        ) {
-
-        }
-
-    }
-}
-
-@Preview(showSystemUi = true)
+@Preview(showSystemUi = false, showBackground = true)
 @Composable
 fun HomeScreenPreview() {
     MaterialTheme {
