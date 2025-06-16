@@ -7,7 +7,6 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Home
-import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material.icons.filled.Visibility
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Person
@@ -27,19 +26,12 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
-import com.rosaliscagroup.admin.ui.barang.BarangTable
 import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.launch
-import com.rosaliscagroup.admin.setting.SettingPage
 import com.rosaliscagroup.admin.ui.home.HomeRoute
-import com.rosaliscagroup.admin.ui.barang.TambahBarangScreen
-import com.rosaliscagroup.admin.ui.barang.dummy.BarangLab
-import com.rosaliscagroup.admin.ui.profile.ProfileData
 import com.rosaliscagroup.admin.ui.profile.ProfileScreen
 import com.rosaliscagroup.admin.ui.login.LoginScreen
-import com.rosaliscagroup.admin.ui.barang.BarangRepository
 import com.rosaliscagroup.admin.ui.barang.CekBarangScreen
-import kotlinx.coroutines.flow.emptyFlow
+import com.rosaliscagroup.admin.ui.item.TambahItem
 
 // Data class untuk state login
 data class LoginState(
@@ -47,6 +39,13 @@ data class LoginState(
     val errorMessage: String? = null
 )
 
+// Bottom navigation item definition
+sealed class BottomNavItem(val route: String, val icon: ImageVector, val contentDescription: String) {
+    object Home : BottomNavItem("home", Icons.Filled.Home, "Home")
+    object CekBarang : BottomNavItem("cek_barang", Icons.Filled.Visibility, "Cek Barang")
+    object TambahID : BottomNavItem("TambahItemPage", Icons.Filled.Add, "Tambah Item")
+    object Profile : BottomNavItem("profile", Icons.Filled.Person, "Profile")
+}
 
 // Komponen AppBar untuk semua layar
 @OptIn(ExperimentalMaterial3Api::class)
@@ -134,6 +133,7 @@ fun BottomNavigationBar(navController: NavController) {
                         Text(
                             text = if (item.contentDescription.length > 10) item.contentDescription.take(9) + "…" else item.contentDescription,
                             fontSize = 14.sp,
+                            modifier = Modifier,
                             color = if (currentRoute == item.route) Color(0xFF2563EB) else Color(0xFF9CA3AF),
                             maxLines = 1,
                             softWrap = false
