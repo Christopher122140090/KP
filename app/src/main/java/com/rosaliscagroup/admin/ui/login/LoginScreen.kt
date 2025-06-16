@@ -344,7 +344,7 @@ fun LoginScreen(
                                     Text("Login dengan Google", color = Color.Black)
                                 }
                             }
-                            // Tombol untuk mengelola akun Google di perangkat
+                                    // Tombol untuk mengelola akun Google di perangkat
                             TextButton(
                                 onClick = {
                                     // Membuka pengaturan akun Google di perangkat
