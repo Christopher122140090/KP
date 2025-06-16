@@ -10,6 +10,7 @@ import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material.icons.filled.Visibility
 import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.Person
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -36,6 +37,8 @@ import com.hadiyarajesh.composetemplate.ui.login.LoginScreen
 import com.hadiyarajesh.composetemplate.ui.barang.BarangRepository
 import com.hadiyarajesh.composetemplate.ui.barang.CekBarangScreen
 import com.hadiyarajesh.composetemplate.ui.tambahitem.TambahItem
+import com.hadiyarajesh.composetemplate.ui.profile.ProfileScreen
+import com.hadiyarajesh.composetemplate.ui.profile.ProfileData
 
 // Data class untuk state login
 data class LoginState(
@@ -48,7 +51,7 @@ sealed class BottomNavItem(val route: String, val icon: ImageVector, val content
     object Home : BottomNavItem("home", Icons.Default.Home, "Home")
     object CekBarang : BottomNavItem("cek_barang", Icons.Default.Visibility, "Cek Barang")
     object TambahID : BottomNavItem("TambahItemPage", Icons.Default.Add, "Tambah Item")
-    object Settings : BottomNavItem("settings", Icons.Default.Settings, "Settings")
+    object Profile : BottomNavItem("profile", Icons.Default.Person, "Profile")
 }
 
 // Komponen AppBar untuk semua layar
@@ -122,7 +125,7 @@ fun BottomNavigationBar(navController: NavController) {
                 BottomNavItem.Home,
                 BottomNavItem.CekBarang,
                 BottomNavItem.TambahID,
-                BottomNavItem.Settings
+                BottomNavItem.Profile
             )
             items.forEach { item ->
                 NavigationBarItem(
@@ -267,11 +270,11 @@ fun MainNavigation() {
                 }
             )
         }
-        composable("settings") {
+        composable("profile") {
             Scaffold(
                 topBar = {
                     AppBar(
-                        title = "Settings",
+                        title = "Profile",
                         navController = navController,
                         drawerState = rememberDrawerState(DrawerValue.Closed),
                         scope = scope,
@@ -280,10 +283,15 @@ fun MainNavigation() {
                     )
                 },
                 content = { padding ->
-                    SettingPage(
-                        navController = navController,
-                        modifier = Modifier.padding(padding)
-                    )
+                    Box(
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .padding(padding)
+                    ) {
+                        ProfileScreen(
+                            navController = navController
+                        )
+                    }
                 },
                 bottomBar = {
                     if (isLoggedIn) {

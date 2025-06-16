@@ -19,6 +19,7 @@ import com.hadiyarajesh.composetemplate.ui.profile.ProfileScreen
 import com.hadiyarajesh.composetemplate.ui.profile.ProfileData
 import androidx.compose.foundation.shape.RoundedCornerShape
 import com.google.firebase.auth.FirebaseAuth
+import androidx.compose.ui.tooling.preview.Preview
 
 interface LogoutNavController {
     val onLogout: (() -> Unit)?
@@ -51,13 +52,7 @@ fun SettingPage(
                 .background(Color(0xFFE3F2FD))
         ) {
             ProfileScreen(
-                profile = ProfileData(
-                    name = username,
-                    email = email,
-                    status = "Aktif",
-                    role = "User",
-                    joinDate = joinDate
-                )
+                navController = navController
             )
             IconButton(
                 onClick = { showProfile = false },
@@ -129,5 +124,15 @@ fun SettingPage(
                 }
             }
         }
+    }
+}
+
+@Preview(showBackground = true)
+@Composable
+fun SettingPagePreview() {
+    // Use a minimal fake NavController for preview
+    val fakeNavController = NavController(LocalContext.current)
+    MaterialTheme {
+        SettingPage(navController = fakeNavController)
     }
 }

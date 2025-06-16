@@ -13,29 +13,32 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import com.google.firebase.auth.FirebaseAuth
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun ProfileScreen(profile: ProfileData) {
+fun ProfileScreen(navController: androidx.navigation.NavController? = null) {
+    val user = FirebaseAuth.getInstance().currentUser
+    val email = user?.email ?: "-"
+    val name = email.substringBefore("@")
+        .replaceFirstChar { if (it.isLowerCase()) it.titlecase() else it.toString() }
+        .replace(".", " ")
+    val status = "Aktif"
+    val role = "User"
+    val createdTimestamp = user?.metadata?.creationTimestamp ?: 0L
+    val joinDate = if (createdTimestamp > 0) {
+        java.text.SimpleDateFormat("dd MMM yyyy").format(java.util.Date(createdTimestamp))
+    } else {
+        "-"
+    }
     Scaffold(
-        topBar = {
-            CenterAlignedTopAppBar(
-                title = {
-                    Text("Profile")
-                },
-                colors = TopAppBarDefaults.centerAlignedTopAppBarColors(
-                    containerColor = Color.Transparent,
-                    titleContentColor = Color.White
-                )
-            )
-        },
         containerColor = Color.Transparent
     ) { innerPadding ->
         Box(
             modifier = Modifier
                 .fillMaxSize()
-                .background(Color(0xFFE3F2FD)) // Biru muda untuk background
-                .padding(innerPadding) // Tambahkan padding dari Scaffold agar konten tidak tertutup top bar
+                .background(Color(0xFFE3F2FD))
+                .padding(innerPadding)
         ) {
             // Blue background curve agar serasi dengan top bar biru tua
             Box(
@@ -63,7 +66,7 @@ fun ProfileScreen(profile: ProfileData) {
                     contentAlignment = Alignment.Center
                 ) {
                     Text(
-                        text = profile.name.take(1).uppercase(),
+                        text = name.take(1).uppercase(),
                         style = MaterialTheme.typography.headlineLarge.copy(
                             color = Color.White,
                             fontWeight = FontWeight.Bold
@@ -72,7 +75,7 @@ fun ProfileScreen(profile: ProfileData) {
                 }
                 Spacer(modifier = Modifier.height(16.dp))
                 Text(
-                    text = profile.name,
+                    text = name,
                     style = MaterialTheme.typography.headlineSmall.copy(
                         color = Color(0xFF000000),
                         fontWeight = FontWeight.Bold
@@ -80,7 +83,7 @@ fun ProfileScreen(profile: ProfileData) {
                 )
                 Spacer(modifier = Modifier.height(8.dp))
                 Text(
-                    text = profile.email,
+                    text = email,
                     style = MaterialTheme.typography.bodyLarge.copy(
                         color = Color(0xFF000000)
                     )
@@ -95,10 +98,27 @@ fun ProfileScreen(profile: ProfileData) {
                     Column(
                         modifier = Modifier.padding(20.dp)
                     ) {
-                        ProfileInfoRow(label = "Status", value = profile.status)
-                        ProfileInfoRow(label = "Role", value = profile.role)
-                        ProfileInfoRow(label = "Join Date", value = profile.joinDate)
+                        ProfileInfoRow(label = "Status", value = status)
+                        ProfileInfoRow(label = "Role", value = role)
+                        ProfileInfoRow(label = "Join Date", value = joinDate)
                     }
+                }
+                Spacer(modifier = Modifier.height(32.dp))
+                Button(
+                    onClick = {
+                        com.google.firebase.auth.FirebaseAuth.getInstance().signOut()
+                        navController?.navigate("login") {
+                            popUpTo(0) { inclusive = true }
+                            launchSingleTop = true
+                        }
+                    },
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(50.dp),
+                    shape = RoundedCornerShape(12.dp),
+                    colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFD32F2F))
+                ) {
+                    Text("Logout", color = Color.White, style = MaterialTheme.typography.titleMedium)
                 }
             }
         }
@@ -132,12 +152,5 @@ private fun ProfileInfoRow(label: String, value: String) {
 @Preview(showBackground = true)
 @Composable
 fun ProfileScreenPreview() {
-    val sampleProfile = ProfileData(
-        name = "John Doe",
-        email = "john.doe@example.com",
-        status = "Aktif",
-        role = "Admini",
-        joinDate = "18 Mei 2025"
-    )
-    ProfileScreen(profile = sampleProfile)
+    ProfileScreen()
 }

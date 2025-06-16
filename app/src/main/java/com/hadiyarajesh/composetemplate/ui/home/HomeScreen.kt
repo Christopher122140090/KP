@@ -55,6 +55,8 @@ import androidx.compose.material.icons.filled.Warning
 import androidx.compose.material.icons.filled.Warehouse
 import androidx.compose.material.icons.filled.QrCodeScanner
 import androidx.compose.material.icons.filled.SwapHoriz
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 
 @Composable
 internal fun HomeRoute(
@@ -87,9 +89,11 @@ private fun HomeScreen(
     ) { innerPadding ->
         Column(
             modifier = Modifier
-                .fillMaxSize()
+                .fillMaxWidth() // Only fill width, let height wrap content for scrolling
+                .verticalScroll(rememberScrollState()) // Enable vertical scrolling
                 .padding(innerPadding)
                 .padding(top = 80.dp) // Add gap at the top so content is not covered by topbar
+                .padding(bottom = 80.dp) // Add bottom padding to avoid overlap with BottomNavBar
                 .padding(horizontal = 16.dp)
         ) {
             // Top Cards
@@ -213,7 +217,7 @@ fun QuickActionButton(icon: androidx.compose.ui.graphics.vector.ImageVector, tex
     Button(
         onClick = onClick,
         shape = RoundedCornerShape(8.dp),
-        colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFE0E0E0)) // Light grey background
+        colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF2196F3)) // Light grey background
     ) {
         Column(horizontalAlignment = Alignment.CenterHorizontally) {
             Icon(icon, contentDescription = text, modifier = Modifier.size(24.dp))
