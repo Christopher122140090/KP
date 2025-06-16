@@ -344,6 +344,19 @@ fun LoginScreen(
                                     Text("Login dengan Google", color = Color.Black)
                                 }
                             }
+                            // Tombol untuk mengelola akun Google di perangkat
+                            TextButton(
+                                onClick = {
+                                    // Membuka pengaturan akun Google di perangkat
+                                    val intent = Intent(android.provider.Settings.ACTION_SYNC_SETTINGS)
+                                    context.startActivity(intent)
+                                },
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(top = 4.dp)
+                            ) {
+                                Text("Manage accounts on this device", color = Color(0xFF276BB4))
+                            }
                         }
                     }
                 }
