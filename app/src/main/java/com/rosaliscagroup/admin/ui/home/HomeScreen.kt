@@ -18,9 +18,13 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Alignment
@@ -39,6 +43,17 @@ import com.rosaliscagroup.admin.ui.components.ErrorItem
 import com.rosaliscagroup.admin.ui.components.LoadingIndicator
 import com.rosaliscagroup.admin.utility.Constants
 import com.google.accompanist.systemuicontroller.rememberSystemUiController
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.ArrowForward
+import androidx.compose.material.icons.filled.CheckCircle
+import androidx.compose.material.icons.filled.LocationOn
+import androidx.compose.material.icons.filled.Warning
+import androidx.compose.material.icons.filled.Warehouse
+import androidx.compose.material.icons.filled.QrCodeScanner
+import androidx.compose.material.icons.filled.SwapHoriz
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 
 @Composable
 internal fun HomeRoute(
@@ -61,99 +76,207 @@ private fun HomeScreen(
     LaunchedEffect(Unit) {
         loadData()
         systemUiController.setSystemBarsColor(
-            color = Color.Transparent,
-            darkIcons = false
+            color = Color.White, // Change status bar color to white
+            darkIcons = true // Use dark icons for better visibility on white background
         )
     }
 
     Scaffold(
-        topBar = {},
-        containerColor = Color.Transparent
+        containerColor = Color.White // Set scaffold background to white
     ) { innerPadding ->
-        Box(
+        Column(
             modifier = Modifier
-                .fillMaxSize()
+                .fillMaxWidth() // Only fill width, let height wrap content for scrolling
+                .verticalScroll(rememberScrollState()) // Enable vertical scrolling
                 .padding(innerPadding)
+                .padding(top = 80.dp) // Add gap at the top so content is not covered by topbar
+                .padding(bottom = 80.dp) // Add bottom padding to avoid overlap with BottomNavBar
+                .padding(horizontal = 16.dp)
         ) {
-            // Latar belakang biru melengkung dan logo
-            Box(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(220.dp)
-                    .align(Alignment.TopCenter)
+            // Top Cards
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(16.dp)
             ) {
-                Box(
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .background(
-                            color = Color(0xF7276BB4),
-                            shape = RoundedCornerShape(bottomStart = 30.dp, bottomEnd = 30.dp)
-                        )
-                )
-                Box(
-                    modifier = Modifier
-                        .size(120.dp)
-                        .align(Alignment.BottomCenter)
-                        .background(color = Color.White, shape = RoundedCornerShape(60.dp)),
-                    contentAlignment = Alignment.Center
+                Card(
+                    modifier = Modifier.weight(1f),
+                    shape = RoundedCornerShape(8.dp),
+                    colors = CardDefaults.cardColors(containerColor = Color(0xFFE3F2FD)) // Light blue background
                 ) {
-                    Image(
-                        painter = painterResource(id = R.drawable.logo),
-                        contentDescription = "Deskripsi aksesibilitas",
-                        modifier = Modifier.size(90.dp)
-                    )
+                    Column(modifier = Modifier.padding(16.dp)) {
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Text("Total Equipment", style = MaterialTheme.typography.bodyMedium)
+                            Spacer(modifier = Modifier.weight(1f))
+                            Icon(Icons.Default.Warehouse, contentDescription = "Total Equipment Icon", tint = Color(0xFF2196F3))
+                        }
+                        Text("1,247", style = MaterialTheme.typography.headlineMedium)
+                        Text("+12 this week", style = MaterialTheme.typography.bodySmall, color = Color(0xFF4CAF50))
+                    }
+                }
+                Card(
+                    modifier = Modifier.weight(1f),
+                    shape = RoundedCornerShape(8.dp),
+                    colors = CardDefaults.cardColors(containerColor = Color(0xFFFFF3E0)) // Light orange background
+                ) {
+                    Column(modifier = Modifier.padding(16.dp)) {
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Text("Active Projects", style = MaterialTheme.typography.bodyMedium)
+                            Spacer(modifier = Modifier.weight(1f))
+                            Icon(Icons.Default.LocationOn, contentDescription = "Active Projects Icon", tint = Color(0xFFFF9800))
+                        }
+                        Text("23", style = MaterialTheme.typography.headlineMedium)
+                        Text("3 overdue", style = MaterialTheme.typography.bodySmall, color = Color(0xFFF44336))
+                    }
                 }
             }
 
-            Column(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(top = 200.dp),
-                horizontalAlignment = Alignment.CenterHorizontally
+            Spacer(modifier = Modifier.height(24.dp))
+
+            // Quick Actions
+            Text("Quick Actions", style = MaterialTheme.typography.titleMedium)
+            Spacer(modifier = Modifier.height(16.dp))
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(16.dp)
             ) {
-                Text(
-                    text = "Selamat Datang di Aplikasi ERH",
-                    style = MaterialTheme.typography.titleSmall,
-                    modifier = Modifier.padding(top = 16.dp)
-                )
-                Spacer(modifier = Modifier.height(16.dp))
-                // Grafik di tengah
-                if (uiState is HomeScreenUiState.Success) {
-                    DashboardPieChart(kondisiStat = uiState.kondisiStat)
-                    Spacer(modifier = Modifier.height(16.dp))
-                } else if (uiState is HomeScreenUiState.Loading) {
-                    LoadingIndicator(modifier = Modifier.fillMaxWidth())
-                    Spacer(modifier = Modifier.height(16.dp))
-                } else if (uiState is HomeScreenUiState.Error) {
-                    ErrorItem(
-                        modifier = Modifier
-                            .padding(40.dp)
-                            .fillMaxWidth(),
-                        text = (uiState as? HomeScreenUiState.Error)?.msg ?: ""
-                    )
-                    Spacer(modifier = Modifier.height(16.dp))
-                }
+                QuickActionButton(icon = Icons.Default.QrCodeScanner, text = "Scan Item", onClick = {})
+                QuickActionButton(icon = Icons.Default.Add, text = "Add Item", onClick = {})
+                QuickActionButton(icon = Icons.Default.SwapHoriz, text = "Transfer", onClick = {})
+            }
+
+            Spacer(modifier = Modifier.height(24.dp))
+
+            // Locations
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text("Locations", style = MaterialTheme.typography.titleMedium)
                 Spacer(modifier = Modifier.weight(1f))
-                val context = LocalContext.current
-                Button(
-                    onClick = {
-                        Toast.makeText(context, "Logging out", Toast.LENGTH_SHORT).show()
-                    },
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(start = 32.dp, end = 32.dp, bottom = 32.dp),
-                    shape = RoundedCornerShape(24.dp),
-                    colors = ButtonDefaults.buttonColors(
-                        containerColor = Color(0xFF4CAF50),
-                        contentColor = Color.White
-                    )
-                ) {
-                    Text("Log Out", style = MaterialTheme.typography.titleMedium)
+                TextButton(onClick = {}) {
+                    Text("View All")
                 }
+            }
+            Spacer(modifier = Modifier.height(16.dp))
+            Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                LocationItem(
+                    icon = Icons.Default.Warehouse,
+                    name = "Main Warehouse",
+                    location = "Jakarta Pusat",
+                    items = "456 items",
+                    capacity = "98% capacity",
+                    capacityColor = Color(0xFF4CAF50) // Green
+                )
+                LocationItem(
+                    icon = Icons.Default.LocationOn,
+                    name = "Site Project A",
+                    location = "Bekasi Timur",
+                    items = "234 items",
+                    capacity = "67% capacity",
+                    capacityColor = Color(0xFFFF9800) // Orange
+                )
+            }
+
+            Spacer(modifier = Modifier.height(24.dp))
+
+            // Recent Activities
+            Text("Recent Activities", style = MaterialTheme.typography.titleMedium)
+            Spacer(modifier = Modifier.height(16.dp))
+            Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                ActivityItem(
+                    icon = Icons.Default.CheckCircle,
+                    iconTint = Color(0xFF4CAF50), // Green
+                    title = "Equipment Received",
+                    details = "Excavator CAT 320D • Main Warehouse",
+                    time = "2 hours ago"
+                )
+                ActivityItem(
+                    icon = Icons.Default.ArrowForward,
+                    iconTint = Color(0xFF2196F3), // Blue
+                    title = "Transfer Completed",
+                    details = "Bulldozer D6T • To Site Project A",
+                    time = "4 hours ago"
+                )
+                ActivityItem(
+                    icon = Icons.Default.Warning,
+                    iconTint = Color(0xFFFF9800), // Orange
+                    title = "Low Stock Alert",
+                    details = "Hydraulic Oil • Only 5 units left",
+                    time = "6 hours ago"
+                )
             }
         }
     }
 }
+
+@Composable
+fun QuickActionButton(icon: androidx.compose.ui.graphics.vector.ImageVector, text: String, onClick: () -> Unit) {
+    Button(
+        onClick = onClick,
+        shape = RoundedCornerShape(8.dp),
+        colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF2196F3)) // Light grey background
+    ) {
+        Column(horizontalAlignment = Alignment.CenterHorizontally) {
+            Icon(icon, contentDescription = text, modifier = Modifier.size(24.dp))
+            Spacer(modifier = Modifier.height(4.dp))
+            Text(text, style = MaterialTheme.typography.bodySmall)
+        }
+    }
+}
+
+@Composable
+fun LocationItem(icon: androidx.compose.ui.graphics.vector.ImageVector, name: String, location: String, items: String, capacity: String, capacityColor: Color) {
+    Card(
+        modifier = Modifier.fillMaxWidth(),
+        shape = RoundedCornerShape(8.dp),
+        colors = CardDefaults.cardColors(containerColor = Color.White),
+        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
+    ) {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(16.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Icon(icon, contentDescription = name, modifier = Modifier.size(40.dp), tint = Color(0xFF2196F3)) // Blue icon
+            Spacer(modifier = Modifier.width(16.dp))
+            Column(modifier = Modifier.weight(1f)) {
+                Text(name, style = MaterialTheme.typography.titleMedium)
+                Text(location, style = MaterialTheme.typography.bodySmall, color = Color.Gray)
+            }
+            Column(horizontalAlignment = Alignment.End) {
+                Text(items, style = MaterialTheme.typography.bodyMedium)
+                Text(capacity, style = MaterialTheme.typography.bodySmall, color = capacityColor)
+            }
+        }
+    }
+}
+
+@Composable
+fun ActivityItem(icon: androidx.compose.ui.graphics.vector.ImageVector, iconTint: Color, title: String, details: String, time: String) {
+    Card(
+        modifier = Modifier.fillMaxWidth(),
+        shape = RoundedCornerShape(8.dp),
+        colors = CardDefaults.cardColors(containerColor = Color.White),
+        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
+    ) {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(16.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Icon(icon, contentDescription = title, modifier = Modifier.size(24.dp), tint = iconTint)
+            Spacer(modifier = Modifier.width(16.dp))
+            Column(modifier = Modifier.weight(1f)) {
+                Text(title, style = MaterialTheme.typography.bodyMedium)
+                Text(details, style = MaterialTheme.typography.bodySmall, color = Color.Gray)
+            }
+            Text(time, style = MaterialTheme.typography.bodySmall, color = Color.Gray)
+        }
+    }
+}
+
 
 @Composable
 fun DashboardPieChart(kondisiStat: Map<String, Int>) {
@@ -198,32 +321,8 @@ fun DashboardPieChart(kondisiStat: Map<String, Int>) {
     }
 }
 
-@Composable
-private fun HomeScreenContent(
-    modifier: Modifier = Modifier
-) {
-    val context = LocalContext.current
 
-    Column(
-        modifier = modifier,
-        verticalArrangement = Arrangement.SpaceBetween,
-        horizontalAlignment = Alignment.CenterHorizontally
-    ) {
-        // Top section: Image and Welcome Text
-        Column(
-            verticalArrangement = Arrangement.Top,
-            modifier = Modifier
-                .weight(1f)
-                .fillMaxWidth()
-                .padding(top = 40.dp) // Turunkan agar rapi di bawah box biru
-        ) {
-
-        }
-
-    }
-}
-
-@Preview(showSystemUi = true)
+@Preview(showSystemUi = false, showBackground = true)
 @Composable
 fun HomeScreenPreview() {
     MaterialTheme {
