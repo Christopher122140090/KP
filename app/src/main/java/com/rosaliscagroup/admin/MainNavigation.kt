@@ -32,7 +32,7 @@ import com.rosaliscagroup.admin.ui.profile.ProfileScreen
 import com.rosaliscagroup.admin.ui.login.LoginScreen
 import com.rosaliscagroup.admin.ui.barang.CekBarangScreen
 import com.rosaliscagroup.admin.ui.item.TambahItem
-
+import com.rosaliscagroup.admin.AddNav
 // Data class untuk state login
 data class LoginState(
     val isLoading: Boolean = false,
@@ -43,7 +43,7 @@ data class LoginState(
 sealed class BottomNavItem(val route: String, val icon: ImageVector, val contentDescription: String) {
     object Home : BottomNavItem("home", Icons.Filled.Home, "Home")
     object CekBarang : BottomNavItem("cek_barang", Icons.Filled.Visibility, "Cek Barang")
-    object TambahID : BottomNavItem("TambahItemPage", Icons.Filled.Add, "Tambah Item")
+    object Tambah : BottomNavItem("NavigationAdd", Icons.Filled.Add, "Tambah")
     object Profile : BottomNavItem("profile", Icons.Filled.Person, "Profile")
 }
 
@@ -117,7 +117,7 @@ fun BottomNavigationBar(navController: NavController) {
             val items = listOf(
                 BottomNavItem.Home,
                 BottomNavItem.CekBarang,
-                BottomNavItem.TambahID,
+                BottomNavItem.Tambah,
                 BottomNavItem.Profile
             )
             items.forEach { item ->
@@ -200,7 +200,7 @@ fun MainNavigation() {
                     )
                 },
                 content = {
-                    HomeRoute()
+                    HomeRoute(navController = navController)
                 },
                 bottomBar = {
                     if (isLoggedIn) {
@@ -238,11 +238,11 @@ fun MainNavigation() {
             )
         }
 
-        composable("TambahItemPage") {
+        composable("NavigationAdd") {
             Scaffold(
                 topBar = {
                     AppBar(
-                        title = "Tambah Item",
+                        title = "Tambah",
                         navController = navController,
                         drawerState = rememberDrawerState(DrawerValue.Closed),
                         scope = scope,
@@ -251,10 +251,9 @@ fun MainNavigation() {
                     )
                 },
                 content = { padding ->
-                    TambahItem(
-                        onSimpan = { nama, deskripsi, kategori, status, gambarUri ->
-                            // TODO: Implement save logic
-                        }
+                    AddNav(
+                        navController = navController,
+                        modifier = Modifier.padding(padding)
                     )
                 },
                 bottomBar = {
@@ -283,9 +282,87 @@ fun MainNavigation() {
                             .padding(padding)
                     ) {
                         ProfileScreen(
+                            name = extractNameFromEmail(userEmail),
+                            email = userEmail,
                             navController = navController
                         )
                     }
+                },
+                bottomBar = {
+                    if (isLoggedIn) {
+                        BottomNavigationBar(navController = navController)
+                    }
+                }
+            )
+        }
+        composable("TambahItemPage") {
+            Scaffold(
+                topBar = {
+                    AppBar(
+                        title = "Tambah Item",
+                        navController = navController,
+                        drawerState = rememberDrawerState(DrawerValue.Closed),
+                        scope = scope,
+                        showMenuIcon = false,
+                        userName = extractNameFromEmail(userEmail)
+                    )
+                },
+                content = { padding ->
+                    TambahItem(
+                        onSimpan = { _, _, _, _, _ -> }
+                    )
+                },
+                bottomBar = {
+                    if (isLoggedIn) {
+                        BottomNavigationBar(navController = navController)
+                    }
+                }
+            )
+        }
+        composable("TambahProyekPage") {
+            Scaffold(
+                topBar = {
+                    AppBar(
+                        title = "Tambah Proyek",
+                        navController = navController,
+                        drawerState = rememberDrawerState(DrawerValue.Closed),
+                        scope = scope,
+                        showMenuIcon = false,
+                        userName = extractNameFromEmail(userEmail)
+                    )
+                },
+                content = { padding ->
+                    com.rosaliscagroup.admin.ui.proyek.TambahProyek(
+                        onSimpan = { _, _ -> }
+                    )
+                },
+                bottomBar = {
+                    if (isLoggedIn) {
+                        BottomNavigationBar(navController = navController)
+                    }
+                }
+            )
+        }
+        composable("ViewProyekPage") {
+            Scaffold(
+                topBar = {
+                    AppBar(
+                        title = "Daftar Proyek",
+                        navController = navController,
+                        drawerState = rememberDrawerState(DrawerValue.Closed),
+                        scope = scope,
+                        showMenuIcon = false,
+                        userName = extractNameFromEmail(userEmail)
+                    )
+                },
+                content = { padding ->
+                    com.rosaliscagroup.admin.ui.proyek.ViewProyek(
+                        proyekList = listOf(
+                            com.rosaliscagroup.admin.ui.proyek.Proyek(id = "1", nama = "Proyek A", lokasi = "Jakarta"),
+                            com.rosaliscagroup.admin.ui.proyek.Proyek(id = "2", nama = "Proyek B", lokasi = "Bandung")
+                        ),
+                        modifier = Modifier.padding(padding)
+                    )
                 },
                 bottomBar = {
                     if (isLoggedIn) {

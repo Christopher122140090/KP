@@ -1,5 +1,6 @@
 package com.rosaliscagroup.admin.ui.profile
 
+import android.annotation.SuppressLint
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
@@ -15,22 +16,17 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.google.firebase.auth.FirebaseAuth
 
-@OptIn(ExperimentalMaterial3Api::class)
+@SuppressLint("SimpleDateFormat")
 @Composable
-fun ProfileScreen(navController: androidx.navigation.NavController? = null) {
-    val user = FirebaseAuth.getInstance().currentUser
-    val email = user?.email ?: "-"
-    val name = email.substringBefore("@")
-        .replaceFirstChar { if (it.isLowerCase()) it.titlecase() else it.toString() }
-        .replace(".", " ")
-    val status = "Aktif"
-    val role = "User"
-    val createdTimestamp = user?.metadata?.creationTimestamp ?: 0L
-    val joinDate = if (createdTimestamp > 0) {
-        java.text.SimpleDateFormat("dd MMM yyyy").format(java.util.Date(createdTimestamp))
-    } else {
-        "-"
-    }
+fun ProfileScreen(
+    name: String,
+    email: String,
+    status: String = "Aktif",
+    role: String = "User",
+    joinDate: String = "-",
+    navController: androidx.navigation.NavController? = null,
+    onLogout: (() -> Unit)? = null
+) {
     Scaffold(
         containerColor = Color.Transparent
     ) { innerPadding ->
@@ -45,9 +41,9 @@ fun ProfileScreen(navController: androidx.navigation.NavController? = null) {
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(120.dp)
+                    .clip(RoundedCornerShape(bottomStart = 30.dp, bottomEnd = 30.dp))
                     .background(
-                        color = Color(0xF7276BB4), // Biru tua, sama dengan top bar
-                        shape = RoundedCornerShape(bottomStart = 30.dp, bottomEnd = 30.dp)
+                        color = Color(0xFF276BB4) // Biru tua, sama dengan top bar, fixed ARGB
                     )
             )
             Column(
@@ -106,7 +102,7 @@ fun ProfileScreen(navController: androidx.navigation.NavController? = null) {
                 Spacer(modifier = Modifier.height(32.dp))
                 Button(
                     onClick = {
-                        com.google.firebase.auth.FirebaseAuth.getInstance().signOut()
+                        onLogout?.invoke()
                         navController?.navigate("login") {
                             popUpTo(0) { inclusive = true }
                             launchSingleTop = true
@@ -124,6 +120,30 @@ fun ProfileScreen(navController: androidx.navigation.NavController? = null) {
         }
     }
 }
+
+// Helper to get user data for runtime usage
+fun getProfileScreenUserData(): ProfileScreenUserData {
+    val user = FirebaseAuth.getInstance().currentUser
+    val email = user?.email ?: "-"
+    val name = email.substringBefore("@")
+        .replaceFirstChar { if (it.isLowerCase()) it.titlecase() else it.toString() }
+        .replace(".", " ")
+    val createdTimestamp = user?.metadata?.creationTimestamp ?: 0L
+    val joinDate = if (createdTimestamp > 0) {
+        java.text.SimpleDateFormat("dd MMM yyyy").format(java.util.Date(createdTimestamp))
+    } else {
+        "-"
+    }
+    return ProfileScreenUserData(name, email, "Aktif", "User", joinDate)
+}
+
+data class ProfileScreenUserData(
+    val name: String,
+    val email: String,
+    val status: String,
+    val role: String,
+    val joinDate: String
+)
 
 @Composable
 private fun ProfileInfoRow(label: String, value: String) {
@@ -152,5 +172,11 @@ private fun ProfileInfoRow(label: String, value: String) {
 @Preview(showBackground = true)
 @Composable
 fun ProfileScreenPreview() {
-    ProfileScreen()
+    ProfileScreen(
+        name = "John Doe",
+        email = "john.doe@example.com",
+        status = "Aktif",
+        role = "User",
+        joinDate = "01 Jan 2024"
+    )
 }

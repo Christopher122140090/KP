@@ -52,6 +52,8 @@ fun SettingPage(
                 .background(Color(0xFFE3F2FD))
         ) {
             ProfileScreen(
+                name = username,
+                email = email,
                 navController = navController
             )
             IconButton(

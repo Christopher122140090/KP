@@ -37,6 +37,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.navigation.NavController
 import com.hadiyarajesh.admin.R
 import com.rosaliscagroup.admin.data.entity.Image
 import com.rosaliscagroup.admin.ui.components.ErrorItem
@@ -57,19 +58,22 @@ import androidx.compose.foundation.verticalScroll
 
 @Composable
 internal fun HomeRoute(
-    viewModel: HomeViewModel = hiltViewModel()
+    viewModel: HomeViewModel = hiltViewModel(),
+    navController: NavController
 ) {
     val uiState = viewModel.uiState.collectAsStateWithLifecycle().value
     HomeScreen(
         uiState = uiState,
-        loadData = { viewModel.loadData() }
+        loadData = { viewModel.loadData() },
+        navController = navController
     )
 }
 
 @Composable
 private fun HomeScreen(
     uiState: HomeScreenUiState,
-    loadData: () -> Unit
+    loadData: () -> Unit,
+    navController: NavController
 ) {
     val systemUiController = rememberSystemUiController()
 
@@ -153,7 +157,7 @@ private fun HomeScreen(
             ) {
                 Text("Locations", style = MaterialTheme.typography.titleMedium)
                 Spacer(modifier = Modifier.weight(1f))
-                TextButton(onClick = {}) {
+                TextButton(onClick = { navController.navigate("ViewProyekPage") }) {
                     Text("View All")
                 }
             }
@@ -335,7 +339,8 @@ fun HomeScreenPreview() {
                 ),
                 kondisiStat = mapOf("Baik" to 10, "Rusak" to 2)
             ),
-            loadData = {}
+            loadData = {},
+            navController = NavController(LocalContext.current)
         )
     }
 }
