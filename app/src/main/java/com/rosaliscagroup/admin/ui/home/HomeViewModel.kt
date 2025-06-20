@@ -2,15 +2,12 @@ package com.rosaliscagroup.admin.ui.home
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.rosaliscagroup.admin.data.entity.Image
 import com.rosaliscagroup.admin.repository.HomeRepository
-import com.rosaliscagroup.admin.ui.barang.BarangRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
-
 import javax.inject.Inject
 
 @HiltViewModel
@@ -24,24 +21,32 @@ internal class HomeViewModel @Inject constructor(
         viewModelScope.launch {
             _uiState.value = HomeScreenUiState.Loading
             try {
-                // Ambil data image (jika masih ingin ditampilkan)
-                var image: Image? = null
-                launch {
-                    homeRepository.loadData().collect { img ->
-                        image = img
-                    }
-                }
-                // Ambil data barang dari Firebase
-                BarangRepository.listenBarangList().collect { barangList ->
-                    // Hitung jumlah barang per kondisi
-                    val kondisiStat = barangList.groupingBy { it.kondisi }.eachCount()
-                    _uiState.value = HomeScreenUiState.Success(
-                        data = image ?: Image(0, "", "", ""),
-                        kondisiStat = kondisiStat
-                    )
-                }
+                val totalActivities = homeRepository.getActivitiesCount()
+                val totalEquipments = homeRepository.getEquipmentsCount()
+                val totalLocations = homeRepository.getLocationsCount()
+                val totalProjects = homeRepository.getProjectsCount()
+                val totalUsers = homeRepository.getUsersCount()
+                val recentActivities = homeRepository.getRecentActivities(5)
+                val kondisiStat = homeRepository.getKondisiStat()
+                _uiState.value = HomeScreenUiState.Success(
+                    kondisiStat = kondisiStat,
+                    totalActivities = totalActivities,
+                    totalEquipments = totalEquipments,
+                    totalLocations = totalLocations,
+                    totalProjects = totalProjects,
+                    totalUsers = totalUsers,
+                    recentActivities = recentActivities
+                )
             } catch (e: Exception) {
-                _uiState.value = HomeScreenUiState.Error(msg = e.message ?: "Something went wrong")
+                val errorMsg = when {
+                    e.message?.contains("PERMISSION_DENIED", ignoreCase = true) == true ->
+                        "Akses ke database ditolak. Silakan cek koneksi dan izin Firestore Anda."
+                    e.message?.contains("network", ignoreCase = true) == true ->
+                        "Tidak dapat terhubung ke server. Periksa koneksi internet Anda."
+                    else ->
+                        e.message ?: "Terjadi kesalahan tak terduga."
+                }
+                _uiState.value = HomeScreenUiState.Error(msg = errorMsg)
             }
         }
     }

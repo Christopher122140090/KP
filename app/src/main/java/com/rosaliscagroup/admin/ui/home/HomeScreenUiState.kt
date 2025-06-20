@@ -1,6 +1,6 @@
 package com.rosaliscagroup.admin.ui.home
 
-import com.rosaliscagroup.admin.data.entity.Image
+import com.rosaliscagroup.admin.data.entity.Activity
 
 /**
  * Sealed class to represent UI states in [HomeScreen]
@@ -8,6 +8,14 @@ import com.rosaliscagroup.admin.data.entity.Image
 internal sealed interface HomeScreenUiState {
     data object Initial : HomeScreenUiState
     data object Loading : HomeScreenUiState
-    data class Success(val data: Image, val kondisiStat: Map<String, Int>) : HomeScreenUiState
+    data class Success(
+        val kondisiStat: Map<String, Int>,
+        val totalActivities: Int,
+        val totalEquipments: Int,
+        val totalLocations: Int,
+        val totalProjects: Int,
+        val totalUsers: Int,
+        val recentActivities: List<Activity>
+    ) : HomeScreenUiState
     data class Error(val msg: String) : HomeScreenUiState
 }

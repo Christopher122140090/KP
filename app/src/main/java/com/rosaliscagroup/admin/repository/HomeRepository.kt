@@ -1,20 +1,15 @@
 package com.rosaliscagroup.admin.repository
 
-import com.rosaliscagroup.admin.data.dao.ImageDao
-import com.rosaliscagroup.admin.data.entity.Image
-import kotlinx.coroutines.flow.Flow
+import com.rosaliscagroup.admin.data.entity.Activity
 import javax.inject.Inject
 import javax.inject.Singleton
 
 interface HomeRepository {
-    fun loadData(): Flow<Image?>
-}
-
-@Singleton
-class HomeRepositoryImpl @Inject constructor(
-    private val imageDao: ImageDao
-) : HomeRepository {
-    override fun loadData(): Flow<Image?> {
-        return imageDao.getImages()
-    }
+    suspend fun getActivitiesCount(): Int
+    suspend fun getEquipmentsCount(): Int
+    suspend fun getLocationsCount(): Int
+    suspend fun getProjectsCount(): Int
+    suspend fun getUsersCount(): Int
+    suspend fun getRecentActivities(limit: Int): List<Activity>
+    suspend fun getKondisiStat(): Map<String, Int>
 }

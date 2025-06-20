@@ -232,7 +232,7 @@ fun MainNavigation() {
                     )
                 },
                 content = {
-                    HomeRoute()
+                    HomeRoute(navController = navController)
                 },
                 bottomBar = {
                     if (isLoggedIn) {
