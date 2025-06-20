@@ -52,8 +52,6 @@ fun SettingPage(
                 .background(Color(0xFFE3F2FD))
         ) {
             ProfileScreen(
-                name = username,
-                email = email,
                 navController = navController
             )
             IconButton(
@@ -71,7 +69,7 @@ fun SettingPage(
             modifier = modifier
                 .fillMaxSize()
                 .background(Color(0xFFE3F2FD))
-                .padding(16.dp),
+                .padding(top = 80.dp, start = 16.dp, end = 16.dp, bottom = 16.dp),
             verticalArrangement = Arrangement.Top,
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
@@ -88,13 +86,13 @@ fun SettingPage(
                 Row(
                     modifier = Modifier
                         .fillMaxSize()
-                        .clickable { showProfile = true }
+                        .clickable { navController.navigate("change_name") }
                         .padding(horizontal = 16.dp),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    Icon(Icons.Default.Person, contentDescription = "Profil", tint = Color(0xFF1976D2))
+                    Icon(Icons.Default.Person, contentDescription = "Ubah Nama Profil", tint = Color(0xFF1976D2))
                     Spacer(Modifier.width(16.dp))
-                    Text("Profil", style = MaterialTheme.typography.titleMedium)
+                    Text("Ubah Nama Profil", style = MaterialTheme.typography.titleMedium)
                 }
             }
             Card(

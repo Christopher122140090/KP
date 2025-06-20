@@ -18,7 +18,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.ui.tooling.preview.Preview
 
 @Composable
-fun AddNav(
+fun CheckNav(
     navController: NavController,
     modifier: Modifier = Modifier
 ) {
@@ -43,13 +43,13 @@ fun AddNav(
             Row(
                 modifier = Modifier
                     .fillMaxSize()
-                    .clickable { navController.navigate("TambahItemPage") }
+                    .clickable { navController.navigate("cek_barang") }
                     .padding(horizontal = 16.dp),
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                Icon(Icons.Default.Person, contentDescription = "Tambah Item", tint = Color(0xFF1976D2))
+                Icon(Icons.Default.Person, contentDescription = "Cek Item", tint = Color(0xFF1976D2))
                 Spacer(Modifier.width(16.dp))
-                Text("Tambah Item", style = MaterialTheme.typography.titleMedium)
+                Text("Cek Item", style = MaterialTheme.typography.titleMedium)
             }
         }
         Card(
@@ -63,13 +63,13 @@ fun AddNav(
             Row(
                 modifier = Modifier
                     .fillMaxSize()
-                    .clickable { navController.navigate("TambahProyekPage") }
+                    .clickable { navController.navigate("ViewProyekPage") }
                     .padding(horizontal = 16.dp),
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                Icon(Icons.Default.ExitToApp, contentDescription = "Tambah Proyek", tint = Color(0xFF1976D2))
+                Icon(Icons.Default.ExitToApp, contentDescription = "Cek Proyek", tint = Color(0xFF1976D2))
                 Spacer(Modifier.width(16.dp))
-                Text("Tambah Lokasi", style = MaterialTheme.typography.titleMedium)
+                Text("Cek Lokasi", style = MaterialTheme.typography.titleMedium)
             }
         }
     }
@@ -77,10 +77,10 @@ fun AddNav(
 
 @Preview(showBackground = true)
 @Composable
-fun AddNavPreview() {
+fun CheckNavPreview() {
     // Use a minimal fake NavController for preview
     val fakeNavController = NavController(LocalContext.current)
     MaterialTheme {
-        AddNav(navController = fakeNavController)
+        CheckNav(navController = fakeNavController)
     }
 }

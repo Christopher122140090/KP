@@ -66,6 +66,8 @@ dependencies {
     implementation(libs.hilt.android)
     implementation(libs.hilt.navigation.compose)
     implementation(libs.firebase.database.ktx)
+    implementation(libs.firebase.firestore.ktx)
+    implementation(libs.espresso.core)
     ksp(libs.hilt.android.compiler)
     implementation(libs.androidx.material.icons.extended) // atau versi Compose kamu
 
@@ -92,6 +94,8 @@ dependencies {
     implementation("com.google.firebase:firebase-auth:22.3.0")
     implementation("com.google.android.gms:play-services-auth:21.0.0")
     implementation("com.google.android.libraries.identity.googleid:googleid:1.1.1")
+    // Firestore
+    implementation("com.google.firebase:firebase-firestore-ktx")
 
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.test.ext.junit)
@@ -119,6 +123,7 @@ dependencies {
     implementation ("androidx.activity:activity-compose:1.9.3")
     implementation("androidx.compose.material3:material3:1.1.0")
     implementation("com.google.accompanist:accompanist-systemuicontroller:0.30.1")
+    implementation("io.coil-kt:coil-compose:2.4.0")
 }
 
 // Pass options to Room ksp processor

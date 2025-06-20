@@ -7,9 +7,9 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Home
-import androidx.compose.material.icons.filled.Visibility
-import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Person
+import androidx.compose.material.icons.filled.Settings
+import androidx.compose.material.icons.filled.Add
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -27,12 +27,20 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.launch
+import com.rosaliscagroup.admin.setting.SettingPage
 import com.rosaliscagroup.admin.ui.home.HomeRoute
 import com.rosaliscagroup.admin.ui.profile.ProfileScreen
 import com.rosaliscagroup.admin.ui.login.LoginScreen
 import com.rosaliscagroup.admin.ui.barang.CekBarangScreen
 import com.rosaliscagroup.admin.ui.item.TambahItem
-import com.rosaliscagroup.admin.AddNav
+import com.rosaliscagroup.admin.ui.login.UserProfileFormScreen
+import coil.compose.AsyncImage
+import androidx.compose.ui.layout.ContentScale
+import android.net.Uri
+import androidx.compose.material.icons.filled.ViewInAr
+import com.rosaliscagroup.admin.setting.ChangeNameScreen
+
 // Data class untuk state login
 data class LoginState(
     val isLoading: Boolean = false,
@@ -42,7 +50,7 @@ data class LoginState(
 // Bottom navigation item definition
 sealed class BottomNavItem(val route: String, val icon: ImageVector, val contentDescription: String) {
     object Home : BottomNavItem("home", Icons.Filled.Home, "Home")
-    object CekBarang : BottomNavItem("cek_barang", Icons.Filled.Visibility, "Cek Barang")
+    object Cek : BottomNavItem("cek", Icons.Filled.ViewInAr, "Cek")
     object Tambah : BottomNavItem("NavigationAdd", Icons.Filled.Add, "Tambah")
     object Profile : BottomNavItem("profile", Icons.Filled.Person, "Profile")
 }
@@ -57,6 +65,7 @@ fun AppBar(
     scope: CoroutineScope,
     showMenuIcon: Boolean, // Tambahkan parameter untuk kontrol ikon menu
     userName: String = "User", // Tambahkan parameter nama user
+    userPhotoUrl: String? = null, // Tambahkan parameter untuk foto profil
     modifier: Modifier = Modifier
 ) {
     Surface(
@@ -68,20 +77,32 @@ fun AppBar(
         TopAppBar(
             title = {
                 Row(verticalAlignment = Alignment.CenterVertically) {
-                    // Avatar bulat dengan inisial user
-                    Box(
-                        modifier = Modifier
-                            .size(36.dp)
-                            .clip(CircleShape)
-                            .background(Color(0xFF2563EB)),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        Text(
-                            text = userName.firstOrNull()?.uppercase() ?: "U",
-                            color = Color.White,
-                            fontWeight = FontWeight.Bold,
-                            fontSize = 18.sp
+                    // Avatar bulat dengan foto profil atau inisial user
+                    if (!userPhotoUrl.isNullOrBlank()) {
+                        AsyncImage(
+                            model = userPhotoUrl,
+                            contentDescription = "Profile Photo",
+                            modifier = Modifier
+                                .size(36.dp)
+                                .clip(CircleShape)
+                                .background(Color(0xFF2563EB)),
+                            contentScale = ContentScale.Crop
                         )
+                    } else {
+                        Box(
+                            modifier = Modifier
+                                .size(36.dp)
+                                .clip(CircleShape)
+                                .background(Color(0xFF2563EB)),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Text(
+                                text = userName.firstOrNull()?.uppercase() ?: "U",
+                                color = Color.White,
+                                fontWeight = FontWeight.Bold,
+                                fontSize = 18.sp
+                            )
+                        }
                     }
                     Spacer(modifier = Modifier.width(12.dp))
                     Text(
@@ -94,6 +115,17 @@ fun AppBar(
                     )
                 }
             },
+            actions = {
+                if (title == "Profile") {
+                    IconButton(onClick = { navController.navigate("setting") }) {
+                        Icon(
+                            imageVector = Icons.Filled.Settings,
+                            contentDescription = "Settings",
+                            tint = Color(0xFF1976D2)
+                        )
+                    }
+                }
+            },
             colors = TopAppBarDefaults.topAppBarColors(
                 containerColor = Color(0xFFFFFFFF),
                 titleContentColor = Color.White
@@ -103,6 +135,7 @@ fun AppBar(
     }
 }
 
+// Komponen untuk konten drawer
 @Composable
 fun BottomNavigationBar(navController: NavController) {
     Surface(
@@ -116,7 +149,7 @@ fun BottomNavigationBar(navController: NavController) {
             val currentRoute = navController.currentBackStackEntryAsState().value?.destination?.route
             val items = listOf(
                 BottomNavItem.Home,
-                BottomNavItem.CekBarang,
+                BottomNavItem.Cek,
                 BottomNavItem.Tambah,
                 BottomNavItem.Profile
             )
@@ -174,15 +207,68 @@ fun MainNavigation() {
     val scope = rememberCoroutineScope()
     var isLoggedIn by remember { mutableStateOf(false) }
     var userEmail by remember { mutableStateOf("") }
+    var userName by remember { mutableStateOf("") }
+    var userPhotoUrl by remember { mutableStateOf<String?>(null) }
 
     NavHost(navController = navController, startDestination = "login") {
         composable("login") {
             LoginScreen(
                 onLoginSuccess = { email, password ->
+                    val user = com.google.firebase.auth.FirebaseAuth.getInstance().currentUser
+                    val userId = user?.uid
+                    if (userId != null) {
+                        val db = com.google.firebase.firestore.FirebaseFirestore.getInstance()
+                        db.collection("users").document(userId).get().addOnSuccessListener { doc ->
+                            if (doc.exists()) {
+                                isLoggedIn = true
+                                userEmail = email
+                                userName = (doc.getString("name") ?: "").split(" ").firstOrNull() ?: "User"
+                                userPhotoUrl = user.photoUrl?.toString()
+                                navController.navigate("home") {
+                                    popUpTo("login") { inclusive = true }
+                                }
+                            } else {
+                                navController.navigate("user_profile_form") {
+                                    popUpTo("login") { inclusive = true }
+                                }
+                            }
+                        }.addOnFailureListener {
+                            navController.navigate("user_profile_form") {
+                                popUpTo("login") { inclusive = true }
+                            }
+                        }
+                    }
+                }
+            )
+        }
+        composable("user_profile_form") {
+            UserProfileFormScreen(
+                onProfileSaved = {
                     isLoggedIn = true
-                    userEmail = email
-                    navController.navigate("home") {
-                        popUpTo("login") { inclusive = true }
+                    val user = com.google.firebase.auth.FirebaseAuth.getInstance().currentUser
+                    userEmail = user?.email ?: ""
+                    val userId = user?.uid
+                    if (userId != null) {
+                        val db = com.google.firebase.firestore.FirebaseFirestore.getInstance()
+                        db.collection("users").document(userId).get().addOnSuccessListener { doc ->
+                            userName = (doc.getString("name") ?: "").split(" ").firstOrNull() ?: "User"
+                            userPhotoUrl = user?.photoUrl?.toString()
+                            navController.navigate("home") {
+                                popUpTo("user_profile_form") { inclusive = true }
+                            }
+                        }.addOnFailureListener {
+                            userName = "User"
+                            userPhotoUrl = user?.photoUrl?.toString()
+                            navController.navigate("home") {
+                                popUpTo("user_profile_form") { inclusive = true }
+                            }
+                        }
+                    } else {
+                        userName = "User"
+                        userPhotoUrl = user?.photoUrl?.toString()
+                        navController.navigate("home") {
+                            popUpTo("user_profile_form") { inclusive = true }
+                        }
                     }
                 }
             )
@@ -196,7 +282,8 @@ fun MainNavigation() {
                         drawerState = rememberDrawerState(DrawerValue.Closed),
                         scope = scope,
                         showMenuIcon = false,
-                        userName = extractNameFromEmail(userEmail)
+                        userName = userName,
+                        userPhotoUrl = userPhotoUrl
                     )
                 },
                 content = {
@@ -209,26 +296,21 @@ fun MainNavigation() {
                 }
             )
         }
-        composable("cek_barang") {
+        composable("cek") {
             Scaffold(
                 topBar = {
                     AppBar(
-                        title = "Cek Barang",
+                        title = "Cek",
                         navController = navController,
                         drawerState = rememberDrawerState(DrawerValue.Closed),
                         scope = scope,
                         showMenuIcon = false,
-                        userName = extractNameFromEmail(userEmail)
+                        userName = userName,
+                        userPhotoUrl = userPhotoUrl
                     )
                 },
                 content = { padding ->
-                    Box(
-                        modifier = Modifier
-                            .fillMaxSize()
-                            .padding(padding)
-                    ) {
-                        CekBarangScreen()
-                    }
+                    CheckNav(navController = navController, modifier = Modifier.padding(padding))
                 },
                 bottomBar = {
                     if (isLoggedIn) {
@@ -247,7 +329,8 @@ fun MainNavigation() {
                         drawerState = rememberDrawerState(DrawerValue.Closed),
                         scope = scope,
                         showMenuIcon = false,
-                        userName = extractNameFromEmail(userEmail)
+                        userName = userName,
+                        userPhotoUrl = userPhotoUrl
                     )
                 },
                 content = { padding ->
@@ -272,7 +355,8 @@ fun MainNavigation() {
                         drawerState = rememberDrawerState(DrawerValue.Closed),
                         scope = scope,
                         showMenuIcon = false,
-                        userName = extractNameFromEmail(userEmail)
+                        userName = userName,
+                        userPhotoUrl = userPhotoUrl
                     )
                 },
                 content = { padding ->
@@ -282,8 +366,6 @@ fun MainNavigation() {
                             .padding(padding)
                     ) {
                         ProfileScreen(
-                            name = extractNameFromEmail(userEmail),
-                            email = userEmail,
                             navController = navController
                         )
                     }
@@ -304,7 +386,8 @@ fun MainNavigation() {
                         drawerState = rememberDrawerState(DrawerValue.Closed),
                         scope = scope,
                         showMenuIcon = false,
-                        userName = extractNameFromEmail(userEmail)
+                        userName = userName,
+                        userPhotoUrl = userPhotoUrl
                     )
                 },
                 content = { padding ->
@@ -328,7 +411,8 @@ fun MainNavigation() {
                         drawerState = rememberDrawerState(DrawerValue.Closed),
                         scope = scope,
                         showMenuIcon = false,
-                        userName = extractNameFromEmail(userEmail)
+                        userName = userName,
+                        userPhotoUrl = userPhotoUrl
                     )
                 },
                 content = { padding ->
@@ -352,7 +436,8 @@ fun MainNavigation() {
                         drawerState = rememberDrawerState(DrawerValue.Closed),
                         scope = scope,
                         showMenuIcon = false,
-                        userName = extractNameFromEmail(userEmail)
+                        userName = userName,
+                        userPhotoUrl = userPhotoUrl
                     )
                 },
                 content = { padding ->
@@ -363,6 +448,75 @@ fun MainNavigation() {
                         ),
                         modifier = Modifier.padding(padding)
                     )
+                },
+                bottomBar = {
+                    if (isLoggedIn) {
+                        BottomNavigationBar(navController = navController)
+                    }
+                }
+            )
+        }
+        composable("cek_barang") {
+            Scaffold(
+                topBar = {
+                    AppBar(
+                        title = "Cek Item",
+                        navController = navController,
+                        drawerState = rememberDrawerState(DrawerValue.Closed),
+                        scope = scope,
+                        showMenuIcon = false,
+                        userName = userName,
+                        userPhotoUrl = userPhotoUrl
+                    )
+                },
+                content = { padding ->
+                    CekBarangScreen()
+                },
+                bottomBar = {
+                    if (isLoggedIn) {
+                        BottomNavigationBar(navController = navController)
+                    }
+                }
+            )
+        }
+        composable("setting") {
+            Scaffold(
+                topBar = {
+                    AppBar(
+                        title = "Setting",
+                        navController = navController,
+                        drawerState = rememberDrawerState(DrawerValue.Closed),
+                        scope = scope,
+                        showMenuIcon = false,
+                        userName = userName,
+                        userPhotoUrl = userPhotoUrl
+                    )
+                },
+                content = { padding ->
+                    SettingPage(navController = navController)
+                },
+                bottomBar = {
+                    if (isLoggedIn) {
+                        BottomNavigationBar(navController = navController)
+                    }
+                }
+            )
+        }
+        composable("change_name") {
+            Scaffold(
+                topBar = {
+                    AppBar(
+                        title = "Ubah Nama Profil",
+                        navController = navController,
+                        drawerState = rememberDrawerState(DrawerValue.Closed),
+                        scope = scope,
+                        showMenuIcon = false,
+                        userName = userName,
+                        userPhotoUrl = userPhotoUrl
+                    )
+                },
+                content = { padding ->
+                    ChangeNameScreen(navController = navController)
                 },
                 bottomBar = {
                     if (isLoggedIn) {
@@ -400,3 +554,4 @@ fun BottomNavigationBarPreview() {
         BottomNavigationBar(navController = navController)
     }
 }
+

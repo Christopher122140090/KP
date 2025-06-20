@@ -35,6 +35,10 @@ import android.app.Activity
 import android.content.Intent
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
+import com.google.firebase.firestore.FirebaseFirestore
+import java.text.SimpleDateFormat
+import java.util.Date
+import java.util.Locale
 
 data class LoginState(
     val isLoading: Boolean = false,
@@ -63,6 +67,16 @@ fun LoginScreen(
                     .addOnCompleteListener { task ->
                         if (task.isSuccessful) {
                             // Login sukses, currentUser akan terisi
+                            // Update last_login di Firestore
+                            val user = FirebaseAuth.getInstance().currentUser
+                            val userId = user?.uid
+                            if (userId != null) {
+                                val db = FirebaseFirestore.getInstance()
+                                val doc = db.collection("users").document(userId)
+                                val sdf = SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.getDefault())
+                                val now = sdf.format(Date())
+                                doc.update("last_login", now)
+                            }
                             loginState = loginState.copy(isLoading = false, errorMessage = null)
                             onLoginSuccess(email, password)
                         } else {
@@ -284,6 +298,15 @@ fun LoginScreen(
                                             googleLoading = false
                                             if (task.isSuccessful) {
                                                 val user = FirebaseAuth.getInstance().currentUser
+                                                // Update last_login di Firestore untuk login Google
+                                                val userId = user?.uid
+                                                if (userId != null) {
+                                                    val db = FirebaseFirestore.getInstance()
+                                                    val doc = db.collection("users").document(userId)
+                                                    val sdf = SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.getDefault())
+                                                    val now = sdf.format(Date())
+                                                    doc.update("last_login", now)
+                                                }
                                                 onLoginSuccess(user?.email ?: "", "google")
                                             } else {
                                                 googleError = task.exception?.localizedMessage ?: "Login Google gagal"

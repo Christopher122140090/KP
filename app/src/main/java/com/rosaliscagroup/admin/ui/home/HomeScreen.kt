@@ -144,7 +144,7 @@ private fun HomeScreen(
                 horizontalArrangement = Arrangement.spacedBy(16.dp)
             ) {
                 QuickActionButton(icon = Icons.Default.QrCodeScanner, text = "Scan Item", onClick = {})
-                QuickActionButton(icon = Icons.Default.Add, text = "Add Item", onClick = {})
+                QuickActionButton(icon = Icons.Default.Add, text = "Add Item", onClick = { navController.navigate("TambahItemPage") })
                 QuickActionButton(icon = Icons.Default.SwapHoriz, text = "Transfer", onClick = {})
             }
 

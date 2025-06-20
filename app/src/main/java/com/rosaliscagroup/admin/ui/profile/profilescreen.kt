@@ -1,32 +1,54 @@
 package com.rosaliscagroup.admin.ui.profile
 
-import android.annotation.SuppressLint
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.*
-import androidx.compose.runtime.Composable
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import coil.compose.AsyncImage
 import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.firestore.FirebaseFirestore
+import kotlinx.coroutines.tasks.await
 
-@SuppressLint("SimpleDateFormat")
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun ProfileScreen(
-    name: String,
-    email: String,
-    status: String = "Aktif",
-    role: String = "User",
-    joinDate: String = "-",
-    navController: androidx.navigation.NavController? = null,
-    onLogout: (() -> Unit)? = null
-) {
+fun ProfileScreen(navController: androidx.navigation.NavController? = null) {
+    val user = FirebaseAuth.getInstance().currentUser
+    val userId = user?.uid ?: "Belum login"
+    var profileData by remember { mutableStateOf(
+        mapOf(
+            "email" to "-",
+            "last_login" to "-",
+            "name" to "-",
+            "role" to "-",
+            "user_id" to userId
+        )
+    ) }
+    LaunchedEffect(userId) {
+        if (user != null) {
+            val db = FirebaseFirestore.getInstance()
+            val doc = db.collection("users").document(userId)
+            val snapshot = doc.get().await()
+            if (snapshot.exists()) {
+                profileData = mapOf(
+                    "email" to (snapshot.getString("email") ?: "-"),
+                    "last_login" to (snapshot.getString("last_login") ?: "-"),
+                    "name" to (snapshot.getString("name") ?: "-"),
+                    "role" to (snapshot.getString("role") ?: "-"),
+                    "user_id" to (snapshot.getString("user_id") ?: userId)
+                )
+            }
+        }
+    }
     Scaffold(
         containerColor = Color.Transparent
     ) { innerPadding ->
@@ -41,9 +63,9 @@ fun ProfileScreen(
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(120.dp)
-                    .clip(RoundedCornerShape(bottomStart = 30.dp, bottomEnd = 30.dp))
                     .background(
-                        color = Color(0xFF276BB4) // Biru tua, sama dengan top bar, fixed ARGB
+                        color = Color(0xF7276BB4), // Biru tua, sama dengan top bar
+                        shape = RoundedCornerShape(bottomStart = 30.dp, bottomEnd = 30.dp)
                     )
             )
             Column(
@@ -53,25 +75,37 @@ fun ProfileScreen(
                     .padding(top = 56.dp, start = 24.dp, end = 24.dp),
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
-                // Profile picture placeholder
-                Box(
-                    modifier = Modifier
-                        .size(100.dp)
-                        .clip(CircleShape)
-                        .background(Color(0xFF90CAF9)), // Lighter blue
-                    contentAlignment = Alignment.Center
-                ) {
-                    Text(
-                        text = name.take(1).uppercase(),
-                        style = MaterialTheme.typography.headlineLarge.copy(
-                            color = Color.White,
-                            fontWeight = FontWeight.Bold
-                        )
+                // Profile picture placeholder or photo
+                if (user?.photoUrl != null) {
+                    AsyncImage(
+                        model = user.photoUrl,
+                        contentDescription = "Profile Photo",
+                        modifier = Modifier
+                            .size(100.dp)
+                            .clip(CircleShape)
+                            .background(Color(0xFF90CAF9)),
+                        contentScale = ContentScale.Crop
                     )
+                } else {
+                    Box(
+                        modifier = Modifier
+                            .size(100.dp)
+                            .clip(CircleShape)
+                            .background(Color(0xFF90CAF9)), // Lighter blue
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Text(
+                            text = (profileData["name"]?.take(1) ?: "-").uppercase(),
+                            style = MaterialTheme.typography.headlineLarge.copy(
+                                color = Color.White,
+                                fontWeight = FontWeight.Bold
+                            )
+                        )
+                    }
                 }
                 Spacer(modifier = Modifier.height(16.dp))
                 Text(
-                    text = name,
+                    text = profileData["name"] ?: "-",
                     style = MaterialTheme.typography.headlineSmall.copy(
                         color = Color(0xFF000000),
                         fontWeight = FontWeight.Bold
@@ -79,7 +113,7 @@ fun ProfileScreen(
                 )
                 Spacer(modifier = Modifier.height(8.dp))
                 Text(
-                    text = email,
+                    text = profileData["email"] ?: "-",
                     style = MaterialTheme.typography.bodyLarge.copy(
                         color = Color(0xFF000000)
                     )
@@ -94,15 +128,15 @@ fun ProfileScreen(
                     Column(
                         modifier = Modifier.padding(20.dp)
                     ) {
-                        ProfileInfoRow(label = "Status", value = status)
-                        ProfileInfoRow(label = "Role", value = role)
-                        ProfileInfoRow(label = "Join Date", value = joinDate)
+                        ProfileInfoRow(label = "Role", value = profileData["role"] ?: "-")
+                        ProfileInfoRow(label = "User ID", value = profileData["user_id"] ?: "-")
+                        ProfileInfoRow(label = "Last Login", value = profileData["last_login"] ?: "-")
                     }
                 }
                 Spacer(modifier = Modifier.height(32.dp))
                 Button(
                     onClick = {
-                        onLogout?.invoke()
+                        com.google.firebase.auth.FirebaseAuth.getInstance().signOut()
                         navController?.navigate("login") {
                             popUpTo(0) { inclusive = true }
                             launchSingleTop = true
@@ -120,30 +154,6 @@ fun ProfileScreen(
         }
     }
 }
-
-// Helper to get user data for runtime usage
-fun getProfileScreenUserData(): ProfileScreenUserData {
-    val user = FirebaseAuth.getInstance().currentUser
-    val email = user?.email ?: "-"
-    val name = email.substringBefore("@")
-        .replaceFirstChar { if (it.isLowerCase()) it.titlecase() else it.toString() }
-        .replace(".", " ")
-    val createdTimestamp = user?.metadata?.creationTimestamp ?: 0L
-    val joinDate = if (createdTimestamp > 0) {
-        java.text.SimpleDateFormat("dd MMM yyyy").format(java.util.Date(createdTimestamp))
-    } else {
-        "-"
-    }
-    return ProfileScreenUserData(name, email, "Aktif", "User", joinDate)
-}
-
-data class ProfileScreenUserData(
-    val name: String,
-    val email: String,
-    val status: String,
-    val role: String,
-    val joinDate: String
-)
 
 @Composable
 private fun ProfileInfoRow(label: String, value: String) {
@@ -172,11 +182,5 @@ private fun ProfileInfoRow(label: String, value: String) {
 @Preview(showBackground = true)
 @Composable
 fun ProfileScreenPreview() {
-    ProfileScreen(
-        name = "John Doe",
-        email = "john.doe@example.com",
-        status = "Aktif",
-        role = "User",
-        joinDate = "01 Jan 2024"
-    )
+    ProfileScreen()
 }
