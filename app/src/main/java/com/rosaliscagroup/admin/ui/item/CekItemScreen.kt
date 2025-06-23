@@ -1,4 +1,4 @@
-package com.rosaliscagroup.admin.ui.barang
+package com.rosaliscagroup.admin.ui.item
 
 import androidx.compose.foundation.background
 //import androidx.compose.foundation.clickable
@@ -27,7 +27,6 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.runtime.rememberCoroutineScope
-import androidx.compose.runtime.getValue
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.material3.AlertDialog
@@ -36,12 +35,13 @@ import android.widget.Toast
 import kotlinx.coroutines.launch
 import androidx.compose.runtime.LaunchedEffect
 import androidx.hilt.navigation.compose.hiltViewModel
+import com.rosaliscagroup.admin.ui.item.dummy.BarangLab
 
 @Composable
 fun BarangTable(
-    barangList: List<com.rosaliscagroup.admin.ui.barang.dummy.BarangLab>,
-    onEdit: (com.rosaliscagroup.admin.ui.barang.dummy.BarangLab) -> Unit = {},
-    onDelete: (com.rosaliscagroup.admin.ui.barang.dummy.BarangLab) -> Unit = {}
+    barangList: List<BarangLab>,
+    onEdit: (BarangLab) -> Unit = {},
+    onDelete: (BarangLab) -> Unit = {}
 ) {
     Scaffold(
         containerColor = Color(0xFFE3F2FD) // Biru muda untuk background
@@ -144,12 +144,12 @@ fun CekBarangScreen() {
     val filteredList = barangList
 
     // State untuk edit dan delete barang
-    val barangToDeleteState = remember { mutableStateOf<com.rosaliscagroup.admin.ui.barang.dummy.BarangLab?>(null) }
-    val barangToEditState = remember { mutableStateOf<com.rosaliscagroup.admin.ui.barang.dummy.BarangLab?>(null) }
+    val barangToDeleteState = remember { mutableStateOf<BarangLab?>(null) }
+    val barangToEditState = remember { mutableStateOf<BarangLab?>(null) }
     val barangToDelete = barangToDeleteState.value
-    val setBarangToDelete = { b: com.rosaliscagroup.admin.ui.barang.dummy.BarangLab? -> barangToDeleteState.value = b }
+    val setBarangToDelete = { b: BarangLab? -> barangToDeleteState.value = b }
     val barangToEdit = barangToEditState.value
-    val setBarangToEdit = { b: com.rosaliscagroup.admin.ui.barang.dummy.BarangLab? -> barangToEditState.value = b }
+    val setBarangToEdit = { b: BarangLab? -> barangToEditState.value = b }
 
     // Tampilkan tabel barang
     BarangTable(
@@ -257,9 +257,9 @@ fun CekBarangScreen() {
 fun BarangTablePreview() {
     BarangTable(
         barangList = listOf(
-            com.rosaliscagroup.admin.ui.barang.dummy.BarangLab("Laptop", "Elektronik", "Baik", "LT01", "PG01", "Aktif", "18/05/2025"),
-            com.rosaliscagroup.admin.ui.barang.dummy.BarangLab("Proyektor", "Elektronik", "Perlu Perbaikan", "LT02", "PG02", "Nonaktif", "10/04/2024"),
-            com.rosaliscagroup.admin.ui.barang.dummy.BarangLab("Meja", "Furnitur", "Baik", "LT03", "PG03", "Aktif", "05/03/2023")
+            BarangLab("Laptop", "Elektronik", "Baik", "LT01", "PG01", "Aktif", "18/05/2025"),
+            BarangLab("Proyektor", "Elektronik", "Perlu Perbaikan", "LT02", "PG02", "Nonaktif", "10/04/2024"),
+            BarangLab("Meja", "Furnitur", "Baik", "LT03", "PG03", "Aktif", "05/03/2023")
         )
     )
 }

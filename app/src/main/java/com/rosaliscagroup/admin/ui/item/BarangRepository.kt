@@ -1,9 +1,9 @@
-package com.rosaliscagroup.admin.ui.barang
+package com.rosaliscagroup.admin.ui.item
 
 import android.util.Log
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.database.*
-import com.rosaliscagroup.admin.ui.barang.dummy.BarangLab
+import com.rosaliscagroup.admin.ui.item.dummy.BarangLab
 import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.callbackFlow

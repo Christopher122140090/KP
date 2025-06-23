@@ -27,17 +27,15 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.launch
 import com.rosaliscagroup.admin.setting.SettingPage
 import com.rosaliscagroup.admin.ui.home.HomeRoute
 import com.rosaliscagroup.admin.ui.profile.ProfileScreen
 import com.rosaliscagroup.admin.ui.login.LoginScreen
-import com.rosaliscagroup.admin.ui.barang.CekBarangScreen
+import com.rosaliscagroup.admin.ui.item.CekBarangScreen
 import com.rosaliscagroup.admin.ui.item.TambahItem
 import com.rosaliscagroup.admin.ui.login.UserProfileFormScreen
 import coil.compose.AsyncImage
 import androidx.compose.ui.layout.ContentScale
-import android.net.Uri
 import androidx.compose.material.icons.filled.ViewInAr
 import com.rosaliscagroup.admin.setting.ChangeNameScreen
 

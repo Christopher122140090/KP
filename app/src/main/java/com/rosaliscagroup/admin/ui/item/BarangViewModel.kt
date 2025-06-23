@@ -1,15 +1,16 @@
-package com.rosaliscagroup.admin.ui.barang
+package com.rosaliscagroup.admin.ui.item
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.rosaliscagroup.admin.ui.item.dummy.BarangLab
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 
 class BarangViewModel : ViewModel() {
-    private val _barangList = MutableStateFlow<List<com.rosaliscagroup.admin.ui.barang.dummy.BarangLab>>(emptyList())
-    val barangList: StateFlow<List<com.rosaliscagroup.admin.ui.barang.dummy.BarangLab>> = _barangList.asStateFlow()
+    private val _barangList = MutableStateFlow<List<BarangLab>>(emptyList())
+    val barangList: StateFlow<List<BarangLab>> = _barangList.asStateFlow()
 
     private val _isTambahBarangLoading = MutableStateFlow(false)
     val isTambahBarangLoading: StateFlow<Boolean> = _isTambahBarangLoading.asStateFlow()
@@ -44,7 +45,7 @@ class BarangViewModel : ViewModel() {
         }
     }
 
-    fun tambahBarang(barang: com.rosaliscagroup.admin.ui.barang.dummy.BarangLab, onSelesai: (() -> Unit)? = null, onError: ((Throwable) -> Unit)? = null) {
+    fun tambahBarang(barang: BarangLab, onSelesai: (() -> Unit)? = null, onError: ((Throwable) -> Unit)? = null) {
         if (_isTambahBarangLoading.value) return // Cegah double submit
         _isTambahBarangLoading.value = true
         viewModelScope.launch {
