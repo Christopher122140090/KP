@@ -425,11 +425,17 @@ fun MainNavigation() {
                 }
             )
         }
-        composable("ViewProyekPage") {
+        composable("ViewProyekPage") { backStackEntry ->
+            // Ambil parentEntry agar ViewModel tetap sama instance dengan HomeScreen
+            val parentEntry = remember(backStackEntry) {
+                navController.getBackStackEntry("home")
+            }
+            val homeViewModel: com.rosaliscagroup.admin.ui.home.HomeViewModel = androidx.hilt.navigation.compose.hiltViewModel(parentEntry)
+            val uiState = homeViewModel.uiState.collectAsState().value
             Scaffold(
                 topBar = {
                     AppBar(
-                        title = "Daftar Proyek",
+                        title = "Daftar Lokasi",
                         navController = navController,
                         drawerState = rememberDrawerState(DrawerValue.Closed),
                         scope = scope,
@@ -440,10 +446,13 @@ fun MainNavigation() {
                 },
                 content = { padding ->
                     com.rosaliscagroup.admin.ui.proyek.ViewProyek(
-                        proyekList = listOf(
-                            com.rosaliscagroup.admin.ui.proyek.Proyek(id = "1", nama = "Proyek A", lokasi = "Jakarta"),
-                            com.rosaliscagroup.admin.ui.proyek.Proyek(id = "2", nama = "Proyek B", lokasi = "Bandung")
-                        ),
+                        proyekList = if (uiState is com.rosaliscagroup.admin.ui.home.HomeScreenUiState.Success) uiState.locations.map {
+                            com.rosaliscagroup.admin.ui.proyek.Proyek(
+                                id = it.id,
+                                nama = it.name,
+                                lokasi = it.address
+                            )
+                        } else emptyList(),
                         modifier = Modifier.padding(padding)
                     )
                 },

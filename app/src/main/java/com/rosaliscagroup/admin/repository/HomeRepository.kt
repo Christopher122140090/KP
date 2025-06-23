@@ -1,6 +1,8 @@
 package com.rosaliscagroup.admin.repository
 
 import com.rosaliscagroup.admin.data.entity.Activity
+import com.rosaliscagroup.admin.data.entity.Location
+import com.rosaliscagroup.admin.data.entity.Project
 import javax.inject.Inject
 import javax.inject.Singleton
 
@@ -12,4 +14,6 @@ interface HomeRepository {
     suspend fun getUsersCount(): Int
     suspend fun getRecentActivities(limit: Int): List<Activity>
     suspend fun getKondisiStat(): Map<String, Int>
+    suspend fun getProjects(): List<Project>
+    suspend fun getLocations(): List<Location>
 }

@@ -1,5 +1,6 @@
 package com.rosaliscagroup.admin.ui.home
 
+import android.widget.Toast
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
@@ -56,15 +57,16 @@ import androidx.compose.foundation.verticalScroll
 import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
 
-@Composable
+    @Composable
 internal fun HomeRoute(
     viewModel: HomeViewModel = hiltViewModel(),
     navController: NavController
 ) {
+    val context = LocalContext.current
     val uiState = viewModel.uiState.collectAsStateWithLifecycle().value
     HomeScreen(
         uiState = uiState,
-        loadData = { viewModel.loadData() },
+        loadData = { viewModel.loadData(context) },
         navController = navController
     )
 }
@@ -85,69 +87,57 @@ private fun HomeScreen(
         )
     }
 
-    when (uiState) {
-        is HomeScreenUiState.Loading -> {
-            LoadingIndicator()
-        }
-        is HomeScreenUiState.Error -> {
-            Box(
-                modifier = Modifier
-                    .fillMaxSize(),
-                contentAlignment = Alignment.Center
+    // Tampilkan data dummy seperti di preview
+    Scaffold(
+        containerColor = Color.White
+    ) { innerPadding ->
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .verticalScroll(rememberScrollState())
+                .padding(innerPadding)
+                .padding(top = 80.dp)
+                .padding(bottom = 80.dp)
+                .padding(horizontal = 16.dp)
+        ) {
+            // Top Cards
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(16.dp)
             ) {
-                ErrorItem(text = uiState.msg)
-            }
-        }
-        is HomeScreenUiState.Success -> {
-            // Tampilkan data dinamis dari Firestore
-            Scaffold(
-                containerColor = Color.White
-            ) { innerPadding ->
-                Column(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .verticalScroll(rememberScrollState())
-                        .padding(innerPadding)
-                        .padding(top = 80.dp)
-                        .padding(bottom = 80.dp)
-                        .padding(horizontal = 16.dp)
+                Card(
+                    modifier = Modifier.weight(1f),
+                    shape = RoundedCornerShape(8.dp),
+                    colors = CardDefaults.cardColors(containerColor = Color(0xFFE3F2FD))
                 ) {
-                    // Top Cards
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.spacedBy(16.dp)
-                    ) {
-                        Card(
-                            modifier = Modifier.weight(1f),
-                            shape = RoundedCornerShape(8.dp),
-                            colors = CardDefaults.cardColors(containerColor = Color(0xFFE3F2FD))
-                        ) {
-                            Column(modifier = Modifier.padding(16.dp)) {
-                                Row(verticalAlignment = Alignment.CenterVertically) {
-                                    Text("Total Equipment", style = MaterialTheme.typography.bodyMedium)
-                                    Spacer(modifier = Modifier.weight(1f))
-                                    Icon(Icons.Default.Warehouse, contentDescription = "Total Equipment Icon", tint = Color(0xFF2196F3))
-                                }
-                                Text(uiState.totalEquipments.toString(), style = MaterialTheme.typography.headlineMedium)
-                                // Dummy: Text("+12 this week", ...)
-                            }
+                    Column(modifier = Modifier.padding(16.dp)) {
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Text("Total Equipment", style = MaterialTheme.typography.bodyMedium)
+                            Spacer(modifier = Modifier.weight(1f))
+                            Icon(Icons.Default.Warehouse, contentDescription = "Total Equipment Icon", tint = Color(0xFF2196F3))
                         }
-                        Card(
-                            modifier = Modifier.weight(1f),
-                            shape = RoundedCornerShape(8.dp),
-                            colors = CardDefaults.cardColors(containerColor = Color(0xFFFFF3E0))
-                        ) {
-                            Column(modifier = Modifier.padding(16.dp)) {
-                                Row(verticalAlignment = Alignment.CenterVertically) {
-                                    Text("Active Projects", style = MaterialTheme.typography.bodyMedium)
-                                    Spacer(modifier = Modifier.weight(1f))
-                                    Icon(Icons.Default.LocationOn, contentDescription = "Active Projects Icon", tint = Color(0xFFFF9800))
-                                }
-                                Text(uiState.totalProjects.toString(), style = MaterialTheme.typography.headlineMedium)
-                                // Dummy: Text("3 overdue", ...)
-                            }
-                        }
+                        val totalEquipments = if (uiState is HomeScreenUiState.Success) uiState.totalEquipments else 0
+                        Text("$totalEquipments", style = MaterialTheme.typography.headlineMedium)
+                        Text("+12 this week", style = MaterialTheme.typography.bodySmall, color = Color(0xFF4CAF50))
                     }
+                }
+                Card(
+                    modifier = Modifier.weight(1f),
+                    shape = RoundedCornerShape(8.dp),
+                    colors = CardDefaults.cardColors(containerColor = Color(0xFFFFF3E0))
+                ) {
+                    Column(modifier = Modifier.padding(16.dp)) {
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Text("Active Projects", style = MaterialTheme.typography.bodyMedium)
+                            Spacer(modifier = Modifier.weight(1f))
+                            Icon(Icons.Default.LocationOn, contentDescription = "Active Projects Icon", tint = Color(0xFFFF9800))
+                        }
+                        val activeProjects = if (uiState is HomeScreenUiState.Success) uiState.projects.size else 0
+                        Text("$activeProjects", style = MaterialTheme.typography.headlineMedium)
+                        Text("", style = MaterialTheme.typography.bodySmall, color = Color(0xFFF44336))
+                    }
+                }
+            }
 
             Spacer(modifier = Modifier.height(24.dp))
 
@@ -159,79 +149,75 @@ private fun HomeScreen(
                 horizontalArrangement = Arrangement.spacedBy(16.dp)
             ) {
                 QuickActionButton(icon = Icons.Default.QrCodeScanner, text = "Scan Item", onClick = {})
-                QuickActionButton(icon = Icons.Default.Add, text = "Add Item", onClick = { navController.navigate("TambahItemPage") })
+                QuickActionButton(icon = Icons.Default.Add, text = "Add Item", onClick = {})
                 QuickActionButton(icon = Icons.Default.SwapHoriz, text = "Transfer", onClick = {})
             }
 
             Spacer(modifier = Modifier.height(24.dp))
 
-                    // Locations
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Text("Locations", style = MaterialTheme.typography.titleMedium)
-                        Spacer(modifier = Modifier.weight(1f))
-                        TextButton(onClick = { navController.navigate("ViewProyekPage") }) {
-                            Text("View All")
-                        }
-                    }
-                    Spacer(modifier = Modifier.height(16.dp))
-                    Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
-                        LocationItem(
-                            icon = Icons.Default.Warehouse,
-                            name = "Main Warehouse",
-                            location = "Jakarta Pusat",
-                            items = "456 items",
-                            capacity = "98% capacity",
-                            capacityColor = Color(0xFF4CAF50)
-                        )
+            // Locations (dari Firestore)
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text("Locations", style = MaterialTheme.typography.titleMedium)
+                Spacer(modifier = Modifier.weight(1f))
+                TextButton(onClick = { navController.navigate("ViewProyekPage") }) {
+                    Text("View All (${if (uiState is HomeScreenUiState.Success) uiState.locations.size else 0})")
+                }
+            }
+            Spacer(modifier = Modifier.height(16.dp))
+            if (uiState is HomeScreenUiState.Success) {
+                Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                    uiState.locations.forEach { location ->
                         LocationItem(
                             icon = Icons.Default.LocationOn,
-                            name = "Site Project A",
-                            location = "Bekasi Timur",
-                            items = "234 items",
-                            capacity = "67% capacity",
-                            capacityColor = Color(0xFFFF9800)
+                            name = location.name,
+                            location = location.address,
+                            items = "", // Jika ada info jumlah item, bisa diisi
+                            capacity = "", // Jika ada info kapasitas, bisa diisi
+                            capacityColor = Color(0xFF2196F3)
                         )
                     }
+                }
+            }
+            if (uiState is HomeScreenUiState.Error) {
+                Text("Gagal mengambil data: ${uiState.msg}", color = Color.Red)
+            }
 
             Spacer(modifier = Modifier.height(24.dp))
 
-                    // Recent Activities
-                    Text("Recent Activities", style = MaterialTheme.typography.titleMedium)
-                    Spacer(modifier = Modifier.height(16.dp))
-                    Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
-                        ActivityItem(
-                            icon = Icons.Default.CheckCircle,
-                            iconTint = Color(0xFF4CAF50),
-                            title = "Equipment Received",
-                            details = "Excavator CAT 320D • Main Warehouse",
-                            time = "2 hours ago"
-                        )
-                        ActivityItem(
-                            icon = Icons.Default.ArrowForward,
-                            iconTint = Color(0xFF2196F3),
-                            title = "Transfer Completed",
-                            details = "Bulldozer D6T • To Site Project A",
-                            time = "4 hours ago"
-                        )
-                        ActivityItem(
-                            icon = Icons.Default.Warning,
-                            iconTint = Color(0xFFFF9800),
-                            title = "Low Stock Alert",
-                            details = "Hydraulic Oil • Only 5 units left",
-                            time = "6 hours ago"
-                        )
-                    }
-
-                    Spacer(modifier = Modifier.height(24.dp))
-
-                    // Hapus bagian Main Image (dummy)
-                }
+            // Recent Activities (dummy)
+            Text("Recent Activities", style = MaterialTheme.typography.titleMedium)
+            Spacer(modifier = Modifier.height(16.dp))
+            Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                ActivityItem(
+                    icon = Icons.Default.CheckCircle,
+                    iconTint = Color(0xFF4CAF50),
+                    title = "Equipment Received",
+                    details = "Excavator CAT 320D • Main Warehouse",
+                    time = "2 hours ago"
+                )
+                ActivityItem(
+                    icon = Icons.Default.ArrowForward,
+                    iconTint = Color(0xFF2196F3),
+                    title = "Transfer Completed",
+                    details = "Bulldozer D6T • To Site Project A",
+                    time = "4 hours ago"
+                )
+                ActivityItem(
+                    icon = Icons.Default.Warning,
+                    iconTint = Color(0xFFFF9800),
+                    title = "Low Stock Alert",
+                    details = "Hydraulic Oil • Only 5 units left",
+                    time = "6 hours ago"
+                )
             }
+
+            Spacer(modifier = Modifier.height(24.dp))
+
+            // Hapus bagian Main Image (dummy)
         }
-        else -> {}
     }
 }
 
@@ -377,7 +363,9 @@ fun HomeScreenPreview() {
                 totalLocations = 3,
                 totalProjects = 2,
                 totalUsers = 7,
-                recentActivities = emptyList()
+                recentActivities = emptyList(),
+                projects = emptyList(), // Tambahkan argumen projects agar preview tidak error
+                locations = emptyList() // Tambahkan argumen locations agar build tidak error
             ),
             loadData = {},
             navController = rememberNavController()
