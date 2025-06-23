@@ -1,7 +1,6 @@
 package com.rosaliscagroup.admin.ui.item
 
 import androidx.compose.foundation.background
-//import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -17,11 +16,8 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
-//import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-//import androidx.compose.ui.unit.sp
-// Hapus import FirebaseAuth jika error unresolved reference
 import com.google.firebase.auth.FirebaseAuth
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Edit
@@ -35,23 +31,42 @@ import android.widget.Toast
 import kotlinx.coroutines.launch
 import androidx.compose.runtime.LaunchedEffect
 import androidx.hilt.navigation.compose.hiltViewModel
-import com.rosaliscagroup.admin.ui.item.dummy.BarangLab
+import coil.compose.rememberAsyncImagePainter
+import com.rosaliscagroup.admin.repository.EquipmentRepository
+import com.rosaliscagroup.admin.data.entity.Location
+import com.rosaliscagroup.admin.repository.HomeRepositoryImpl
+
+data class EquipmentUi(
+    val id: String = "",
+    val nama: String = "",
+    val deskripsi: String = "",
+    val kategori: String = "",
+    val lokasiId: String = "",
+    val sku: String = "",
+    val gambarUri: String = "",
+    val createdAt: String = "",
+    val updatedAt: String = ""
+)
 
 @Composable
 fun BarangTable(
-    barangList: List<BarangLab>,
-    onEdit: (BarangLab) -> Unit = {},
-    onDelete: (BarangLab) -> Unit = {}
+    barangList: List<EquipmentUi>,
+    onEdit: (EquipmentUi) -> Unit = {},
+    onDelete: (EquipmentUi) -> Unit = {}
 ) {
     Scaffold(
-        containerColor = Color(0xFFE3F2FD) // Biru muda untuk background
+        containerColor = Color(0xFFE3F2FD)
     ) { innerPadding ->
         Column(
             modifier = Modifier
                 .fillMaxSize()
                 .background(Color(0xFFE3F2FD))
-                .padding(innerPadding)
-                .padding(16.dp)
+                .padding(
+                    start = 16.dp,
+                    end = 16.dp,
+                    top = innerPadding.calculateTopPadding() + 80.dp, // Jarak topbar lebih kecil agar kategori tidak terdorong ke bawah
+                    bottom = innerPadding.calculateBottomPadding() + 80.dp
+                )
         ) {
             if (barangList.isEmpty()) {
                 Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
@@ -59,7 +74,9 @@ fun BarangTable(
                 }
             } else {
                 LazyColumn(
-                    modifier = Modifier.fillMaxSize(),
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .padding(bottom = 32.dp), // Tambah bottom padding pada LazyColumn
                     verticalArrangement = Arrangement.spacedBy(12.dp)
                 ) {
                     items(barangList) { barang ->
@@ -70,14 +87,28 @@ fun BarangTable(
                             modifier = Modifier.fillMaxWidth()
                         ) {
                             Column(modifier = Modifier.padding(16.dp)) {
+                                if (barang.gambarUri.isNotBlank()) {
+                                    androidx.compose.foundation.Image(
+                                        painter = rememberAsyncImagePainter(barang.gambarUri),
+                                        contentDescription = "Gambar Barang",
+                                        modifier = Modifier
+                                            .fillMaxWidth()
+                                            .height(180.dp),
+                                        contentScale = androidx.compose.ui.layout.ContentScale.Crop
+                                    )
+                                    Spacer(modifier = Modifier.height(8.dp))
+                                }
                                 Text(barang.nama, style = MaterialTheme.typography.titleMedium.copy(color = Color(0xFF000000), fontWeight = FontWeight.Bold))
                                 Spacer(modifier = Modifier.height(4.dp))
                                 Text("Kategori: " + (barang.kategori.trim().ifBlank { "Tidak diketahui" }.replaceFirstChar { it.uppercase() }), color = Color(0xFF000000))
                                 Spacer(modifier = Modifier.height(4.dp))
-                                Text("Kondisi: " + (barang.kondisi.trim().ifBlank { "Tidak diketahui" }.replaceFirstChar { it.uppercase() }), color = Color(0xFF000000))
-                                Text("Status: " + (barang.status.trim().ifBlank { "Tidak diketahui" }.replaceFirstChar { it.uppercase() }), color = Color(0xFF000000))
-                                Text("Tanggal Masuk: ${barang.tanggalMasuk}", color = Color(0xFF000000))
-                                Text("ID: ${barang.id}", color = Color.Gray, style = MaterialTheme.typography.bodySmall)
+                                Text("Lokasi: ${barang.lokasiId}", color = Color(0xFF000000))
+                                if (barang.deskripsi.isNotBlank()) {
+                                    Text("Deskripsi: ${barang.deskripsi}", color = Color(0xFF000000))
+                                }
+                                Text("SKU: ${barang.sku}", color = Color(0xFF000000))
+                                Text("Created: ${barang.createdAt}", color = Color.Gray, style = MaterialTheme.typography.bodySmall)
+                                Text("Updated: ${barang.updatedAt}", color = Color.Gray, style = MaterialTheme.typography.bodySmall)
                                 Spacer(modifier = Modifier.height(8.dp))
                                 Row(
                                     horizontalArrangement = Arrangement.End,
@@ -101,165 +132,44 @@ fun BarangTable(
 
 @Composable
 fun CekBarangScreen() {
-    val viewModel: BarangViewModel = hiltViewModel()
-    val barangList by viewModel.barangList.collectAsState()
     val context = LocalContext.current
     val coroutineScope = rememberCoroutineScope()
-
-    // Gunakan state Compose untuk currentUser agar bisa trigger recomposition
-    val currentUserState = remember { mutableStateOf(FirebaseAuth.getInstance().currentUser) }
-    DisposableEffect(Unit) {
-        val auth = FirebaseAuth.getInstance()
-        val listener = FirebaseAuth.AuthStateListener { authListener ->
-            currentUserState.value = authListener.currentUser
-        }
-        auth.addAuthStateListener(listener)
-        onDispose { auth.removeAuthStateListener(listener) }
-    }
-    val currentUser = currentUserState.value
-
-    // Tambahkan debug Toast untuk melihat status currentUser
-    LaunchedEffect(currentUser) {
-        Toast.makeText(context, "currentUser: ${currentUser?.email ?: "null"}", Toast.LENGTH_LONG).show()
-    }
-
-    if (currentUser == null) {
-        Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-            Text("Silakan login terlebih dahulu.")
-        }
-        return
-    }
-
-    Column(modifier = Modifier.fillMaxWidth().padding(16.dp)) {
-        Text("User ID: ${currentUser.uid}", color = Color.Gray)
-        Text("Email: ${currentUser.email}", color = Color.Gray)
-    }
-
-    // Debug: Tampilkan jumlah barang yang diambil dari database
-    LaunchedEffect(barangList) {
-        Toast.makeText(context, "Jumlah barang: ${barangList.size}", Toast.LENGTH_SHORT).show()
-    }
-
-    // Semua user bisa melihat semua barang tanpa filter
-    val filteredList = barangList
-
-    // State untuk edit dan delete barang
-    val barangToDeleteState = remember { mutableStateOf<BarangLab?>(null) }
-    val barangToEditState = remember { mutableStateOf<BarangLab?>(null) }
-    val barangToDelete = barangToDeleteState.value
-    val setBarangToDelete = { b: BarangLab? -> barangToDeleteState.value = b }
-    val barangToEdit = barangToEditState.value
-    val setBarangToEdit = { b: BarangLab? -> barangToEditState.value = b }
-
-    // Tampilkan tabel barang
-    BarangTable(
-        barangList = filteredList,
-        onEdit = setBarangToEdit,
-        onDelete = setBarangToDelete
+    var barangList by remember { mutableStateOf<List<EquipmentUi>>(emptyList()) }
+    var lokasiList by remember { mutableStateOf<List<Location>>(emptyList()) }
+    var loading by remember { mutableStateOf(true) }
+    val kategoriOptions = listOf(
+        "Alat Berat",
+        "Generator",
+        "Alat Personel",
+        "Alat Tambahan",
+        "dan lain-lain"
     )
-
-    // Dialog konfirmasi hapus
-    if (barangToDelete != null) {
-        AlertDialog(
-            onDismissRequest = { setBarangToDelete(null) },
-            title = { Text("Konfirmasi Hapus") },
-            text = { Text("Apakah Anda yakin ingin menghapus barang '${barangToDelete.nama}'? (id: ${barangToDelete.id})") },
-            confirmButton = {
-                TextButton(onClick = {
-                    coroutineScope.launch {
-                        Toast.makeText(context, "Memulai hapus id: ${barangToDelete.id}", Toast.LENGTH_SHORT).show()
-                        try {
-                            BarangRepository.hapusBarang(barangToDelete)
-                            Toast.makeText(context, "Barang berhasil dihapus (id: ${barangToDelete.id})", Toast.LENGTH_SHORT).show()
-                        } catch (e: Exception) {
-                            Toast.makeText(context, "Gagal menghapus barang: ${e.localizedMessage}", Toast.LENGTH_LONG).show()
-                        }
-                        setBarangToDelete(null)
-                    }
-                }) {
-                    Text("Hapus")
-                }
-            },
-            dismissButton = {
-                TextButton(onClick = { setBarangToDelete(null) }) {
-                    Text("Batal")
-                }
+    var selectedKategori by remember { mutableStateOf<String?>(null) }
+    LaunchedEffect(Unit) {
+        loading = true
+        try {
+            val lokasiRepo = HomeRepositoryImpl()
+            lokasiList = lokasiRepo.getLocations()
+            val result = EquipmentRepository.getAllEquipments()
+            barangList = result.map { eq ->
+                val lokasiNama = lokasiList.find { it.id == eq.lokasiId }?.name ?: "-"
+                EquipmentUi(
+                    id = eq.id,
+                    nama = eq.nama,
+                    deskripsi = eq.deskripsi,
+                    kategori = eq.kategori,
+                    lokasiId = lokasiNama,
+                    sku = eq.sku,
+                    gambarUri = eq.gambarUri,
+                    createdAt = eq.createdAt?.toDate()?.toString() ?: "",
+                    updatedAt = eq.updatedAt?.toDate()?.toString() ?: ""
+                )
             }
-        )
+        } catch (e: Exception) {
+            Toast.makeText(context, "Gagal mengambil data: ${e.message}", Toast.LENGTH_SHORT).show()
+        }
+        loading = false
     }
-
-    // Dialog edit dengan form
-    if (barangToEdit != null) {
-        var nama by remember(barangToEdit) { mutableStateOf(barangToEdit.nama) }
-        var kategori by remember(barangToEdit) { mutableStateOf(barangToEdit.kategori) }
-        var kondisi by remember(barangToEdit) { mutableStateOf(barangToEdit.kondisi) }
-        var status by remember(barangToEdit) { mutableStateOf(barangToEdit.status) }
-
-        AlertDialog(
-            onDismissRequest = { setBarangToEdit(null) },
-            title = { Text("Edit Barang") },
-            text = {
-                Column {
-                    OutlinedTextField(
-                        value = nama,
-                        onValueChange = { nama = it },
-                        label = { Text("Nama Barang") }
-                    )
-                    OutlinedTextField(
-                        value = kategori,
-                        onValueChange = { kategori = it },
-                        label = { Text("Kategori") }
-                    )
-                    OutlinedTextField(
-                        value = kondisi,
-                        onValueChange = { kondisi = it },
-                        label = { Text("Kondisi") }
-                    )
-                    OutlinedTextField(
-                        value = status,
-                        onValueChange = { status = it },
-                        label = { Text("Status") }
-                    )
-                }
-            },
-            confirmButton = {
-                TextButton(onClick = {
-                    coroutineScope.launch {
-                        try {
-                            val updatedBarang = barangToEdit.copy(
-                                nama = nama,
-                                kategori = kategori,
-                                kondisi = kondisi,
-                                status = status
-                            )
-                            BarangRepository.updateBarang(updatedBarang)
-                            Toast.makeText(context, "Barang berhasil diupdate", Toast.LENGTH_SHORT).show()
-                        } catch (e: Exception) {
-                            Toast.makeText(context, "Gagal update: ${e.localizedMessage}", Toast.LENGTH_LONG).show()
-                        }
-                        setBarangToEdit(null)
-                    }
-                }) {
-                    Text("Simpan")
-                }
-            },
-            dismissButton = {
-                TextButton(onClick = { setBarangToEdit(null) }) {
-                    Text("Batal")
-                }
-            }
-        )
-    }
-}
-
-@Preview(showBackground = true)
-@Composable
-fun BarangTablePreview() {
-    BarangTable(
-        barangList = listOf(
-            BarangLab("Laptop", "Elektronik", "Baik", "LT01", "PG01", "Aktif", "18/05/2025"),
-            BarangLab("Proyektor", "Elektronik", "Perlu Perbaikan", "LT02", "PG02", "Nonaktif", "10/04/2024"),
-            BarangLab("Meja", "Furnitur", "Baik", "LT03", "PG03", "Aktif", "05/03/2023")
-        )
-    )
+    val filteredBarang = if (selectedKategori == null) barangList else barangList.filter { it.kategori == selectedKategori }
+    BarangTable(barangList = filteredBarang)
 }

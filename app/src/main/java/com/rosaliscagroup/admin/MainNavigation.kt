@@ -207,6 +207,7 @@ fun MainNavigation() {
     var userEmail by remember { mutableStateOf("") }
     var userName by remember { mutableStateOf("") }
     var userPhotoUrl by remember { mutableStateOf<String?>(null) }
+    var showNavbar by remember { mutableStateOf(true) } // Tambah state untuk kontrol navbar
 
     NavHost(navController = navController, startDestination = "login") {
         composable("login") {
@@ -288,7 +289,7 @@ fun MainNavigation() {
                     HomeRoute(navController = navController)
                 },
                 bottomBar = {
-                    if (isLoggedIn) {
+                    if (isLoggedIn && showNavbar) {
                         BottomNavigationBar(navController = navController)
                     }
                 }
@@ -311,7 +312,7 @@ fun MainNavigation() {
                     CheckNav(navController = navController, modifier = Modifier.padding(padding))
                 },
                 bottomBar = {
-                    if (isLoggedIn) {
+                    if (isLoggedIn && showNavbar) {
                         BottomNavigationBar(navController = navController)
                     }
                 }
@@ -338,7 +339,7 @@ fun MainNavigation() {
                     )
                 },
                 bottomBar = {
-                    if (isLoggedIn) {
+                    if (isLoggedIn && showNavbar) {
                         BottomNavigationBar(navController = navController)
                     }
                 }
@@ -369,7 +370,7 @@ fun MainNavigation() {
                     }
                 },
                 bottomBar = {
-                    if (isLoggedIn) {
+                    if (isLoggedIn && showNavbar) {
                         BottomNavigationBar(navController = navController)
                     }
                 }
@@ -390,11 +391,13 @@ fun MainNavigation() {
                 },
                 content = { padding ->
                     TambahItem(
-                        onSimpan = { _, _, _, _, _ -> }
+                        onSimpan = { _, _, _, _, _, _ -> },
+                        onCancel = { navController.popBackStack() },
+                        onShowNavbarChange = { show -> showNavbar = show } // Pass state control
                     )
                 },
                 bottomBar = {
-                    if (isLoggedIn) {
+                    if (isLoggedIn && showNavbar) {
                         BottomNavigationBar(navController = navController)
                     }
                 }
@@ -419,7 +422,7 @@ fun MainNavigation() {
                     )
                 },
                 bottomBar = {
-                    if (isLoggedIn) {
+                    if (isLoggedIn && showNavbar) {
                         BottomNavigationBar(navController = navController)
                     }
                 }
@@ -457,7 +460,7 @@ fun MainNavigation() {
                     )
                 },
                 bottomBar = {
-                    if (isLoggedIn) {
+                    if (isLoggedIn && showNavbar) {
                         BottomNavigationBar(navController = navController)
                     }
                 }
@@ -480,7 +483,7 @@ fun MainNavigation() {
                     CekBarangScreen()
                 },
                 bottomBar = {
-                    if (isLoggedIn) {
+                    if (isLoggedIn && showNavbar) {
                         BottomNavigationBar(navController = navController)
                     }
                 }
@@ -503,7 +506,7 @@ fun MainNavigation() {
                     SettingPage(navController = navController)
                 },
                 bottomBar = {
-                    if (isLoggedIn) {
+                    if (isLoggedIn && showNavbar) {
                         BottomNavigationBar(navController = navController)
                     }
                 }
@@ -526,7 +529,7 @@ fun MainNavigation() {
                     ChangeNameScreen(navController = navController)
                 },
                 bottomBar = {
-                    if (isLoggedIn) {
+                    if (isLoggedIn && showNavbar) {
                         BottomNavigationBar(navController = navController)
                     }
                 }

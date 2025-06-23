@@ -7,6 +7,7 @@ import android.provider.MediaStore
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.activity.result.ActivityResult
+import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.background
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.clickable
@@ -30,17 +31,25 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import coil.compose.rememberAsyncImagePainter
 import androidx.compose.ui.focus.onFocusChanged
+import kotlinx.coroutines.launch
+import com.rosaliscagroup.admin.data.SkuRepository
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.delay
+import com.rosaliscagroup.admin.data.entity.Location
+import com.rosaliscagroup.admin.repository.HomeRepositoryImpl
+import com.rosaliscagroup.admin.repository.EquipmentRepository
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun TambahItem(
-    onSimpan: (String, String, String, String, Uri) -> Unit
+    onSimpan: (String, String, String, String, Uri, String) -> Unit,
+    onCancel: (() -> Unit)? = null, // Add onCancel callback
+    onShowNavbarChange: ((Boolean) -> Unit)? = null // Add callback to control Navbar
 ) {
     val context = LocalContext.current
     var nama by remember { mutableStateOf("") }
     var deskripsi by remember { mutableStateOf("") }
     var kategori by remember { mutableStateOf("") }
-    var status by remember { mutableStateOf("") }
     var lokasi by remember { mutableStateOf("") }
     var gambarUri by remember { mutableStateOf<Uri?>(null) }
     var gambarError by remember { mutableStateOf(false) }
@@ -48,12 +57,18 @@ fun TambahItem(
     var deskripsiError by remember { mutableStateOf(false) }
     var kategoriError by remember { mutableStateOf(false) }
     var lokasiError by remember { mutableStateOf(false) }
-    var statusError by remember { mutableStateOf(false) }
     var isNamaFocused by remember { mutableStateOf(false) }
     var isDeskripsiFocused by remember { mutableStateOf(false) }
     var isKategoriFocused by remember { mutableStateOf(false) }
-    var isStatusFocused by remember { mutableStateOf(false) }
     var isLokasiFocused by remember { mutableStateOf(false) }
+    var lokasiExpanded by remember { mutableStateOf(false) }
+    var lokasiList by remember { mutableStateOf(listOf<Location>()) }
+    var lokasiLoading by remember { mutableStateOf(true) }
+    var sku by remember { mutableStateOf("") }
+    var skuLoading by remember { mutableStateOf(false) }
+    var skuError by remember { mutableStateOf(false) }
+    var skuJob by remember { mutableStateOf<Job?>(null) }
+    val coroutineScope = rememberCoroutineScope()
     val scrollState = rememberScrollState()
 
     val kategoriOptions = listOf(
@@ -65,13 +80,6 @@ fun TambahItem(
     )
     var kategoriExpanded by remember { mutableStateOf(false) }
 
-    val statusOptions = listOf(
-        "Baik",
-        "Perlu Diperbaiki",
-        "Sedang Tidak Digunakan"
-    )
-    var statusExpanded by remember { mutableStateOf(false) }
-
     // Launcher untuk chooser intent (galeri/kamera)
     val chooserImageUri = remember { mutableStateOf<Uri?>(null) }
     val chooserLauncher = rememberLauncherForActivityResult(ActivityResultContracts.StartActivityForResult()) { result: ActivityResult ->
@@ -80,6 +88,39 @@ fun TambahItem(
             val uri = data?.data ?: chooserImageUri.value
             gambarUri = uri
             gambarError = uri == null
+        }
+    }
+
+    // Fetch lokasi from Firestore
+    LaunchedEffect(Unit) {
+        lokasiLoading = true
+        val repo = HomeRepositoryImpl()
+        try {
+            lokasiList = repo.getLocations()
+        } catch (_: Exception) {
+            lokasiList = emptyList()
+        }
+        lokasiLoading = false
+    }
+
+    // Hide Navbar when this page is active
+    LaunchedEffect(Unit) {
+        onShowNavbarChange?.invoke(false)
+    }
+
+    // Handle back press to release SKU if reserved
+    BackHandler(enabled = sku.isNotBlank() || true) { // always handle back to show navbar
+        if (sku.isNotBlank()) {
+            coroutineScope.launch {
+                SkuRepository.releaseSku(sku)
+                skuJob?.cancel()
+                sku = ""
+                onShowNavbarChange?.invoke(true)
+                onCancel?.invoke()
+            }
+        } else {
+            onShowNavbarChange?.invoke(true)
+            onCancel?.invoke()
         }
     }
 
@@ -192,36 +233,92 @@ fun TambahItem(
                                     text = { Text(option, color = Color(0xFF757575)) },
                                     modifier = Modifier.fillMaxWidth(),
                                     onClick = {
-                                        kategori = option
-                                        kategoriExpanded = false
-                                        kategoriError = false
+                                        coroutineScope.launch {
+                                            if (sku.isNotBlank()) {
+                                                try {
+                                                    SkuRepository.releaseSku(sku)
+                                                } catch (_: Exception) {}
+                                                skuJob?.cancel()
+                                                sku = ""
+                                            }
+                                            kategori = option
+                                            kategoriExpanded = false
+                                            kategoriError = false
+                                            // Generate and reserve SKU when category changes
+                                            skuLoading = true
+                                            skuError = false
+                                            sku = ""
+                                            skuJob?.cancel()
+                                            try {
+                                                val generatedSku = SkuRepository.generateAndReserveSku(option)
+                                                if (generatedSku != null) {
+                                                    sku = generatedSku
+                                                    skuLoading = false
+                                                    // Start timeout job (e.g., 5 minutes)
+                                                    skuJob = launch {
+                                                        delay(5 * 60 * 1000)
+                                                        SkuRepository.releaseSku(generatedSku)
+                                                        sku = ""
+                                                    }
+                                                } else {
+                                                    skuError = true
+                                                    skuLoading = false
+                                                }
+                                            } catch (e: Exception) {
+                                                skuError = true
+                                                skuLoading = false
+                                            }
+                                        }
                                     }
                                 )
                             }
                         }
                     }
-                    ExposedDropdownMenuBox(
-                        expanded = statusExpanded,
-                        onExpandedChange = { statusExpanded = !statusExpanded }
-                    ) {
+                    // SKU read-only field
+                    if (skuLoading) {
+                        LinearProgressIndicator(modifier = Modifier.fillMaxWidth())
+                    }
+                    if (sku.isNotBlank()) {
                         OutlinedTextField(
-                            value = status,
+                            value = sku,
                             onValueChange = {},
                             readOnly = true,
-                            label = { Text("Status", color = if (isStatusFocused) Color(0xFF9CA3AF) else Color.Unspecified) },
+                            label = { Text("SKU (Otomatis)") },
+                            modifier = Modifier.fillMaxWidth(),
+                            colors = OutlinedTextFieldDefaults.colors(
+                                focusedBorderColor = Color(0xFF1E88E5),
+                                unfocusedBorderColor = Color(0xFF757575),
+                                focusedContainerColor = Color(0xFFF5F5F5),
+                                unfocusedContainerColor = Color(0xFFF5F5F5)
+                            )
+                        )
+                    }
+                    if (skuError) {
+                        Text("Gagal membuat SKU unik, coba lagi.", color = Color.Red, fontSize = 12.sp)
+                    }
+                    ExposedDropdownMenuBox(
+                        expanded = lokasiExpanded,
+                        onExpandedChange = { lokasiExpanded = !lokasiExpanded }
+                    ) {
+                        OutlinedTextField(
+                            value = lokasiList.find { it.id == lokasi }?.name ?: "",
+                            onValueChange = {},
+                            readOnly = true,
+                            label = { Text("Lokasi", color = if (isLokasiFocused) Color(0xFF9CA3AF) else Color.Unspecified) },
                             trailingIcon = {
-                                ExposedDropdownMenuDefaults.TrailingIcon(expanded = statusExpanded)
+                                ExposedDropdownMenuDefaults.TrailingIcon(expanded = lokasiExpanded)
                             },
                             modifier = Modifier
                                 .fillMaxWidth()
                                 .menuAnchor()
-                                .onFocusChanged { focusState: androidx.compose.ui.focus.FocusState ->
-                                    isStatusFocused = focusState.isFocused
+                                .onFocusChanged { focusState ->
+                                    isLokasiFocused = focusState.isFocused
                                 },
-                            isError = statusError,
+                            isError = lokasiError,
+                            enabled = !lokasiLoading,
                             colors = OutlinedTextFieldDefaults.colors(
                                 focusedBorderColor = Color(0xFF1E88E5),
-                                cursorColor = if (isStatusFocused) Color(0xFF9CA3AF) else Color.Unspecified,
+                                cursorColor = if (isLokasiFocused) Color(0xFF9CA3AF) else Color.Unspecified,
                                 unfocusedBorderColor = Color(0xFF757575),
                                 errorBorderColor = Color(0xFFF44336),
                                 focusedContainerColor = Color(0x1E88E5FF),
@@ -229,46 +326,23 @@ fun TambahItem(
                             )
                         )
                         ExposedDropdownMenu(
-                            expanded = statusExpanded,
-                            onDismissRequest = { statusExpanded = false },
+                            expanded = lokasiExpanded,
+                            onDismissRequest = { lokasiExpanded = false },
                             modifier = Modifier.background(Color(0xFFF5F5F5))
                         ) {
-                            statusOptions.forEach { option ->
+                            lokasiList.forEach { loc ->
                                 DropdownMenuItem(
-                                    text = { Text(option, color = Color(0xFF757575)) },
+                                    text = { Text(loc.name, color = Color(0xFF757575)) },
                                     modifier = Modifier.fillMaxWidth(),
                                     onClick = {
-                                        status = option
-                                        statusExpanded = false
-                                        statusError = false
+                                        lokasi = loc.id
+                                        lokasiExpanded = false
+                                        lokasiError = false
                                     }
                                 )
                             }
                         }
                     }
-                    OutlinedTextField(
-                        value = lokasi,
-                        onValueChange = {
-                            lokasi = it
-                            lokasiError = false
-                        },
-                        label = { Text("Lokasi", color = if (isLokasiFocused) Color(0xFF9CA3AF) else Color.Unspecified) },
-                        isError = lokasiError,
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .onFocusChanged { focusState: androidx.compose.ui.focus.FocusState ->
-                                isLokasiFocused = focusState.isFocused
-                            },
-                        keyboardOptions = KeyboardOptions.Default.copy(imeAction = ImeAction.Next),
-                        colors = OutlinedTextFieldDefaults.colors(
-                            focusedBorderColor = Color(0xFF1E88E5),
-                            cursorColor = if (isLokasiFocused) Color(0xFF9CA3AF) else Color.Unspecified,
-                            unfocusedBorderColor = Color(0xFF757575),
-                            errorBorderColor = Color(0xFFF44336),
-                            focusedContainerColor = Color(0x1E88E5FF),
-                            unfocusedContainerColor = Color(0xFFF5F5F5)
-                        )
-                    )
                     Column(
                         modifier = Modifier.fillMaxWidth(),
                         horizontalAlignment = Alignment.CenterHorizontally
@@ -344,10 +418,33 @@ fun TambahItem(
                             deskripsiError = deskripsi.isBlank()
                             kategoriError = kategori.isBlank()
                             lokasiError = lokasi.isBlank()
-                            statusError = status.isBlank()
                             gambarError = gambarUri == null
-                            if (!namaError && !deskripsiError && !kategoriError && !lokasiError && !statusError && !gambarError) {
-                                onSimpan(nama, deskripsi, kategori, status, gambarUri!!)
+                            if (!namaError && !deskripsiError && !kategoriError && !lokasiError && !gambarError && sku.isNotBlank()) {
+                                coroutineScope.launch {
+                                    try {
+                                        EquipmentRepository.addEquipment(
+                                            nama = nama,
+                                            deskripsi = deskripsi,
+                                            kategori = kategori,
+                                            lokasiId = lokasi,
+                                            gambarUri = gambarUri!!,
+                                            sku = sku
+                                        )
+                                        SkuRepository.confirmSku(sku, mapOf(
+                                            "nama" to nama,
+                                            "deskripsi" to deskripsi,
+                                            "kategori" to kategori,
+                                            "lokasi" to lokasi,
+                                            "sku" to sku,
+                                            "gambarUri" to (gambarUri?.toString() ?: "")
+                                        ))
+                                        skuJob?.cancel()
+                                        onShowNavbarChange?.invoke(true)
+                                        onSimpan(nama, deskripsi, kategori, lokasi, gambarUri!!, sku)
+                                    } catch (e: Exception) {
+                                        Toast.makeText(context, "Gagal menyimpan ke Firestore: ${e.message}", Toast.LENGTH_SHORT).show()
+                                    }
+                                }
                             } else {
                                 Toast.makeText(context, "Mohon lengkapi data yang wajib diisi", Toast.LENGTH_SHORT).show()
                             }
@@ -366,7 +463,7 @@ fun TambahItem(
 @Preview(showBackground = true)
 @Composable
 fun TambahItemPreview() {
-    TambahItem(onSimpan = { nama, deskripsi, kategori, status, gambarUri ->
+    TambahItem(onSimpan = { nama, deskripsi, kategori, lokasi, gambarUri, sku ->
         // Preview: do nothing
-    })
+    }, onShowNavbarChange = {})
 }
