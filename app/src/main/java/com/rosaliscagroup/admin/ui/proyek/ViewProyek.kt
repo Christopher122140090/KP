@@ -23,7 +23,8 @@ data class Proyek(
 @Composable
 fun ViewProyek(
     proyekList: List<Proyek>,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    onViewAllClick: (() -> Unit)? = null
 ) {
     Column(
         modifier = modifier
@@ -31,11 +32,22 @@ fun ViewProyek(
             .background(Color(0xFFF5F7FA))
             .padding(16.dp)
     ) {
-        Text(
-            text = if (proyekList.isEmpty()) "Belum ada lokasi terdaftar" else "Daftar Lokasi",
-            style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold),
-            modifier = Modifier.padding(bottom = 16.dp)
-        )
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Text(
+                text = if (proyekList.isEmpty()) "Belum ada lokasi terdaftar" else "Daftar Lokasi",
+                style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold),
+                modifier = Modifier.padding(bottom = 16.dp)
+            )
+            if (onViewAllClick != null && proyekList.isNotEmpty()) {
+                TextButton(onClick = onViewAllClick) {
+                    Text("Lihat Semua")
+                }
+            }
+        }
         if (proyekList.isEmpty()) {
             Box(
                 modifier = Modifier.fillMaxSize(),
@@ -79,5 +91,5 @@ fun ViewProyekPreview() {
         Proyek(id = "1", nama = "Proyek A", lokasi = "Jakarta"),
         Proyek(id = "2", nama = "Proyek B", lokasi = "Bandung")
     )
-    ViewProyek(proyekList = dummyList)
+    ViewProyek(proyekList = dummyList, onViewAllClick = {})
 }

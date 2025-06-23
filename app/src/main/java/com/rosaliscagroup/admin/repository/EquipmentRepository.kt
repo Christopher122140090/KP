@@ -3,6 +3,9 @@ package com.rosaliscagroup.admin.repository
 import android.net.Uri
 import com.google.firebase.Timestamp
 import com.google.firebase.firestore.FirebaseFirestore
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.callbackFlow
+import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.tasks.await
 
 object EquipmentRepository {
@@ -27,7 +30,19 @@ object EquipmentRepository {
             "createdAt" to now,
             "updatedAt" to now
         )
-        db.collection("equipments").add(data).await()
+        val equipmentRef = db.collection("equipments").add(data).await()
+        // Tambahkan aktivitas ke koleksi activities
+        val activity = hashMapOf(
+            "type" to "Equipment Received",
+            "createdAt" to now,
+            "details" to "$nama ($sku) - $kategori",
+            "equipmentId" to equipmentRef.id,
+            "locationId" to lokasiId,
+            "projectId" to ""
+        )
+        db.collection("activities").add(activity).await()
+        // Tambahkan log/Toast untuk debug
+        android.util.Log.d("EquipmentRepository", "Activity berhasil ditambahkan ke /activities")
     }
 
     data class Equipment(
@@ -58,5 +73,32 @@ object EquipmentRepository {
                 updatedAt = data["updatedAt"] as? com.google.firebase.Timestamp
             )
         }
+    }
+
+    fun getLatestEquipmentFlow(): Flow<Equipment?> = callbackFlow {
+        val listener = db.collection("equipments")
+            .orderBy("createdAt", com.google.firebase.firestore.Query.Direction.DESCENDING)
+            .limit(1)
+            .addSnapshotListener { snapshot, error ->
+                if (error != null) {
+                    close(error)
+                    return@addSnapshotListener
+                }
+                val doc = snapshot?.documents?.firstOrNull()
+                val data = doc?.data
+                val equipment = if (doc != null && data != null) Equipment(
+                    id = doc.id,
+                    nama = data["nama"] as? String ?: "",
+                    deskripsi = data["deskripsi"] as? String ?: "",
+                    kategori = data["kategori"] as? String ?: "",
+                    lokasiId = data["lokasiId"] as? String ?: "",
+                    sku = data["sku"] as? String ?: "",
+                    gambarUri = data["gambarUri"] as? String ?: "",
+                    createdAt = data["createdAt"] as? com.google.firebase.Timestamp,
+                    updatedAt = data["updatedAt"] as? com.google.firebase.Timestamp
+                ) else null
+                trySend(equipment)
+            }
+        awaitClose { listener.remove() }
     }
 }

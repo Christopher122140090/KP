@@ -1,0 +1,3 @@
+// Tambahkan ke dependencies di build.gradle (module: app)
+// Agar activityViewModel bisa digunakan di Compose
+implementation "androidx.lifecycle:lifecycle-viewmodel-compose:2.6.0"

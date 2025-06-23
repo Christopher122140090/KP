@@ -38,6 +38,8 @@ import coil.compose.AsyncImage
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.material.icons.filled.ViewInAr
 import com.rosaliscagroup.admin.setting.ChangeNameScreen
+import androidx.compose.runtime.rememberCoroutineScope
+import kotlinx.coroutines.launch
 
 // Data class untuk state login
 data class LoginState(
@@ -404,6 +406,7 @@ fun MainNavigation() {
             )
         }
         composable("TambahProyekPage") {
+            val coroutineScope = rememberCoroutineScope()
             Scaffold(
                 topBar = {
                     AppBar(
@@ -418,7 +421,11 @@ fun MainNavigation() {
                 },
                 content = { padding ->
                     com.rosaliscagroup.admin.ui.proyek.TambahProyek(
-                        onSimpan = { _, _ -> }
+                        onSimpan = { nama, lokasi ->
+                            coroutineScope.launch {
+                                com.rosaliscagroup.admin.repository.ProjectRepository.addProject(nama, lokasi)
+                            }
+                        }
                     )
                 },
                 bottomBar = {
@@ -533,6 +540,15 @@ fun MainNavigation() {
                         BottomNavigationBar(navController = navController)
                     }
                 }
+            )
+        }
+        composable("ViewActivitiesPage") { backStackEntry ->
+            val parentEntry = remember(backStackEntry) {
+                navController.getBackStackEntry("home")
+            }
+            val homeViewModel: com.rosaliscagroup.admin.ui.home.HomeViewModel = androidx.hilt.navigation.compose.hiltViewModel(parentEntry)
+            com.rosaliscagroup.admin.ui.activities.ViewActivitiesPage(
+                homeViewModel = homeViewModel
             )
         }
     }
