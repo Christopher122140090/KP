@@ -1,6 +1,8 @@
 package com.rosaliscagroup.admin.ui.home
 
 import com.rosaliscagroup.admin.data.entity.Activity
+import com.rosaliscagroup.admin.data.entity.Location
+import com.rosaliscagroup.admin.data.entity.Project
 
 /**
  * Sealed class to represent UI states in [HomeScreen]
@@ -15,7 +17,9 @@ internal sealed interface HomeScreenUiState {
         val totalLocations: Int,
         val totalProjects: Int,
         val totalUsers: Int,
-        val recentActivities: List<Activity>
+        val recentActivities: List<Activity>,
+        val projects: List<Project>, // Tambahan: daftar project
+        val locations: List<Location> // Tambahan: daftar lokasi
     ) : HomeScreenUiState
     data class Error(val msg: String) : HomeScreenUiState
 }

@@ -17,7 +17,7 @@ internal class HomeViewModel @Inject constructor(
     private val _uiState = MutableStateFlow<HomeScreenUiState>(HomeScreenUiState.Initial)
     val uiState: StateFlow<HomeScreenUiState> = _uiState.asStateFlow()
 
-    fun loadData() {
+    fun loadData(context: android.content.Context? = null) {
         viewModelScope.launch {
             _uiState.value = HomeScreenUiState.Loading
             try {
@@ -28,6 +28,11 @@ internal class HomeViewModel @Inject constructor(
                 val totalUsers = homeRepository.getUsersCount()
                 val recentActivities = homeRepository.getRecentActivities(5)
                 val kondisiStat = homeRepository.getKondisiStat()
+                val projects = homeRepository.getProjects()
+                val locations = homeRepository.getLocations()
+                if (context != null) {
+                    android.widget.Toast.makeText(context, "Locations: ${locations.size}", android.widget.Toast.LENGTH_SHORT).show()
+                }
                 _uiState.value = HomeScreenUiState.Success(
                     kondisiStat = kondisiStat,
                     totalActivities = totalActivities,
@@ -35,18 +40,15 @@ internal class HomeViewModel @Inject constructor(
                     totalLocations = totalLocations,
                     totalProjects = totalProjects,
                     totalUsers = totalUsers,
-                    recentActivities = recentActivities
+                    recentActivities = recentActivities,
+                    projects = projects,
+                    locations = locations
                 )
             } catch (e: Exception) {
-                val errorMsg = when {
-                    e.message?.contains("PERMISSION_DENIED", ignoreCase = true) == true ->
-                        "Akses ke database ditolak. Silakan cek koneksi dan izin Firestore Anda."
-                    e.message?.contains("network", ignoreCase = true) == true ->
-                        "Tidak dapat terhubung ke server. Periksa koneksi internet Anda."
-                    else ->
-                        e.message ?: "Terjadi kesalahan tak terduga."
+                if (context != null) {
+                    android.widget.Toast.makeText(context, "Error: ${e.message}", android.widget.Toast.LENGTH_LONG).show()
                 }
-                _uiState.value = HomeScreenUiState.Error(msg = errorMsg)
+                _uiState.value = HomeScreenUiState.Error(msg = e.message ?: "Something went wrong")
             }
         }
     }

@@ -1,4 +1,4 @@
-package com.rosaliscagroup.admin.ui.barang.dummy
+package com.rosaliscagroup.admin.ui.item.dummy
 
 data class BarangLab(
     val id: String = "", // id unik untuk setiap barang
