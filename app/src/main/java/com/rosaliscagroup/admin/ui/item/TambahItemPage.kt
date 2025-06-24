@@ -17,8 +17,15 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.ArrowBack
+import androidx.compose.material.icons.filled.Inventory
+import androidx.compose.material.icons.filled.KeyboardArrowRight
+import androidx.compose.material.icons.filled.LocationOn
 import androidx.compose.material.icons.filled.AddAPhoto
 import androidx.compose.material3.*
+import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.TopAppBarDefaults
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -38,432 +45,505 @@ import kotlinx.coroutines.delay
 import com.rosaliscagroup.admin.data.entity.Location
 import com.rosaliscagroup.admin.repository.HomeRepositoryImpl
 import com.rosaliscagroup.admin.repository.EquipmentRepository
+import androidx.compose.ui.text.font.FontWeight
+import androidx.navigation.NavController
+import androidx.navigation.compose.rememberNavController
+import com.google.firebase.storage.FirebaseStorage
+import java.util.UUID
+import androidx.compose.foundation.border
+import com.google.firebase.firestore.FirebaseFirestore
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun TambahItem(
-    onSimpan: (String, String, String, String, Uri, String) -> Unit,
-    onCancel: (() -> Unit)? = null, // Add onCancel callback
-    onShowNavbarChange: ((Boolean) -> Unit)? = null // Add callback to control Navbar
+    navController: NavController,
+    onSimpan: (
+        param1: Any?,
+        param2: Any?,
+        param3: Any?,
+        param4: Any?,
+        param5: Any?,
+        param6: Any?
+    ) -> Unit = { _, _, _, _, _, _ -> },
+    onCancel: () -> Unit = {},
+    onShowNavbarChange: (Boolean) -> Unit = {},
+    onBack: () -> Unit = {},
+    onTambahBarang: () -> Unit = {},
+    onTambahLokasi: () -> Unit = {}
 ) {
-    val context = LocalContext.current
-    var nama by remember { mutableStateOf("") }
-    var deskripsi by remember { mutableStateOf("") }
-    var kategori by remember { mutableStateOf("") }
-    var lokasi by remember { mutableStateOf("") }
-    var gambarUri by remember { mutableStateOf<Uri?>(null) }
-    var gambarError by remember { mutableStateOf(false) }
-    var namaError by remember { mutableStateOf(false) }
-    var deskripsiError by remember { mutableStateOf(false) }
-    var kategoriError by remember { mutableStateOf(false) }
-    var lokasiError by remember { mutableStateOf(false) }
-    var isNamaFocused by remember { mutableStateOf(false) }
-    var isDeskripsiFocused by remember { mutableStateOf(false) }
-    var isKategoriFocused by remember { mutableStateOf(false) }
-    var isLokasiFocused by remember { mutableStateOf(false) }
-    var lokasiExpanded by remember { mutableStateOf(false) }
-    var lokasiList by remember { mutableStateOf(listOf<Location>()) }
-    var lokasiLoading by remember { mutableStateOf(true) }
-    var sku by remember { mutableStateOf("") }
-    var skuLoading by remember { mutableStateOf(false) }
-    var skuError by remember { mutableStateOf(false) }
-    var skuJob by remember { mutableStateOf<Job?>(null) }
-    val coroutineScope = rememberCoroutineScope()
-    val scrollState = rememberScrollState()
-
-    val kategoriOptions = listOf(
-        "Alat Berat",
-        "Generator",
-        "Alat Personel",
-        "Alat Tambahan",
-        "dan lain-lain"
-    )
-    var kategoriExpanded by remember { mutableStateOf(false) }
-
-    // Launcher untuk chooser intent (galeri/kamera)
-    val chooserImageUri = remember { mutableStateOf<Uri?>(null) }
-    val chooserLauncher = rememberLauncherForActivityResult(ActivityResultContracts.StartActivityForResult()) { result: ActivityResult ->
-        if (result.resultCode == android.app.Activity.RESULT_OK) {
-            val data = result.data
-            val uri = data?.data ?: chooserImageUri.value
-            gambarUri = uri
-            gambarError = uri == null
-        }
+    var showTambahBarang by remember { mutableStateOf(false) }
+    if (showTambahBarang) {
+        TambahBarangPage(
+            onSimpan = { showTambahBarang = false },
+            onCancel = { showTambahBarang = false }
+        )
+        return
     }
-
-    // Fetch lokasi from Firestore
-    LaunchedEffect(Unit) {
-        lokasiLoading = true
-        val repo = HomeRepositoryImpl()
-        try {
-            lokasiList = repo.getLocations()
-        } catch (_: Exception) {
-            lokasiList = emptyList()
-        }
-        lokasiLoading = false
-    }
-
-    // Hide Navbar when this page is active
-    LaunchedEffect(Unit) {
-        onShowNavbarChange?.invoke(false)
-    }
-
-    // Handle back press to release SKU if reserved
-    BackHandler(enabled = sku.isNotBlank() || true) { // always handle back to show navbar
-        if (sku.isNotBlank()) {
-            coroutineScope.launch {
-                SkuRepository.releaseSku(sku)
-                skuJob?.cancel()
-                sku = ""
-                onShowNavbarChange?.invoke(true)
-                onCancel?.invoke()
-            }
-        } else {
-            onShowNavbarChange?.invoke(true)
-            onCancel?.invoke()
-        }
-    }
-
     Scaffold(
-        modifier = Modifier.fillMaxSize().background(Color(0xFFF5F7FA))
+        topBar = {
+            TopAppBar(
+                title = {
+                    Text("Tambah Item", style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold))
+                },
+                navigationIcon = {
+                    IconButton(onClick = onBack) {
+                        Icon(Icons.Filled.ArrowBack, contentDescription = "Kembali")
+                    }
+                },
+                actions = {},
+                colors = TopAppBarDefaults.topAppBarColors(containerColor = Color.White)
+            )
+        },
+        containerColor = Color(0xFFF9FAFB)
     ) { innerPadding ->
-        Box(
+        Column(
             modifier = Modifier
                 .fillMaxSize()
-                .background(Color(0xFFF5F7FA))
-                .padding(
-                    top = innerPadding.calculateTopPadding() + 92.dp, // Jarak top lebih besar seperti sebelumnya
-                    start = 16.dp,
-                    end = 16.dp,
-                    bottom = 16.dp
-                )
+                .background(Color(0xFFF9FAFB))
+                .padding(innerPadding)
         ) {
+            Spacer(modifier = Modifier.height(16.dp))
+            Column(modifier = Modifier.padding(horizontal = 24.dp)) {
+                Text(
+                    "Pilih Jenis Item",
+                    style = MaterialTheme.typography.headlineSmall.copy(fontWeight = FontWeight.Bold, color = Color(0xFF23272E))
+                )
+                Spacer(modifier = Modifier.height(4.dp))
+                Text(
+                    "Pilih jenis item yang ingin Anda tambahkan ke dalam proyek konstruksi",
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = Color(0xFF6B7280)
+                )
+            }
+            Spacer(modifier = Modifier.height(24.dp))
+            // Kartu Tambahkan Barang
             Card(
-                modifier = Modifier.fillMaxWidth().wrapContentHeight().padding(horizontal = 8.dp),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 16.dp)
+                    .clickable { showTambahBarang = true },
                 shape = RoundedCornerShape(16.dp),
-                elevation = CardDefaults.cardElevation(defaultElevation = 6.dp),
-                colors = CardDefaults.cardColors(containerColor = Color.White)
+                colors = CardDefaults.cardColors(containerColor = Color.White),
+                elevation = CardDefaults.cardElevation(2.dp)
             ) {
-                Column(
-                    modifier = Modifier.fillMaxWidth().verticalScroll(scrollState).padding(24.dp),
-                    verticalArrangement = Arrangement.spacedBy(20.dp),
-                    horizontalAlignment = Alignment.CenterHorizontally
+                Row(
+                    modifier = Modifier.padding(20.dp),
+                    verticalAlignment = Alignment.CenterVertically
                 ) {
-                    OutlinedTextField(
-                        value = nama,
-                        onValueChange = {
-                            nama = it
-                            namaError = false
-                        },
-                        label = { Text("Nama", color = if (isNamaFocused) Color(0xFF9CA3AF) else Color.Unspecified) },
-                        isError = namaError,
+                    Box(
                         modifier = Modifier
-                            .fillMaxWidth()
-                            .onFocusChanged { focusState: androidx.compose.ui.focus.FocusState ->
-                                isNamaFocused = focusState.isFocused
-                            },
-                        keyboardOptions = KeyboardOptions.Default.copy(imeAction = ImeAction.Next),
-                        colors = OutlinedTextFieldDefaults.colors(
-                            focusedBorderColor = Color(0xFF1E88E5),
-                            cursorColor = if (isNamaFocused) Color(0xFF9CA3AF) else Color.Unspecified,
-                            unfocusedBorderColor = Color(0xFF757575),
-                            errorBorderColor = Color(0xFFF44336),
-                            focusedContainerColor = Color(0x1E88E5FF),
-                            unfocusedContainerColor = Color(0xFFF5F5F5)
+                            .size(48.dp)
+                            .background(Color(0xFFFFF3E0), RoundedCornerShape(12.dp)),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Icon(
+                            Icons.Filled.Inventory,
+                            contentDescription = null,
+                            tint = Color(0xFFFF7043),
+                            modifier = Modifier.size(28.dp)
                         )
+                    }
+                    Spacer(modifier = Modifier.width(16.dp))
+                    Column(modifier = Modifier.weight(1f)) {
+                        Text(
+                            "Tambahkan Barang",
+                            style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold, color = Color(0xFF23272E))
+                        )
+                        Spacer(modifier = Modifier.height(2.dp))
+                        Text(
+                            "Tambahkan material, alat, atau peralatan konstruksi ke dalam inventori proyek",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = Color(0xFF6B7280)
+                        )
+                        Spacer(modifier = Modifier.height(8.dp))
+                        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                            ItemChip(text = "Material")
+                            ItemChip(text = "Alat")
+                            ItemChip(text = "Equipment")
+                        }
+                    }
+                    Icon(
+                        Icons.Filled.KeyboardArrowRight,
+                        contentDescription = null,
+                        tint = Color(0xFFB0B0B0),
+                        modifier = Modifier.size(18.dp)
                     )
-                    OutlinedTextField(
-                        value = deskripsi,
-                        onValueChange = {
-                            deskripsi = it
-                            deskripsiError = false
-                        },
-                        label = { Text("Deskripsi", color = if (isDeskripsiFocused) Color(0xFF9CA3AF) else Color.Unspecified) },
-                        isError = deskripsiError,
+                }
+            }
+            Spacer(modifier = Modifier.height(16.dp))
+            // Kartu Tambahkan Lokasi
+            Card(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 16.dp)
+                    .clickable { navController.navigate("TambahLokasiPage") },
+                shape = RoundedCornerShape(16.dp),
+                colors = CardDefaults.cardColors(containerColor = Color.White),
+                elevation = CardDefaults.cardElevation(2.dp)
+            ) {
+                Row(
+                    modifier = Modifier.padding(20.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Box(
                         modifier = Modifier
-                            .fillMaxWidth()
-                            .onFocusChanged { focusState: androidx.compose.ui.focus.FocusState ->
-                                isDeskripsiFocused = focusState.isFocused
-                            },
-                        keyboardOptions = KeyboardOptions.Default.copy(imeAction = ImeAction.Next),
-                        colors = OutlinedTextFieldDefaults.colors(
-                            focusedBorderColor = Color(0xFF1E88E5),
-                            cursorColor = if (isDeskripsiFocused) Color(0xFF9CA3AF) else Color.Unspecified,
-                            unfocusedBorderColor = Color(0xFF757575),
-                            errorBorderColor = Color(0xFFF44336),
-                            focusedContainerColor = Color(0x1E88E5FF),
-                            unfocusedContainerColor = Color(0xFFF5F5F5)
+                            .size(48.dp)
+                            .background(Color(0xFFE3F0FF), RoundedCornerShape(12.dp)),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Icon(
+                            Icons.Filled.LocationOn,
+                            contentDescription = null,
+                            tint = Color(0xFF1976D2),
+                            modifier = Modifier.size(28.dp)
                         )
+                    }
+                    Spacer(modifier = Modifier.width(16.dp))
+                    Column(modifier = Modifier.weight(1f)) {
+                        Text(
+                            "Tambahkan Lokasi",
+                            style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold, color = Color(0xFF23272E))
+                        )
+                        Spacer(modifier = Modifier.height(2.dp))
+                        Text(
+                            "Tambahkan lokasi baru seperti gudang, area kerja, atau titik distribusi material",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = Color(0xFF6B7280)
+                        )
+                        Spacer(modifier = Modifier.height(8.dp))
+                        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                            ItemChip(text = "Gudang")
+                            ItemChip(text = "Area Kerja")
+                            ItemChip(text = "Site Office")
+                        }
+                    }
+                    Icon(
+                        Icons.Filled.KeyboardArrowRight,
+                        contentDescription = null,
+                        tint = Color(0xFFB0B0B0),
+                        modifier = Modifier.size(18.dp)
                     )
-                    ExposedDropdownMenuBox(
-                        expanded = kategoriExpanded,
-                        onExpandedChange = { kategoriExpanded = !kategoriExpanded }
-                    ) {
-                        OutlinedTextField(
-                            value = kategori,
-                            onValueChange = {},
-                            readOnly = true,
-                            label = { Text("Kategori", color = if (isKategoriFocused) Color(0xFF9CA3AF) else Color.Unspecified) },
-                            trailingIcon = {
-                                ExposedDropdownMenuDefaults.TrailingIcon(expanded = kategoriExpanded)
-                            },
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .menuAnchor()
-                                .onFocusChanged { focusState: androidx.compose.ui.focus.FocusState ->
-                                    isKategoriFocused = focusState.isFocused
-                                },
-                            isError = kategoriError,
-                            colors = OutlinedTextFieldDefaults.colors(
-                                focusedBorderColor = Color(0xFF1E88E5),
-                                cursorColor = if (isKategoriFocused) Color(0xFF9CA3AF) else Color.Unspecified,
-                                unfocusedBorderColor = Color(0xFF757575),
-                                errorBorderColor = Color(0xFFF44336),
-                                focusedContainerColor = Color(0x1E88E5FF),
-                                unfocusedContainerColor = Color(0xFFF5F5F5)
-                            )
-                        )
-                        ExposedDropdownMenu(
-                            expanded = kategoriExpanded,
-                            onDismissRequest = { kategoriExpanded = false },
-                            modifier = Modifier.background(Color(0xFFF5F5F5))
-                        ) {
-                            kategoriOptions.forEach { option ->
-                                DropdownMenuItem(
-                                    text = { Text(option, color = Color(0xFF757575)) },
-                                    modifier = Modifier.fillMaxWidth(),
-                                    onClick = {
-                                        coroutineScope.launch {
-                                            if (sku.isNotBlank()) {
-                                                try {
-                                                    SkuRepository.releaseSku(sku)
-                                                } catch (_: Exception) {}
-                                                skuJob?.cancel()
-                                                sku = ""
-                                            }
-                                            kategori = option
-                                            kategoriExpanded = false
-                                            kategoriError = false
-                                            // Generate and reserve SKU when category changes
-                                            skuLoading = true
-                                            skuError = false
-                                            sku = ""
-                                            skuJob?.cancel()
-                                            try {
-                                                val generatedSku = SkuRepository.generateAndReserveSku(option)
-                                                if (generatedSku != null) {
-                                                    sku = generatedSku
-                                                    skuLoading = false
-                                                    // Start timeout job (e.g., 5 minutes)
-                                                    skuJob = launch {
-                                                        delay(5 * 60 * 1000)
-                                                        SkuRepository.releaseSku(generatedSku)
-                                                        sku = ""
-                                                    }
-                                                } else {
-                                                    skuError = true
-                                                    skuLoading = false
-                                                }
-                                            } catch (e: Exception) {
-                                                skuError = true
-                                                skuLoading = false
-                                            }
-                                        }
-                                    }
-                                )
-                            }
-                        }
-                    }
-                    // SKU read-only field
-                    if (skuLoading) {
-                        LinearProgressIndicator(modifier = Modifier.fillMaxWidth())
-                    }
-                    if (sku.isNotBlank()) {
-                        OutlinedTextField(
-                            value = sku,
-                            onValueChange = {},
-                            readOnly = true,
-                            label = { Text("SKU (Otomatis)") },
-                            modifier = Modifier.fillMaxWidth(),
-                            colors = OutlinedTextFieldDefaults.colors(
-                                focusedBorderColor = Color(0xFF1E88E5),
-                                unfocusedBorderColor = Color(0xFF757575),
-                                focusedContainerColor = Color(0xFFF5F5F5),
-                                unfocusedContainerColor = Color(0xFFF5F5F5)
-                            )
-                        )
-                    }
-                    if (skuError) {
-                        Text("Gagal membuat SKU unik, coba lagi.", color = Color.Red, fontSize = 12.sp)
-                    }
-                    ExposedDropdownMenuBox(
-                        expanded = lokasiExpanded,
-                        onExpandedChange = { lokasiExpanded = !lokasiExpanded }
-                    ) {
-                        OutlinedTextField(
-                            value = lokasiList.find { it.id == lokasi }?.name ?: "",
-                            onValueChange = {},
-                            readOnly = true,
-                            label = { Text("Lokasi", color = if (isLokasiFocused) Color(0xFF9CA3AF) else Color.Unspecified) },
-                            trailingIcon = {
-                                ExposedDropdownMenuDefaults.TrailingIcon(expanded = lokasiExpanded)
-                            },
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .menuAnchor()
-                                .onFocusChanged { focusState ->
-                                    isLokasiFocused = focusState.isFocused
-                                },
-                            isError = lokasiError,
-                            enabled = !lokasiLoading,
-                            colors = OutlinedTextFieldDefaults.colors(
-                                focusedBorderColor = Color(0xFF1E88E5),
-                                cursorColor = if (isLokasiFocused) Color(0xFF9CA3AF) else Color.Unspecified,
-                                unfocusedBorderColor = Color(0xFF757575),
-                                errorBorderColor = Color(0xFFF44336),
-                                focusedContainerColor = Color(0x1E88E5FF),
-                                unfocusedContainerColor = Color(0xFFF5F5F5)
-                            )
-                        )
-                        ExposedDropdownMenu(
-                            expanded = lokasiExpanded,
-                            onDismissRequest = { lokasiExpanded = false },
-                            modifier = Modifier.background(Color(0xFFF5F5F5))
-                        ) {
-                            lokasiList.forEach { loc ->
-                                DropdownMenuItem(
-                                    text = { Text(loc.name, color = Color(0xFF757575)) },
-                                    modifier = Modifier.fillMaxWidth(),
-                                    onClick = {
-                                        lokasi = loc.id
-                                        lokasiExpanded = false
-                                        lokasiError = false
-                                    }
-                                )
-                            }
-                        }
-                    }
-                    Column(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalAlignment = Alignment.CenterHorizontally
-                    ) {
-                        if (gambarUri != null) {
-                            Box(
-                                modifier = Modifier
-                                    .size(120.dp)
-                                    .background(Color(0xFFF5F5F5), RoundedCornerShape(8.dp))
-                                    .clickable {
-                                        // Buat intent galeri
-                                        val galleryIntent = Intent(Intent.ACTION_GET_CONTENT).apply {
-                                            type = "image/*"
-                                        }
-                                        // Buat intent kamera
-                                        val contentResolver = context.contentResolver
-                                        val contentValues = android.content.ContentValues().apply {
-                                            put(MediaStore.Images.Media.MIME_TYPE, "image/jpeg")
-                                        }
-                                        val uri = contentResolver.insert(MediaStore.Images.Media.EXTERNAL_CONTENT_URI, contentValues)
-                                        chooserImageUri.value = uri
-                                        val cameraIntent = Intent(MediaStore.ACTION_IMAGE_CAPTURE).apply {
-                                            putExtra(MediaStore.EXTRA_OUTPUT, uri)
-                                        }
-                                        // Buat chooser
-                                        val chooser = Intent.createChooser(galleryIntent, "Pilih Sumber Gambar")
-                                        chooser.putExtra(Intent.EXTRA_INITIAL_INTENTS, arrayOf(cameraIntent))
-                                        chooserLauncher.launch(chooser)
-                                    },
-                                contentAlignment = Alignment.Center
-                            ) {
-                                Image(
-                                    painter = rememberAsyncImagePainter(gambarUri),
-                                    contentDescription = "Gambar dipilih",
-                                    modifier = Modifier.fillMaxSize(),
-                                    contentScale = ContentScale.Crop
-                                )
-                            }
-                        } else {
-                            IconButton(
-                                onClick = {
-                                    // Buat intent galeri
-                                    val galleryIntent = Intent(Intent.ACTION_GET_CONTENT).apply {
-                                        type = "image/*"
-                                    }
-                                    // Buat intent kamera
-                                    val contentResolver = context.contentResolver
-                                    val contentValues = android.content.ContentValues().apply {
-                                        put(MediaStore.Images.Media.MIME_TYPE, "image/jpeg")
-                                    }
-                                    val uri = contentResolver.insert(MediaStore.Images.Media.EXTERNAL_CONTENT_URI, contentValues)
-                                    chooserImageUri.value = uri
-                                    val cameraIntent = Intent(MediaStore.ACTION_IMAGE_CAPTURE).apply {
-                                        putExtra(MediaStore.EXTRA_OUTPUT, uri)
-                                    }
-                                    // Buat chooser
-                                    val chooser = Intent.createChooser(galleryIntent, "Pilih Sumber Gambar")
-                                    chooser.putExtra(Intent.EXTRA_INITIAL_INTENTS, arrayOf(cameraIntent))
-                                    chooserLauncher.launch(chooser)
-                                },
-                                modifier = Modifier.size(120.dp).background(Color(0xFFF5F5F5), RoundedCornerShape(8.dp))
-                            ) {
-                                Icon(Icons.Default.AddAPhoto, contentDescription = "Upload Gambar", tint = Color(0xFF1E88E5), modifier = Modifier.size(48.dp))
-                            }
-                        }
-                        if (gambarError) {
-                            Text("Gambar wajib diupload", color = Color.Red, fontSize = 12.sp)
-                        }
-                    }
-                    Button(
-                        onClick = {
-                            namaError = nama.isBlank()
-                            deskripsiError = deskripsi.isBlank()
-                            kategoriError = kategori.isBlank()
-                            lokasiError = lokasi.isBlank()
-                            gambarError = gambarUri == null
-                            if (!namaError && !deskripsiError && !kategoriError && !lokasiError && !gambarError && sku.isNotBlank()) {
-                                coroutineScope.launch {
-                                    try {
-                                        EquipmentRepository.addEquipment(
-                                            nama = nama,
-                                            deskripsi = deskripsi,
-                                            kategori = kategori,
-                                            lokasiId = lokasi,
-                                            gambarUri = gambarUri!!,
-                                            sku = sku
-                                        )
-                                        SkuRepository.confirmSku(sku, mapOf(
-                                            "nama" to nama,
-                                            "deskripsi" to deskripsi,
-                                            "kategori" to kategori,
-                                            "lokasi" to lokasi,
-                                            "sku" to sku,
-                                            "gambarUri" to (gambarUri?.toString() ?: "")
-                                        ))
-                                        skuJob?.cancel()
-                                        onShowNavbarChange?.invoke(true)
-                                        onSimpan(nama, deskripsi, kategori, lokasi, gambarUri!!, sku)
-                                    } catch (e: Exception) {
-                                        Toast.makeText(context, "Gagal menyimpan ke Firestore: ${e.message}", Toast.LENGTH_SHORT).show()
-                                    }
-                                }
-                            } else {
-                                Toast.makeText(context, "Mohon lengkapi data yang wajib diisi", Toast.LENGTH_SHORT).show()
-                            }
-                        },
-                        modifier = Modifier.fillMaxWidth(),
-                        colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF2563EB))
-                    ) {
-                        Text("Simpan")
-                    }
                 }
             }
         }
     }
 }
 
+@Composable
+fun ItemChip(text: String) {
+    Box(
+        modifier = Modifier
+            .background(Color(0xFFF3F4F6), RoundedCornerShape(50))
+            .padding(horizontal = 12.dp, vertical = 4.dp),
+        contentAlignment = Alignment.Center
+    ) {
+        Text(text, style = MaterialTheme.typography.labelMedium, color = Color(0xFF23272E))
+    }
+}
+
 @Preview(showBackground = true)
 @Composable
 fun TambahItemPreview() {
-    TambahItem(onSimpan = { nama, deskripsi, kategori, lokasi, gambarUri, sku ->
-        // Preview: do nothing
-    }, onShowNavbarChange = {})
+    val navController = rememberNavController()
+    TambahItem(navController = navController, onBack = {}, onTambahBarang = {}, onTambahLokasi = {})
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun TambahBarangPage(
+    onSimpan: () -> Unit = {},
+    onCancel: () -> Unit = {}
+) {
+    val context = LocalContext.current
+    var nama by remember { mutableStateOf("") }
+    var sku by remember { mutableStateOf("") }
+    var kategori by remember { mutableStateOf("") }
+    var deskripsi by remember { mutableStateOf("") }
+    var lokasi by remember { mutableStateOf("") }
+    var fotoUri by remember { mutableStateOf<Uri?>(null) }
+    var fotoUrl by remember { mutableStateOf<String?>(null) }
+    var isUploading by remember { mutableStateOf(false) }
+    val kategoriOptions = listOf("Alat Personel", "Alat Berat", "Material", "Lainnya")
+    val lokasiOptions = listOf("Gudang Utama - Jakarta", "Gudang 2", "Site Office")
+    var kategoriExpanded by remember { mutableStateOf(false) }
+    var lokasiExpanded by remember { mutableStateOf(false) }
+    val now = remember { java.time.LocalDateTime.now() }
+    val formatter = java.time.format.DateTimeFormatter.ofPattern("dd MMM yyyy, HH:mm")
+    val waktu = now.format(formatter)
+
+    val firestore = FirebaseFirestore.getInstance()
+    var isSaving by remember { mutableStateOf(false) }
+
+    val launcher = rememberLauncherForActivityResult(ActivityResultContracts.GetContent()) { uri ->
+        if (uri != null) {
+            fotoUri = uri
+            isUploading = true
+            val storageRef = FirebaseStorage.getInstance().reference.child("item_images/${UUID.randomUUID()}")
+            storageRef.putFile(uri)
+                .addOnSuccessListener { taskSnapshot ->
+                    storageRef.downloadUrl.addOnSuccessListener { downloadUri ->
+                        fotoUrl = downloadUri.toString()
+                        isUploading = false
+                        Toast.makeText(context, "Foto berhasil diupload", Toast.LENGTH_SHORT).show()
+                    }
+                }
+                .addOnFailureListener {
+                    isUploading = false
+                    Toast.makeText(context, "Gagal upload foto", Toast.LENGTH_SHORT).show()
+                }
+        }
+    }
+
+    Scaffold(
+        topBar = {
+            TopAppBar(
+                title = { Text("Tambah Barang", style = MaterialTheme.typography.titleLarge.copy(fontWeight     = FontWeight.Bold)) },
+                navigationIcon = {
+                    IconButton(onClick = onCancel) {
+                        Icon(Icons.Filled.ArrowBack, contentDescription = "Kembali")
+                    }
+                },
+                actions = {},
+                colors = TopAppBarDefaults.topAppBarColors(containerColor = Color.White)
+            )
+        },
+        containerColor = Color.White
+    ) { innerPadding ->
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .background(Color.White)
+                .padding(innerPadding)
+                .verticalScroll(rememberScrollState())
+                .padding(bottom = 96.dp) // padding ekstra agar tombol tidak tertutup navbar
+        ) {
+            Spacer(modifier = Modifier.height(12.dp))
+            Text("Foto Barang", style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold), modifier = Modifier.padding(horizontal = 20.dp))
+            Spacer(modifier = Modifier.height(8.dp))
+            Box(
+                modifier = Modifier
+                    .padding(horizontal = 16.dp)
+                    .fillMaxWidth()
+                    .height(160.dp)
+                    .background(Color(0xFFF9FAFB), RoundedCornerShape(16.dp))
+                    .border(1.dp, Color(0xFFE5E7EB), RoundedCornerShape(16.dp))
+                    .clickable { if (!isUploading) launcher.launch("image/*") },
+                contentAlignment = Alignment.Center
+            ) {
+                if (fotoUri != null) {
+                    Image(
+                        painter = rememberAsyncImagePainter(fotoUri),
+                        contentDescription = null,
+                        modifier = Modifier.fillMaxSize().padding(24.dp),
+                        contentScale = ContentScale.Crop
+                    )
+                    if (isUploading) {
+                        Box(
+                            Modifier.fillMaxSize().background(Color(0xAAFFFFFF), RoundedCornerShape(16.dp)),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            CircularProgressIndicator()
+                        }
+                    }
+                } else {
+                    Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                        Icon(Icons.Filled.AddAPhoto, contentDescription = null, tint = Color(0xFF9CA3AF), modifier = Modifier.size(40.dp))
+                        Spacer(modifier = Modifier.height(8.dp))
+                        Text("Tap untuk menambah foto", color = Color(0xFF6B7280))
+                        Text("JPG, PNG maksimal 5MB", color = Color(0xFF9CA3AF), fontSize = 12.sp)
+                    }
+                }
+            }
+            Spacer(modifier = Modifier.height(20.dp))
+            // Nama Barang
+            Text("Nama Barang *", style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.Bold), modifier = Modifier.padding(horizontal = 20.dp))
+            OutlinedTextField(
+                value = nama,
+                onValueChange = { nama = it },
+                placeholder = { Text("Bor", color = Color(0xFF9CA3AF)) },
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 16.dp),
+                shape = RoundedCornerShape(12.dp),
+                singleLine = true
+            )
+            Spacer(modifier = Modifier.height(12.dp))
+            // Kategori
+            Text("Kategori *", style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.Bold), modifier = Modifier.padding(horizontal = 20.dp))
+            ExposedDropdownMenuBox(
+                expanded = kategoriExpanded,
+                onExpandedChange = { kategoriExpanded = !kategoriExpanded }
+            ) {
+                OutlinedTextField(
+                    value = kategori,
+                    onValueChange = {},
+                    readOnly = true,
+                    placeholder = { Text("Alat Personel", color = Color(0xFF9CA3AF)) },
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .menuAnchor()
+                        .padding(horizontal = 16.dp),
+                    shape = RoundedCornerShape(12.dp),
+                    trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = kategoriExpanded) }
+                )
+                ExposedDropdownMenu(
+                    expanded = kategoriExpanded,
+                    onDismissRequest = { kategoriExpanded = false }
+                ) {
+                    kategoriOptions.forEach {
+                        DropdownMenuItem(
+                            text = { Text(it) },
+                            onClick = {
+                                kategori = it
+                                kategoriExpanded = false
+                                // Generate SKU otomatis berdasarkan kategori
+                                sku = when (it) {
+                                    "Alat Personel" -> "PRS-004"
+                                    "Alat Berat" -> "ALT-001"
+                                    "Material" -> "MAT-001"
+                                    else -> "OTH-001"
+                                }
+                            }
+                        )
+                    }
+                }
+            }
+            Spacer(modifier = Modifier.height(12.dp))
+            // SKU
+            Text("SKU *", style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.Bold), modifier = Modifier.padding(horizontal = 20.dp))
+            OutlinedTextField(
+                value = sku,
+                onValueChange = {},
+                placeholder = { Text("PRS-004", color = Color(0xFF9CA3AF)) },
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 16.dp),
+                shape = RoundedCornerShape(12.dp),
+                singleLine = true,
+                enabled = false
+            )
+            Spacer(modifier = Modifier.height(12.dp))
+            // Deskripsi
+            Text("Deskripsi", style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.Bold), modifier = Modifier.padding(horizontal = 20.dp))
+            OutlinedTextField(
+                value = deskripsi,
+                onValueChange = { deskripsi = it },
+                placeholder = { Text("bor", color = Color(0xFF9CA3AF)) },
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 16.dp),
+                shape = RoundedCornerShape(12.dp),
+                minLines = 3
+            )
+            Spacer(modifier = Modifier.height(12.dp))
+            // Lokasi
+            Text("Lokasi *", style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.Bold), modifier = Modifier.padding(horizontal = 20.dp))
+            ExposedDropdownMenuBox(
+                expanded = lokasiExpanded,
+                onExpandedChange = { lokasiExpanded = !lokasiExpanded }
+            ) {
+                OutlinedTextField(
+                    value = lokasi,
+                    onValueChange = {},
+                    readOnly = true,
+                    placeholder = { Text("Gudang Utama - Jakarta", color = Color(0xFF9CA3AF)) },
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .menuAnchor()
+                        .padding(horizontal = 16.dp),
+                    shape = RoundedCornerShape(12.dp),
+                    trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = lokasiExpanded) }
+                )
+                ExposedDropdownMenu(
+                    expanded = lokasiExpanded,
+                    onDismissRequest = { lokasiExpanded = false }
+                ) {
+                    lokasiOptions.forEach {
+                        DropdownMenuItem(
+                            text = { Text(it) },
+                            onClick = {
+                                lokasi = it
+                                lokasiExpanded = false
+                            }
+                        )
+                    }
+                }
+            }
+            Spacer(modifier = Modifier.height(20.dp))
+            // Informasi Sistem
+            Text("Informasi Sistem", style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.Bold), modifier = Modifier.padding(horizontal = 20.dp))
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 20.dp, vertical = 8.dp),
+                horizontalArrangement = Arrangement.SpaceBetween
+            ) {
+                Column {
+                    Text("Dibuat", color = Color(0xFF6B7280), fontSize = 14.sp)
+                    Text(waktu, color = Color(0xFF23272E), fontSize = 14.sp)
+                }
+                Column {
+                    Text("Diperbarui", color = Color(0xFF6B7280), fontSize = 14.sp)
+                    Text(waktu, color = Color(0xFF23272E), fontSize = 14.sp)
+                }
+            }
+            Spacer(modifier = Modifier.height(16.dp))
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 12.dp),
+                horizontalArrangement = Arrangement.SpaceBetween
+            ) {
+                OutlinedButton(
+                    onClick = onCancel,
+                    modifier = Modifier.weight(1f).padding(end = 8.dp),
+                    shape = RoundedCornerShape(12.dp)
+                ) {
+                    Text("Batal", color = Color(0xFF23272E), style = MaterialTheme.typography.titleMedium)
+                }
+                Button(
+                    onClick = {
+                        if (isUploading) {
+                            Toast.makeText(context, "Tunggu upload foto selesai", Toast.LENGTH_SHORT).show()
+                            return@Button
+                        }
+                        if (nama.isBlank() || kategori.isBlank() || lokasi.isBlank() || sku.isBlank()) {
+                            Toast.makeText(context, "Lengkapi semua field wajib", Toast.LENGTH_SHORT).show()
+                            return@Button
+                        }
+                        isSaving = true
+                        val data = hashMapOf(
+                            "name" to nama,
+                            "sku" to sku,
+                            "category" to kategori,
+                            "description" to deskripsi,
+                            "location" to lokasi,
+                            "photoUrl" to (fotoUrl ?: ""),
+                            "createdAt" to waktu,
+                            "updatedAt" to waktu
+                        )
+                        firestore.collection("equipments")
+                            .add(data)
+                            .addOnSuccessListener {
+                                isSaving = false
+                                Toast.makeText(context, "Barang berhasil ditambahkan", Toast.LENGTH_SHORT).show()
+                                onSimpan()
+                            }
+                            .addOnFailureListener {
+                                isSaving = false
+                                Toast.makeText(context, "Gagal menambah barang", Toast.LENGTH_SHORT).show()
+                            }
+                    },
+                    enabled = !isSaving && !isUploading,
+                    modifier = Modifier.weight(1f).padding(start = 8.dp),
+                    shape = RoundedCornerShape(12.dp),
+                    colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF2563EB))
+                ) {
+                    if (isSaving) CircularProgressIndicator(color = Color.White, modifier = Modifier.size(18.dp))
+                    else Text("Simpan Barang", color = Color.White, style = MaterialTheme.typography.titleMedium)
+                }
+            }
+            Spacer(modifier = Modifier.height(24.dp))
+        }
+    }
 }

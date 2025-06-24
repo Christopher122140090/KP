@@ -393,9 +393,10 @@ fun MainNavigation() {
                 },
                 content = { padding ->
                     TambahItem(
+                        navController = navController,
                         onSimpan = { _, _, _, _, _, _ -> },
                         onCancel = { navController.popBackStack() },
-                        onShowNavbarChange = { show -> showNavbar = show } // Pass state control
+                        onShowNavbarChange = { show -> showNavbar = show }
                     )
                 },
                 bottomBar = {
@@ -580,4 +581,3 @@ fun BottomNavigationBarPreview() {
         BottomNavigationBar(navController = navController)
     }
 }
-
