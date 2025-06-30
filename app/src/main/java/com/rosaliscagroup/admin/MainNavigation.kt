@@ -38,6 +38,8 @@ import coil.compose.AsyncImage
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.material.icons.filled.ViewInAr
 import com.rosaliscagroup.admin.setting.ChangeNameScreen
+import androidx.compose.runtime.rememberCoroutineScope
+import kotlinx.coroutines.launch
 
 // Data class untuk state login
 data class LoginState(

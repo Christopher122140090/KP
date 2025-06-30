@@ -39,10 +39,16 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import coil.compose.rememberAsyncImagePainter
 import com.google.accompanist.systemuicontroller.rememberSystemUiController
 import com.hadiyarajesh.admin.R
+import com.rosaliscagroup.admin.data.entity.Activity
 import com.rosaliscagroup.admin.data.entity.Image
 import com.rosaliscagroup.admin.ui.components.ErrorItem
 import com.rosaliscagroup.admin.ui.components.LoadingIndicator
 import com.rosaliscagroup.admin.utility.Constants
+import kotlinx.coroutines.flow.collectLatest
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.launch
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.ArrowForward
@@ -56,6 +62,7 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
+import com.rosaliscagroup.admin.ui.location.RecentLocationHistorySection
 
     @Composable
 internal fun HomeRoute(
@@ -64,16 +71,20 @@ internal fun HomeRoute(
 ) {
     val context = LocalContext.current
     val uiState = viewModel.uiState.collectAsStateWithLifecycle().value
+    val recentActivities = viewModel.recentActivities.collectAsStateWithLifecycle().value
     HomeScreen(
         uiState = uiState,
+        recentActivities = recentActivities,
         loadData = { viewModel.loadData(context) },
         navController = navController
     )
 }
 
+@OptIn(androidx.compose.material3.ExperimentalMaterial3Api::class)
 @Composable
 private fun HomeScreen(
     uiState: HomeScreenUiState,
+    recentActivities: List<Activity>,
     loadData: () -> Unit,
     navController: NavController
 ) {
@@ -118,7 +129,8 @@ private fun HomeScreen(
                         }
                         val totalEquipments = if (uiState is HomeScreenUiState.Success) uiState.totalEquipments else 0
                         Text("$totalEquipments", style = MaterialTheme.typography.headlineMedium)
-                        Text("+12 this week", style = MaterialTheme.typography.bodySmall, color = Color(0xFF4CAF50))
+                        val newEquipmentsThisWeek = if (uiState is HomeScreenUiState.Success) uiState.newEquipmentsThisWeek else 0
+                        Text("+$newEquipmentsThisWeek this week", style = MaterialTheme.typography.bodySmall, color = Color(0xFF4CAF50))
                     }
                 }
                 Card(
@@ -132,7 +144,8 @@ private fun HomeScreen(
                             Spacer(modifier = Modifier.weight(1f))
                             Icon(Icons.Default.LocationOn, contentDescription = "Active Projects Icon", tint = Color(0xFFFF9800))
                         }
-                        val activeProjects = if (uiState is HomeScreenUiState.Success) uiState.projects.size else 0
+                        // Active Projects: jumlah lokasi dengan status == "active"
+                        val activeProjects = if (uiState is HomeScreenUiState.Success) uiState.locations.count { it.status == "active" } else 0
                         Text("$activeProjects", style = MaterialTheme.typography.headlineMedium)
                         Text("", style = MaterialTheme.typography.bodySmall, color = Color(0xFFF44336))
                     }
@@ -162,22 +175,43 @@ private fun HomeScreen(
             ) {
                 Text("Locations", style = MaterialTheme.typography.titleMedium)
                 Spacer(modifier = Modifier.weight(1f))
-                TextButton(onClick = { navController.navigate("ViewProyekPage") }) {
+                TextButton(onClick = { navController.navigate("AllLocationsScreen") }) {
                     Text("View All (${if (uiState is HomeScreenUiState.Success) uiState.locations.size else 0})")
                 }
             }
             Spacer(modifier = Modifier.height(16.dp))
             if (uiState is HomeScreenUiState.Success) {
+                val locationsToShow = uiState.locations.take(3)
                 Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
-                    uiState.locations.forEach { location ->
-                        LocationItem(
-                            icon = Icons.Default.LocationOn,
-                            name = location.name,
-                            location = location.address,
-                            items = "", // Jika ada info jumlah item, bisa diisi
-                            capacity = "", // Jika ada info kapasitas, bisa diisi
-                            capacityColor = Color(0xFF2196F3)
-                        )
+                    locationsToShow.forEach { location ->
+                        Card(
+                            modifier = Modifier.fillMaxWidth(),
+                            shape = RoundedCornerShape(8.dp),
+                            colors = CardDefaults.cardColors(containerColor = Color.White),
+                            elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
+                        ) {
+                            Row(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(16.dp),
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Icon(Icons.Default.LocationOn, contentDescription = location.name, modifier = Modifier.size(40.dp), tint = Color(0xFF2196F3))
+                                Spacer(modifier = Modifier.width(16.dp))
+                                Column(modifier = Modifier.weight(1f)) {
+                                    Text(location.name, style = MaterialTheme.typography.titleMedium)
+                                    if (location.address.isNotBlank()) {
+                                        Text(location.address, style = MaterialTheme.typography.bodySmall, color = Color.Gray)
+                                    }
+                                    if (location.type.isNotBlank()) {
+                                        Text("Tipe: ${location.type}", style = MaterialTheme.typography.bodySmall, color = Color(0xFF1976D2))
+                                    }
+                                    if (location.status.isNotBlank()) {
+                                        Text("Status: ${location.status}", style = MaterialTheme.typography.bodySmall, color = if (location.status == "active") Color(0xFF388E3C) else Color(0xFFD32F2F))
+                                    }
+                                }
+                            }
+                        }
                     }
                 }
             }
@@ -187,31 +221,32 @@ private fun HomeScreen(
 
             Spacer(modifier = Modifier.height(24.dp))
 
-            // Recent Activities (dummy)
-            Text("Recent Activities", style = MaterialTheme.typography.titleMedium)
+            // Recent Activities (realtime)
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text("Recent Activities", style = MaterialTheme.typography.titleMedium)
+                Spacer(modifier = Modifier.weight(1f))
+                TextButton(onClick = { navController.navigate("ViewActivitiesPage") }) {
+                    Text("View All")
+                }
+            }
             Spacer(modifier = Modifier.height(16.dp))
-            Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
-                ActivityItem(
-                    icon = Icons.Default.CheckCircle,
-                    iconTint = Color(0xFF4CAF50),
-                    title = "Equipment Received",
-                    details = "Excavator CAT 320D • Main Warehouse",
-                    time = "2 hours ago"
-                )
-                ActivityItem(
-                    icon = Icons.Default.ArrowForward,
-                    iconTint = Color(0xFF2196F3),
-                    title = "Transfer Completed",
-                    details = "Bulldozer D6T • To Site Project A",
-                    time = "4 hours ago"
-                )
-                ActivityItem(
-                    icon = Icons.Default.Warning,
-                    iconTint = Color(0xFFFF9800),
-                    title = "Low Stock Alert",
-                    details = "Hydraulic Oil • Only 5 units left",
-                    time = "6 hours ago"
-                )
+            if (recentActivities.isEmpty()) {
+                Text("No recent activities.", color = Color.Gray)
+            } else {
+                Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                    recentActivities.forEach { activity ->
+                        ActivityItem(
+                            icon = Icons.Default.CheckCircle,
+                            iconTint = Color(0xFF4CAF50),
+                            title = activity.type,
+                            details = activity.details,
+                            time = getRelativeTime(activity.createdAt)
+                        )
+                    }
+                }
             }
 
             Spacer(modifier = Modifier.height(24.dp))
@@ -350,6 +385,18 @@ fun DashboardPieChart(kondisiStat: Map<String, Int>) {
     }
 }
 
+// Tambahkan fungsi util untuk waktu relatif
+fun getRelativeTime(timestamp: Long): String {
+    val now = System.currentTimeMillis()
+    val diff = now - timestamp
+    val minutes = diff / 60000
+    val hours = minutes / 60
+    return when {
+        hours > 0 -> "$hours hours ago"
+        minutes > 0 -> "$minutes minutes ago"
+        else -> "Just now"
+    }
+}
 
 @Preview(showSystemUi = false, showBackground = true)
 @Composable
@@ -364,9 +411,11 @@ fun HomeScreenPreview() {
                 totalProjects = 2,
                 totalUsers = 7,
                 recentActivities = emptyList(),
-                projects = emptyList(), // Tambahkan argumen projects agar preview tidak error
-                locations = emptyList() // Tambahkan argumen locations agar build tidak error
+                projects = emptyList(),
+                locations = emptyList(),
+                newEquipmentsThisWeek = 0 // <-- fix preview error
             ),
+            recentActivities = emptyList(),
             loadData = {},
             navController = rememberNavController()
         )

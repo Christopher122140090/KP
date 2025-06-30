@@ -15,8 +15,7 @@ android {
 
     defaultConfig {
         applicationId = "com.rosaliscagroup.admin"
-        minSdk = 23
-        // dinaikkan dari 21 ke 23 agar kompatibel dengan Firebase Auth
+        minSdk = 23 // dinaikkan dari 21 ke 23 agar kompatibel dengan Firebase Auth
         targetSdk = 35
         versionCode = 1
         versionName = "1.0"
@@ -69,6 +68,7 @@ dependencies {
     implementation(libs.firebase.firestore.ktx)
     implementation(libs.firebase.storage.ktx)
     implementation(libs.androidx.runtime.livedata)
+    implementation(libs.espresso.core)
     ksp(libs.hilt.android.compiler)
     implementation(libs.bundles.room)
     ksp(libs.room.compiler)
@@ -84,19 +84,45 @@ dependencies {
     implementation("com.google.accompanist:accompanist-systemuicontroller:0.34.0")
     // Import the Firebase BoM
     implementation(platform("com.google.firebase:firebase-bom:33.13.0"))
+
     // Add the dependencies for Firebase products you want to use
     implementation("com.google.firebase:firebase-analytics")
+    // Firebase Auth
     implementation("com.google.firebase:firebase-auth-ktx")
     implementation("com.google.firebase:firebase-auth:22.3.0")
     implementation("com.google.android.gms:play-services-auth:21.0.0")
     implementation("com.google.android.libraries.identity.googleid:googleid:1.1.1")
+    // Firestore
     implementation("com.google.firebase:firebase-firestore-ktx")
+    implementation("com.google.firebase:firebase-storage-ktx")
+
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.test.ext.junit)
     androidTestImplementation(libs.espresso.core)
     androidTestImplementation(platform(libs.compose.bom))
     androidTestImplementation(libs.ui.test.junit4)
     debugImplementation(libs.bundles.compose.ui.debug)
+
+    implementation (libs.androidx.material3)
+    implementation (libs.androidx.ui)
+    implementation (libs.kotlinx.coroutines.core)
+    implementation (libs.androidx.navigation.compose.v280)
+    implementation (libs.androidx.material.icons.extended.v170) // Untuk ikon
+    implementation (libs.kotlinx.coroutines.core.v180)
+    implementation (libs.androidx.datastore.preferences.v111)
+    implementation (libs.navigation.compose)
+    implementation (libs.androidx.material.icons.extended)
+    implementation (libs.androidx.datastore.preferences)
+    implementation("io.coil-kt:coil-compose:2.5.0")
+    implementation ("androidx.compose:compose-bom:2024.10.00")
+    implementation ("androidx.compose.material3:material3")
+    implementation ("androidx.compose.ui:ui")
+    implementation ("androidx.compose.ui:ui-tooling-preview")
+    debugImplementation ("androidx.compose.ui:ui-tooling")
+    implementation ("androidx.activity:activity-compose:1.9.3")
+    implementation("androidx.compose.material3:material3:1.1.0")
+    implementation("com.google.accompanist:accompanist-systemuicontroller:0.30.1")
+    implementation("io.coil-kt:coil-compose:2.4.0")
 }
 
 // Pass options to Room ksp processor
