@@ -45,6 +45,25 @@ object EquipmentRepository {
         android.util.Log.d("EquipmentRepository", "Activity berhasil ditambahkan ke /activities")
     }
 
+    suspend fun addEquipmentWithImageUrl(
+        context: android.content.Context,
+        nama: String,
+        deskripsi: String,
+        kategori: String,
+        lokasiId: String,
+        gambarUri: Uri,
+        sku: String,
+        onProgress: (Float) -> Unit
+    ) {
+        // Simulasi upload gambar dan update progress
+        onProgress(0.1f)
+        // TODO: Implement actual image upload logic here
+        // For now, just call addEquipment after simulating progress
+        onProgress(0.5f)
+        addEquipment(nama, deskripsi, kategori, lokasiId, gambarUri, sku)
+        onProgress(1.0f)
+    }
+
     data class Equipment(
         val id: String = "",
         val nama: String = "",

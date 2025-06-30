@@ -592,7 +592,7 @@ fun TambahItem(
                                                 lokasiId = lokasi,
                                                 gambarUri = gambarUri!!,
                                                 sku = sku,
-                                                onProgress = { progress ->
+                                                onProgress = { progress: Float ->
                                                     saveProgress = (progress * 100).toInt()
                                                 }
                                             )
