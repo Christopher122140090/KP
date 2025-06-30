@@ -552,6 +552,18 @@ fun MainNavigation() {
                 homeViewModel = homeViewModel
             )
         }
+        composable("AllLocationsScreen") { backStackEntry ->
+            val parentEntry = remember(backStackEntry) {
+                navController.getBackStackEntry("home")
+            }
+            val homeViewModel: com.rosaliscagroup.admin.ui.home.HomeViewModel = androidx.hilt.navigation.compose.hiltViewModel(parentEntry)
+            val uiState = homeViewModel.uiState.collectAsState().value
+            com.rosaliscagroup.admin.ui.location.AllLocationsScreen(
+                locations = if (uiState is com.rosaliscagroup.admin.ui.home.HomeScreenUiState.Success) uiState.locations else emptyList(),
+                navController = navController,
+                onBack = { navController.popBackStack() }
+            )
+        }
     }
 }
 

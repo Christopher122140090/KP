@@ -125,8 +125,58 @@ class HomeRepositoryImpl @Inject constructor() : HomeRepository {
             val id = doc.id
             val name = doc.getString("name") ?: return@mapNotNull null
             val address = doc.getString("address") ?: ""
-            Location(id = id, name = name, address = address)
+            val contactPerson = doc.getString("contactPerson") ?: ""
+            val createdAt = doc.getTimestamp("createdAt")?.toDate()?.time ?: 0L
+            val createdBy = doc.getString("createdBy") ?: ""
+            val description = doc.getString("description") ?: ""
+            val status = doc.getString("status") ?: ""
+            val type = doc.getString("type") ?: ""
+            Location(
+                id = id,
+                name = name,
+                address = address,
+                contactPerson = contactPerson,
+                createdAt = createdAt,
+                createdBy = createdBy,
+                description = description,
+                status = status,
+                type = type
+            )
         }
+    }
+
+    override fun getLocationsRealtime(): Flow<List<Location>> = callbackFlow {
+        val listener = db.collection("locations")
+            .addSnapshotListener { snapshot, error ->
+                if (error != null) {
+                    close(error)
+                    return@addSnapshotListener
+                }
+                val locations = snapshot?.documents?.mapNotNull { doc ->
+                    val id = doc.id
+                    val name = doc.getString("name") ?: return@mapNotNull null
+                    val address = doc.getString("address") ?: ""
+                    val contactPerson = doc.getString("contactPerson") ?: ""
+                    val createdAt = doc.getTimestamp("createdAt")?.toDate()?.time ?: 0L
+                    val createdBy = doc.getString("createdBy") ?: ""
+                    val description = doc.getString("description") ?: ""
+                    val status = doc.getString("status") ?: ""
+                    val type = doc.getString("type") ?: ""
+                    Location(
+                        id = id,
+                        name = name,
+                        address = address,
+                        contactPerson = contactPerson,
+                        createdAt = createdAt,
+                        createdBy = createdBy,
+                        description = description,
+                        status = status,
+                        type = type
+                    )
+                } ?: emptyList()
+                trySend(locations)
+            }
+        awaitClose { listener.remove() }
     }
 
     override suspend fun getNewEquipmentsThisWeek(): Int {

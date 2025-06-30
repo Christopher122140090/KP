@@ -18,5 +18,6 @@ interface HomeRepository {
     suspend fun getKondisiStat(): Map<String, Int>
     suspend fun getProjects(): List<Project>
     suspend fun getLocations(): List<Location>
+    fun getLocationsRealtime(): Flow<List<Location>>
     suspend fun getNewEquipmentsThisWeek(): Int
 }
