@@ -39,7 +39,7 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.material.icons.filled.ViewInAr
 import com.rosaliscagroup.admin.setting.ChangeNameScreen
 import androidx.compose.runtime.rememberCoroutineScope
-import kotlinx.coroutines.launch
+import com.rosaliscagroup.admin.ui.transfer.TransferPage
 
 // Data class untuk state login
 data class LoginState(
@@ -548,6 +548,31 @@ fun MainNavigation() {
                 }
             )
         }
+        composable("transfer") {
+            androidx.compose.material3.Scaffold(
+                topBar = {
+                    AppBar(
+                        title = "Transfer",
+                        navController = navController,
+                        drawerState = rememberDrawerState(DrawerValue.Closed),
+                        scope = scope,
+                        showMenuIcon = false,
+                        userName = userName,
+                        userPhotoUrl = userPhotoUrl
+                    )
+                },
+                content = { padding ->
+                    Box(Modifier.padding(padding)) {
+                        TransferPage()
+                    }
+                },
+                bottomBar = {
+                    if (isLoggedIn && showNavbar) {
+                        BottomNavigationBar(navController = navController)
+                    }
+                }
+            )
+        }
     }
 }
 
@@ -577,5 +602,4 @@ fun BottomNavigationBarPreview() {
         BottomNavigationBar(navController = navController)
     }
 }
-
 

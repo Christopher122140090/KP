@@ -26,6 +26,10 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -38,6 +42,8 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import coil.compose.rememberAsyncImagePainter
 import com.google.accompanist.systemuicontroller.rememberSystemUiController
+import com.google.accompanist.swiperefresh.SwipeRefresh
+import com.google.accompanist.swiperefresh.rememberSwipeRefreshState
 import com.hadiyarajesh.admin.R
 import com.rosaliscagroup.admin.data.entity.Activity
 import com.rosaliscagroup.admin.data.entity.Image
@@ -64,7 +70,7 @@ import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
 import com.rosaliscagroup.admin.ui.location.RecentLocationHistorySection
 
-    @Composable
+@Composable
 internal fun HomeRoute(
     viewModel: HomeViewModel = hiltViewModel(),
     navController: NavController
@@ -72,10 +78,21 @@ internal fun HomeRoute(
     val context = LocalContext.current
     val uiState = viewModel.uiState.collectAsStateWithLifecycle().value
     val recentActivities = viewModel.recentActivities.collectAsStateWithLifecycle().value
+    // Only fetch if cache is truly empty (Initial state)
+    val shouldFetch = uiState is HomeScreenUiState.Initial
+
+    // Only run on first composition (not on every navigation)
+    LaunchedEffect(shouldFetch) {
+        if (shouldFetch) {
+            viewModel.loadData(context)
+        }
+    }
+
     HomeScreen(
         uiState = uiState,
         recentActivities = recentActivities,
-        loadData = { viewModel.loadData(context) },
+        loadData = {}, // No-op, handled by LaunchedEffect
+        onManualRefresh = { viewModel.loadData(context, forceRefresh = true) },
         navController = navController
     )
 }
@@ -86,9 +103,12 @@ private fun HomeScreen(
     uiState: HomeScreenUiState,
     recentActivities: List<Activity>,
     loadData: () -> Unit,
+    onManualRefresh: () -> Unit,
     navController: NavController
 ) {
     val systemUiController = rememberSystemUiController()
+    var isRefreshing by remember { mutableStateOf(false) }
+    val swipeRefreshState = rememberSwipeRefreshState(isRefreshing)
 
     LaunchedEffect(Unit) {
         loadData()
@@ -98,160 +118,168 @@ private fun HomeScreen(
         )
     }
 
-    // Tampilkan data dummy seperti di preview
     Scaffold(
         containerColor = Color.White
     ) { innerPadding ->
-        Column(
-            modifier = Modifier
-                .fillMaxWidth()
-                .verticalScroll(rememberScrollState())
-                .padding(innerPadding)
-                .padding(top = 80.dp)
-                .padding(bottom = 80.dp)
-                .padding(horizontal = 16.dp)
+        SwipeRefresh(
+            state = swipeRefreshState,
+            onRefresh = {
+                isRefreshing = true
+                onManualRefresh()
+                isRefreshing = false
+            }
         ) {
-            // Top Cards
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(16.dp)
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .verticalScroll(rememberScrollState())
+                    .padding(innerPadding)
+                    .padding(top = 80.dp)
+                    .padding(bottom = 80.dp)
+                    .padding(horizontal = 16.dp)
             ) {
-                Card(
-                    modifier = Modifier.weight(1f),
-                    shape = RoundedCornerShape(8.dp),
-                    colors = CardDefaults.cardColors(containerColor = Color(0xFFE3F2FD))
+                // Top Cards
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(16.dp)
                 ) {
-                    Column(modifier = Modifier.padding(16.dp)) {
-                        Row(verticalAlignment = Alignment.CenterVertically) {
-                            Text("Total Equipment", style = MaterialTheme.typography.bodyMedium)
-                            Spacer(modifier = Modifier.weight(1f))
-                            Icon(Icons.Default.Warehouse, contentDescription = "Total Equipment Icon", tint = Color(0xFF2196F3))
+                    Card(
+                        modifier = Modifier.weight(1f),
+                        shape = RoundedCornerShape(8.dp),
+                        colors = CardDefaults.cardColors(containerColor = Color(0xFFE3F2FD))
+                    ) {
+                        Column(modifier = Modifier.padding(16.dp)) {
+                            Row(verticalAlignment = Alignment.CenterVertically) {
+                                Text("Total Equipment", style = MaterialTheme.typography.bodyMedium)
+                                Spacer(modifier = Modifier.weight(1f))
+                                Icon(Icons.Default.Warehouse, contentDescription = "Total Equipment Icon", tint = Color(0xFF2196F3))
+                            }
+                            val totalEquipments = if (uiState is HomeScreenUiState.Success) uiState.totalEquipments else 0
+                            Text("$totalEquipments", style = MaterialTheme.typography.headlineMedium)
+                            val newEquipmentsThisWeek = if (uiState is HomeScreenUiState.Success) uiState.newEquipmentsThisWeek else 0
+                            Text("+$newEquipmentsThisWeek this week", style = MaterialTheme.typography.bodySmall, color = Color(0xFF4CAF50))
                         }
-                        val totalEquipments = if (uiState is HomeScreenUiState.Success) uiState.totalEquipments else 0
-                        Text("$totalEquipments", style = MaterialTheme.typography.headlineMedium)
-                        val newEquipmentsThisWeek = if (uiState is HomeScreenUiState.Success) uiState.newEquipmentsThisWeek else 0
-                        Text("+$newEquipmentsThisWeek this week", style = MaterialTheme.typography.bodySmall, color = Color(0xFF4CAF50))
+                    }
+                    Card(
+                        modifier = Modifier.weight(1f),
+                        shape = RoundedCornerShape(8.dp),
+                        colors = CardDefaults.cardColors(containerColor = Color(0xFFFFF3E0))
+                    ) {
+                        Column(modifier = Modifier.padding(16.dp)) {
+                            Row(verticalAlignment = Alignment.CenterVertically) {
+                                Text("Active Projects", style = MaterialTheme.typography.bodyMedium)
+                                Spacer(modifier = Modifier.weight(1f))
+                                Icon(Icons.Default.LocationOn, contentDescription = "Active Projects Icon", tint = Color(0xFFFF9800))
+                            }
+                            // Active Projects: jumlah lokasi dengan status == "active"
+                            val activeProjects = if (uiState is HomeScreenUiState.Success) uiState.locations.count { it.status == "active" } else 0
+                            Text("$activeProjects", style = MaterialTheme.typography.headlineMedium)
+                            Text("", style = MaterialTheme.typography.bodySmall, color = Color(0xFFF44336))
+                        }
                     }
                 }
-                Card(
-                    modifier = Modifier.weight(1f),
-                    shape = RoundedCornerShape(8.dp),
-                    colors = CardDefaults.cardColors(containerColor = Color(0xFFFFF3E0))
+
+                Spacer(modifier = Modifier.height(24.dp))
+
+                // Quick Actions
+                Text("Quick Actions", style = MaterialTheme.typography.titleMedium)
+                Spacer(modifier = Modifier.height(16.dp))
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(16.dp)
                 ) {
-                    Column(modifier = Modifier.padding(16.dp)) {
-                        Row(verticalAlignment = Alignment.CenterVertically) {
-                            Text("Active Projects", style = MaterialTheme.typography.bodyMedium)
-                            Spacer(modifier = Modifier.weight(1f))
-                            Icon(Icons.Default.LocationOn, contentDescription = "Active Projects Icon", tint = Color(0xFFFF9800))
-                        }
-                        // Active Projects: jumlah lokasi dengan status == "active"
-                        val activeProjects = if (uiState is HomeScreenUiState.Success) uiState.locations.count { it.status == "active" } else 0
-                        Text("$activeProjects", style = MaterialTheme.typography.headlineMedium)
-                        Text("", style = MaterialTheme.typography.bodySmall, color = Color(0xFFF44336))
+                    QuickActionButton(icon = Icons.Default.QrCodeScanner, text = "Scan Item", onClick = {})
+                    QuickActionButton(icon = Icons.Default.Add, text = "Add Item", onClick = {})
+                    QuickActionButton(icon = Icons.Default.SwapHoriz, text = "Transfer", onClick = { navController.navigate("transfer") })
+                }
+
+                Spacer(modifier = Modifier.height(24.dp))
+
+                // Locations (dari Firestore)
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Text("Locations", style = MaterialTheme.typography.titleMedium)
+                    Spacer(modifier = Modifier.weight(1f))
+                    TextButton(onClick = { navController.navigate("AllLocationsScreen") }) {
+                        Text("View All (${if (uiState is HomeScreenUiState.Success) uiState.locations.size else 0})")
                     }
                 }
-            }
-
-            Spacer(modifier = Modifier.height(24.dp))
-
-            // Quick Actions
-            Text("Quick Actions", style = MaterialTheme.typography.titleMedium)
-            Spacer(modifier = Modifier.height(16.dp))
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(16.dp)
-            ) {
-                QuickActionButton(icon = Icons.Default.QrCodeScanner, text = "Scan Item", onClick = {})
-                QuickActionButton(icon = Icons.Default.Add, text = "Add Item", onClick = {})
-                QuickActionButton(icon = Icons.Default.SwapHoriz, text = "Transfer", onClick = {})
-            }
-
-            Spacer(modifier = Modifier.height(24.dp))
-
-            // Locations (dari Firestore)
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Text("Locations", style = MaterialTheme.typography.titleMedium)
-                Spacer(modifier = Modifier.weight(1f))
-                TextButton(onClick = { navController.navigate("AllLocationsScreen") }) {
-                    Text("View All (${if (uiState is HomeScreenUiState.Success) uiState.locations.size else 0})")
-                }
-            }
-            Spacer(modifier = Modifier.height(16.dp))
-            if (uiState is HomeScreenUiState.Success) {
-                val locationsToShow = uiState.locations.take(3)
-                Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
-                    locationsToShow.forEach { location ->
-                        Card(
-                            modifier = Modifier.fillMaxWidth(),
-                            shape = RoundedCornerShape(8.dp),
-                            colors = CardDefaults.cardColors(containerColor = Color.White),
-                            elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
-                        ) {
-                            Row(
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .padding(16.dp),
-                                verticalAlignment = Alignment.CenterVertically
+                Spacer(modifier = Modifier.height(16.dp))
+                if (uiState is HomeScreenUiState.Success) {
+                    val locationsToShow = uiState.locations.take(3)
+                    Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                        locationsToShow.forEach { location ->
+                            Card(
+                                modifier = Modifier.fillMaxWidth(),
+                                shape = RoundedCornerShape(8.dp),
+                                colors = CardDefaults.cardColors(containerColor = Color.White),
+                                elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
                             ) {
-                                Icon(Icons.Default.LocationOn, contentDescription = location.name, modifier = Modifier.size(40.dp), tint = Color(0xFF2196F3))
-                                Spacer(modifier = Modifier.width(16.dp))
-                                Column(modifier = Modifier.weight(1f)) {
-                                    Text(location.name, style = MaterialTheme.typography.titleMedium)
-                                    if (location.address.isNotBlank()) {
-                                        Text(location.address, style = MaterialTheme.typography.bodySmall, color = Color.Gray)
-                                    }
-                                    if (location.type.isNotBlank()) {
-                                        Text("Tipe: ${location.type}", style = MaterialTheme.typography.bodySmall, color = Color(0xFF1976D2))
-                                    }
-                                    if (location.status.isNotBlank()) {
-                                        Text("Status: ${location.status}", style = MaterialTheme.typography.bodySmall, color = if (location.status == "active") Color(0xFF388E3C) else Color(0xFFD32F2F))
+                                Row(
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .padding(16.dp),
+                                    verticalAlignment = Alignment.CenterVertically
+                                ) {
+                                    Icon(Icons.Default.LocationOn, contentDescription = location.name, modifier = Modifier.size(40.dp), tint = Color(0xFF2196F3))
+                                    Spacer(modifier = Modifier.width(16.dp))
+                                    Column(modifier = Modifier.weight(1f)) {
+                                        Text(location.name, style = MaterialTheme.typography.titleMedium)
+                                        if (location.address.isNotBlank()) {
+                                            Text(location.address, style = MaterialTheme.typography.bodySmall, color = Color.Gray)
+                                        }
+                                        if (location.type.isNotBlank()) {
+                                            Text("Tipe: ${location.type}", style = MaterialTheme.typography.bodySmall, color = Color(0xFF1976D2))
+                                        }
+                                        if (location.status.isNotBlank()) {
+                                            Text("Status: ${location.status}", style = MaterialTheme.typography.bodySmall, color = if (location.status == "active") Color(0xFF388E3C) else Color(0xFFD32F2F))
+                                        }
                                     }
                                 }
                             }
                         }
                     }
                 }
-            }
-            if (uiState is HomeScreenUiState.Error) {
-                Text("Gagal mengambil data: ${uiState.msg}", color = Color.Red)
-            }
-
-            Spacer(modifier = Modifier.height(24.dp))
-
-            // Recent Activities (realtime)
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Text("Recent Activities", style = MaterialTheme.typography.titleMedium)
-                Spacer(modifier = Modifier.weight(1f))
-                TextButton(onClick = { navController.navigate("ViewActivitiesPage") }) {
-                    Text("View All")
+                if (uiState is HomeScreenUiState.Error) {
+                    Text("Gagal mengambil data: ${uiState.msg}", color = Color.Red)
                 }
-            }
-            Spacer(modifier = Modifier.height(16.dp))
-            if (recentActivities.isEmpty()) {
-                Text("No recent activities.", color = Color.Gray)
-            } else {
-                Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
-                    recentActivities.forEach { activity ->
-                        ActivityItem(
-                            icon = Icons.Default.CheckCircle,
-                            iconTint = Color(0xFF4CAF50),
-                            title = activity.type,
-                            details = activity.details,
-                            time = getRelativeTime(activity.createdAt)
-                        )
+
+                Spacer(modifier = Modifier.height(24.dp))
+
+                // Recent Activities (realtime)
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Text("Recent Activities", style = MaterialTheme.typography.titleMedium)
+                    Spacer(modifier = Modifier.weight(1f))
+                    TextButton(onClick = { navController.navigate("ViewActivitiesPage") }) {
+                        Text("View All")
                     }
                 }
+                Spacer(modifier = Modifier.height(16.dp))
+                if (recentActivities.isEmpty()) {
+                    Text("No recent activities.", color = Color.Gray)
+                } else {
+                    Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                        recentActivities.forEach { activity ->
+                            ActivityItem(
+                                icon = Icons.Default.CheckCircle,
+                                iconTint = Color(0xFF4CAF50),
+                                title = activity.type,
+                                details = activity.details,
+                                time = getRelativeTime(activity.createdAt)
+                            )
+                        }
+                    }
+                }
+
+                Spacer(modifier = Modifier.height(24.dp))
+
+                // Hapus bagian Main Image (dummy)
             }
-
-            Spacer(modifier = Modifier.height(24.dp))
-
-            // Hapus bagian Main Image (dummy)
         }
     }
 }
@@ -417,11 +445,9 @@ fun HomeScreenPreview() {
             ),
             recentActivities = emptyList(),
             loadData = {},
+            onManualRefresh = {},
             navController = rememberNavController()
         )
     }
 }
-
-
-
 

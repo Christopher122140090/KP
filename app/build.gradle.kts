@@ -78,6 +78,7 @@ dependencies {
     ksp(libs.moshi.kotlin.codegen)
     implementation(libs.bundles.coil)
     implementation("io.coil-kt:coil-compose:2.6.0")
+    implementation("com.google.accompanist:accompanist-swiperefresh:0.33.2-alpha")
     // Material Icons Extended for additional icons (ViewInAr, AddAPhoto, etc.)
     implementation("androidx.compose.material:material-icons-extended")
     // Accompanist System UI Controller for rememberSystemUiController
