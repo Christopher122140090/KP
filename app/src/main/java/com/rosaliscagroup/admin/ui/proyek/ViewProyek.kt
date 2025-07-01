@@ -107,7 +107,9 @@ fun ViewProyek(
             },
             confirmButton = {
                 Button(onClick = {
-                    navController?.navigate("ItemListPage?lokasi=${proyek.id}&kategori=Semua")
+                    if (proyek.id.isNotBlank() && navController != null) {
+                        navController.navigate("proyekItemListPage?lokasi=${proyek.id}&kategori=Semua")
+                    }
                     selectedProyek.value = null
                 }) {
                     Text("Lihat Item")

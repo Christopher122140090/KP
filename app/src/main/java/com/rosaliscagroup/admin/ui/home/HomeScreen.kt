@@ -202,7 +202,7 @@ private fun HomeScreen(
                 ) {
                     Text("Locations", style = MaterialTheme.typography.titleMedium)
                     Spacer(modifier = Modifier.weight(1f))
-                    TextButton(onClick = { navController.navigate("AllLocationsScreen") }) {
+                    TextButton(onClick = { navController.navigate("ViewProyekPage") }) {
                         Text("View All (${if (uiState is HomeScreenUiState.Success) uiState.locations.size else 0})")
                     }
                 }
