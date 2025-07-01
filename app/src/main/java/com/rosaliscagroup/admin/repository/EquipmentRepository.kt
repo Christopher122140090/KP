@@ -55,12 +55,19 @@ object EquipmentRepository {
         sku: String,
         onProgress: (Float) -> Unit
     ) {
-        // Simulasi upload gambar dan update progress
-        onProgress(0.1f)
-        // TODO: Implement actual image upload logic here
-        // For now, just call addEquipment after simulating progress
-        onProgress(0.5f)
-        addEquipment(nama, deskripsi, kategori, lokasiId, gambarUri, sku)
+        // Upload gambar ke Firebase Storage
+        val storageRef = com.google.firebase.storage.FirebaseStorage.getInstance().reference
+        val fileName = "equipments/${System.currentTimeMillis()}_${gambarUri.lastPathSegment}"
+        val imageRef = storageRef.child(fileName)
+        val uploadTask = imageRef.putFile(gambarUri)
+        uploadTask.addOnProgressListener { taskSnapshot ->
+            val progress = taskSnapshot.bytesTransferred.toFloat() / taskSnapshot.totalByteCount.toFloat()
+            onProgress(progress * 0.8f) // 80% progress for upload
+        }.await()
+        val downloadUrl = imageRef.downloadUrl.await().toString()
+        onProgress(0.9f)
+        // Simpan data equipment dengan URL gambar dari Storage
+        addEquipment(nama, deskripsi, kategori, lokasiId, Uri.parse(downloadUrl), sku)
         onProgress(1.0f)
     }
 

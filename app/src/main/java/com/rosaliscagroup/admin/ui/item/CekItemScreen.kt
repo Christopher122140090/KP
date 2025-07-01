@@ -148,7 +148,14 @@ fun CekBarangScreen(
     var lokasiList by remember { mutableStateOf<List<Location>>(emptyList()) }
     var loading by remember { mutableStateOf(true) }
     var searchQuery by remember { mutableStateOf("") }
-    val kategoriOptions = listOf("Semua", "Alat Personel", "Alat Berat")
+    val kategoriOptions = listOf(
+        "Semua",
+        "Alat berat",
+        "Generator",
+        "Alat personel",
+        "Alat Tambahan",
+        "Lain-lain"
+    )
     var selectedKategori by remember { mutableStateOf("Semua") }
     var selectedBarang by remember { mutableStateOf<EquipmentUi?>(null) }
     var showTambahSheet by remember { mutableStateOf(false) }
@@ -384,20 +391,44 @@ fun CekBarangScreen(
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(horizontal = 16.dp),
-                horizontalArrangement = Arrangement.spacedBy(8.dp)
+                horizontalArrangement = Arrangement.spacedBy(16.dp)
             ) {
-                kategoriOptions.forEach { kategori ->
-                    val selected = selectedKategori == kategori
-                    Button(
-                        onClick = { selectedKategori = kategori },
-                        colors = ButtonDefaults.buttonColors(
-                            containerColor = if (selected) Color(0xFF1976D2) else Color(0xFFF5F5F5),
-                            contentColor = if (selected) Color.White else Color(0xFF1976D2)
-                        ),
-                        shape = RoundedCornerShape(8.dp),
-                        modifier = Modifier.weight(1f)
-                    ) {
-                        Text(kategori)
+                Column(
+                    modifier = Modifier.weight(1f),
+                    verticalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    kategoriOptions.take(3).forEach { kategori ->
+                        val selected = selectedKategori == kategori
+                        Button(
+                            onClick = { selectedKategori = kategori },
+                            colors = ButtonDefaults.buttonColors(
+                                containerColor = if (selected) Color(0xFF1976D2) else Color(0xFFF5F5F5),
+                                contentColor = if (selected) Color.White else Color(0xFF1976D2)
+                            ),
+                            shape = RoundedCornerShape(8.dp),
+                            modifier = Modifier.fillMaxWidth()
+                        ) {
+                            Text(kategori, maxLines = 1)
+                        }
+                    }
+                }
+                Column(
+                    modifier = Modifier.weight(1f),
+                    verticalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    kategoriOptions.drop(3).forEach { kategori ->
+                        val selected = selectedKategori == kategori
+                        Button(
+                            onClick = { selectedKategori = kategori },
+                            colors = ButtonDefaults.buttonColors(
+                                containerColor = if (selected) Color(0xFF1976D2) else Color(0xFFF5F5F5),
+                                contentColor = if (selected) Color.White else Color(0xFF1976D2)
+                            ),
+                            shape = RoundedCornerShape(8.dp),
+                            modifier = Modifier.fillMaxWidth()
+                        ) {
+                            Text(kategori, maxLines = 1)
+                        }
                     }
                 }
             }

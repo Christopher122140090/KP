@@ -20,6 +20,7 @@ import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
@@ -33,6 +34,8 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.navigation.NavController
+import androidx.navigation.compose.rememberNavController
 import com.rosaliscagroup.admin.ui.transfer.TransferViewModel
 
 data class LokasiProyek(
@@ -50,6 +53,7 @@ data class ItemBarang(
 
 @Composable
 fun TransferPage(
+    navController: NavController,
     viewModel: TransferViewModel = viewModel(TransferViewModel::class.java)
 ) {
     val lokasiList = viewModel.lokasiList.collectAsStateWithLifecycle().value
@@ -102,64 +106,39 @@ fun TransferPage(
         }
     }
 
-    // Pop Up Dialog for detail
+    // Pop up dialog untuk menampilkan detail lokasi (versi baru)
     if (selectedLokasi.value != null) {
-        val kategoriList = selectedLokasi.value!!.items.map { it.kategori }.distinct()
+        val lokasi = selectedLokasi.value!!
         AlertDialog(
-            onDismissRequest = { selectedLokasi.value = null; selectedKategori.value = null },
+            onDismissRequest = { selectedLokasi.value = null },
             title = {
-                Text(selectedLokasi.value!!.nama, fontWeight = FontWeight.Bold)
+                Text(text = "Detail Lokasi Proyek", fontWeight = FontWeight.Bold)
             },
             text = {
                 Column {
-                    Text("Alamat: ${selectedLokasi.value!!.alamat}")
+                    Text("ID: ${lokasi.id}")
+                    Text("Nama: ${lokasi.nama}")
+                    Text("Alamat: ${lokasi.alamat}")
                     Spacer(modifier = Modifier.height(8.dp))
-                    Text("Pilih Kategori Barang:", fontWeight = FontWeight.SemiBold)
-                    Row(
-                        horizontalArrangement = Arrangement.spacedBy(8.dp),
-                        modifier = Modifier.padding(vertical = 8.dp)
-                    ) {
-                        kategoriList.forEach { kategori: String ->
-                            Button(
-                                onClick = { selectedKategori.value = kategori },
-                                colors = if (selectedKategori.value == kategori) ButtonDefaults.buttonColors(
-                                    containerColor = Color(0xFF1976D2)
-                                ) else ButtonDefaults.buttonColors()
-                            ) {
-                                Text(kategori)
-                            }
-                        }
-                    }
-                    if (selectedKategori.value != null) {
-                        val filteredItems = selectedLokasi.value!!.items.filter { it.kategori == selectedKategori.value }
-                        Text("Barang pada kategori '", fontWeight = FontWeight.SemiBold)
-                        Text(selectedKategori.value!! + "':")
-                        if (filteredItems.isEmpty()) {
-                            Text(
-                                "Tidak ada barang pada kategori ini.",
-                                color = Color.Gray
-                            )
-                        } else {
-                            Column {
-                                filteredItems.forEach { item: ItemBarang ->
-                                    Text("- ${item.nama}")
-                                }
-                            }
+                    Text("Daftar Item:", fontWeight = FontWeight.Bold)
+                    if (lokasi.items.isEmpty()) {
+                        Text("Tidak ada item.")
+                    } else {
+                        lokasi.items.forEach { item ->
+                            Text("- ${item.nama} (${item.kategori})")
                         }
                     }
                 }
             },
             confirmButton = {
-                TextButton(onClick = { selectedLokasi.value = null; selectedKategori.value = null }) {
-                    Text("Tutup")
+                Button(onClick = {
+                    navController.navigate("itemListPage?lokasi=${lokasi.id}&kategori=Semua")
+                    selectedLokasi.value = null
+                }) {
+                    Text("Modifikasi Item")
                 }
             }
         )
     }
 }
 
-@Preview(showBackground = true)
-@Composable
-fun TransferPagePreview() {
-    TransferPage()
-}
