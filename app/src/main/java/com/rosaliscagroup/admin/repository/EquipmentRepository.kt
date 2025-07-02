@@ -45,6 +45,32 @@ object EquipmentRepository {
         android.util.Log.d("EquipmentRepository", "Activity berhasil ditambahkan ke /activities")
     }
 
+    suspend fun addEquipmentWithImageUrl(
+        context: android.content.Context,
+        nama: String,
+        deskripsi: String,
+        kategori: String,
+        lokasiId: String,
+        gambarUri: Uri,
+        sku: String,
+        onProgress: (Float) -> Unit
+    ) {
+        // Upload gambar ke Firebase Storage
+        val storageRef = com.google.firebase.storage.FirebaseStorage.getInstance().reference
+        val fileName = "equipments/${System.currentTimeMillis()}_${gambarUri.lastPathSegment}"
+        val imageRef = storageRef.child(fileName)
+        val uploadTask = imageRef.putFile(gambarUri)
+        uploadTask.addOnProgressListener { taskSnapshot ->
+            val progress = taskSnapshot.bytesTransferred.toFloat() / taskSnapshot.totalByteCount.toFloat()
+            onProgress(progress * 0.8f) // 80% progress for upload
+        }.await()
+        val downloadUrl = imageRef.downloadUrl.await().toString()
+        onProgress(0.9f)
+        // Simpan data equipment dengan URL gambar dari Storage
+        addEquipment(nama, deskripsi, kategori, lokasiId, Uri.parse(downloadUrl), sku)
+        onProgress(1.0f)
+    }
+
     data class Equipment(
         val id: String = "",
         val nama: String = "",

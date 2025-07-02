@@ -62,28 +62,27 @@ dependencies {
     implementation(libs.bundles.compose.ui.impl)
     implementation(libs.material3)
     implementation(libs.navigation.compose)
-
     implementation(libs.hilt.android)
     implementation(libs.hilt.navigation.compose)
     implementation(libs.firebase.database.ktx)
     implementation(libs.firebase.firestore.ktx)
+    implementation(libs.firebase.storage.ktx)
+    implementation(libs.androidx.runtime.livedata)
     implementation(libs.espresso.core)
     ksp(libs.hilt.android.compiler)
-    implementation(libs.androidx.material.icons.extended) // atau versi Compose kamu
-
     implementation(libs.bundles.room)
     ksp(libs.room.compiler)
-
     implementation(libs.bundles.retrofit)
     implementation(libs.okhttp.interceptor.logging)
-
     implementation(libs.moshi)
     ksp(libs.moshi.kotlin.codegen)
-
-    implementation(libs.bundles.coil) {
-        because("An image loading library for Android backed by Kotlin Coroutines")
-    }
-
+    implementation(libs.bundles.coil)
+    implementation("io.coil-kt:coil-compose:2.6.0")
+    implementation("com.google.accompanist:accompanist-swiperefresh:0.33.2-alpha")
+    // Material Icons Extended for additional icons (ViewInAr, AddAPhoto, etc.)
+    implementation("androidx.compose.material:material-icons-extended")
+    // Accompanist System UI Controller for rememberSystemUiController
+    implementation("com.google.accompanist:accompanist-systemuicontroller:0.34.0")
     // Import the Firebase BoM
     implementation(platform("com.google.firebase:firebase-bom:33.13.0"))
 

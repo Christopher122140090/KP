@@ -17,6 +17,8 @@ class HomeViewModel @Inject constructor(
     private val _uiState = MutableStateFlow<HomeScreenUiState>(HomeScreenUiState.Initial)
     val uiState: StateFlow<HomeScreenUiState> = _uiState.asStateFlow()
 
+    private var isCacheValid = false
+
     // Tambahkan StateFlow untuk recent activities realtime
     val recentActivities: StateFlow<List<Activity>> =
         combine(
@@ -50,7 +52,8 @@ class HomeViewModel @Inject constructor(
         homeRepository.getRecentActivitiesRealtime(1000)
             .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
 
-    fun loadData(context: android.content.Context? = null) {
+    fun loadData(context: android.content.Context? = null, forceRefresh: Boolean = false) {
+        if (isCacheValid && !forceRefresh && _uiState.value !is HomeScreenUiState.Initial) return
         viewModelScope.launch {
             _uiState.value = HomeScreenUiState.Loading
             try {
@@ -80,6 +83,7 @@ class HomeViewModel @Inject constructor(
                     locations = locations,
                     newEquipmentsThisWeek = newEquipmentsThisWeek
                 )
+                isCacheValid = true
             } catch (e: Exception) {
                 if (context != null) {
                     android.widget.Toast.makeText(context, "Error: ${e.message}", android.widget.Toast.LENGTH_LONG).show()
@@ -87,5 +91,9 @@ class HomeViewModel @Inject constructor(
                 _uiState.value = HomeScreenUiState.Error(msg = e.message ?: "Something went wrong")
             }
         }
+    }
+
+    fun invalidateCache() {
+        isCacheValid = false
     }
 }

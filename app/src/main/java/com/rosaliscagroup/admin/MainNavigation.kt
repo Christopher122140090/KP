@@ -39,7 +39,10 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.material.icons.filled.ViewInAr
 import com.rosaliscagroup.admin.setting.ChangeNameScreen
 import androidx.compose.runtime.rememberCoroutineScope
-import kotlinx.coroutines.launch
+import com.rosaliscagroup.admin.ui.transfer.TransferPage
+import androidx.navigation.NavType
+import androidx.navigation.navArgument
+import com.rosaliscagroup.admin.ui.proyek.CekBarangScreenTransfer
 
 // Data class untuk state login
 data class LoginState(
@@ -369,6 +372,8 @@ fun MainNavigation() {
             )
         }
         composable("TambahItemPage") {
+            var showSuccess by remember { mutableStateOf(false) }
+            val snackbarHostState = remember { SnackbarHostState() }
             Scaffold(
                 topBar = {
                     AppBar(
@@ -382,12 +387,20 @@ fun MainNavigation() {
                     )
                 },
                 content = { padding ->
-                    TambahItem(
-                        navController = navController,
-                        onSimpan = { _, _, _, _, _, _ -> },
-                        onCancel = { navController.popBackStack() },
-                        onShowNavbarChange = { show -> showNavbar = show }
-                    )
+                    Box(Modifier.padding(padding)) {
+                        TambahItem(
+                            onSimpan = { _, _, _, _, _, _ -> showSuccess = true },
+                            onCancel = { navController.popBackStack() },
+                            onShowNavbarChange = { show -> showNavbar = show }
+                        )
+                        if (showSuccess) {
+                            LaunchedEffect(Unit) {
+                                showSuccess = false
+                                snackbarHostState.showSnackbar("Berhasil menyimpan data!")
+                                navController.popBackStack()
+                            }
+                        }
+                    }
                 },
                 bottomBar = {
                     if (isLoggedIn && showNavbar) {
@@ -397,7 +410,12 @@ fun MainNavigation() {
             )
         }
         composable("TambahProyekPage") {
-            val coroutineScope = rememberCoroutineScope()
+            var showSuccess by remember { mutableStateOf(false) }
+            val snackbarHostState = remember { SnackbarHostState() }
+            val user = com.google.firebase.auth.FirebaseAuth.getInstance().currentUser
+            val userUid = user?.uid ?: ""
+            val userFullName = user?.displayName ?: userName
+            var showDialog by remember { mutableStateOf(false) }
             Scaffold(
                 topBar = {
                     AppBar(
@@ -412,12 +430,35 @@ fun MainNavigation() {
                 },
                 content = { padding ->
                     com.rosaliscagroup.admin.ui.proyek.TambahProyek(
-                        onSimpan = { nama, lokasi ->
-                            coroutineScope.launch {
-                                com.rosaliscagroup.admin.repository.ProjectRepository.addProject(nama, lokasi)
-                            }
-                        }
+                        userUid = userUid,
+                        userName = userFullName,
+                        onSimpan = {
+                            showDialog = true
+                            showSuccess = true
+                        },
+                        onCancel = { navController.popBackStack() }
                     )
+                    if (showDialog) {
+                        AlertDialog(
+                            onDismissRequest = {},
+                            confirmButton = {
+                                TextButton(onClick = {
+                                    showDialog = false
+                                    navController.popBackStack()
+                                }) {
+                                    Text("OK")
+                                }
+                            },
+                            title = { Text("Berhasil") },
+                            text = { Text("Data berhasil disimpan!") }
+                        )
+                    }
+                    if (showSuccess) {
+                        LaunchedEffect(Unit) {
+                            showSuccess = false
+                            snackbarHostState.showSnackbar("Berhasil menyimpan data!")
+                        }
+                    }
                 },
                 bottomBar = {
                     if (isLoggedIn && showNavbar) {
@@ -454,7 +495,8 @@ fun MainNavigation() {
                                 lokasi = it.address
                             )
                         } else emptyList(),
-                        modifier = Modifier.padding(padding)
+                        modifier = Modifier.padding(padding),
+                        navController = navController // <-- pastikan navController diisi
                     )
                 },
                 bottomBar = {
@@ -533,26 +575,50 @@ fun MainNavigation() {
                 }
             )
         }
-        composable("ViewActivitiesPage") { backStackEntry ->
-            val parentEntry = remember(backStackEntry) {
-                navController.getBackStackEntry("home")
-            }
-            val homeViewModel: com.rosaliscagroup.admin.ui.home.HomeViewModel = androidx.hilt.navigation.compose.hiltViewModel(parentEntry)
-            com.rosaliscagroup.admin.ui.activities.ViewActivitiesPage(
-                homeViewModel = homeViewModel
+        composable("transfer") {
+            androidx.compose.material3.Scaffold(
+                topBar = {
+                    AppBar(
+                        title = "Transfer",
+                        navController = navController,
+                        drawerState = rememberDrawerState(DrawerValue.Closed),
+                        scope = scope,
+                        showMenuIcon = false,
+                        userName = userName,
+                        userPhotoUrl = userPhotoUrl
+                    )
+                },
+                content = { padding ->
+                    Box(Modifier.padding(padding)) {
+                        TransferPage(navController = navController)
+                    }
+                },
+                bottomBar = {
+                    if (isLoggedIn && showNavbar) {
+                        BottomNavigationBar(navController = navController)
+                    }
+                }
             )
         }
-        composable("AllLocationsScreen") { backStackEntry ->
-            val parentEntry = remember(backStackEntry) {
-                navController.getBackStackEntry("home")
-            }
-            val homeViewModel: com.rosaliscagroup.admin.ui.home.HomeViewModel = androidx.hilt.navigation.compose.hiltViewModel(parentEntry)
-            val uiState = homeViewModel.uiState.collectAsState().value
-            com.rosaliscagroup.admin.ui.location.AllLocationsScreen(
-                locations = if (uiState is com.rosaliscagroup.admin.ui.home.HomeScreenUiState.Success) uiState.locations else emptyList(),
-                navController = navController,
-                onBack = { navController.popBackStack() }
+        composable(
+            "itemListPage?lokasi={lokasi}&kategori={kategori}",
+            arguments = listOf(
+                navArgument("lokasi") { type = NavType.StringType; defaultValue = "" },
+                navArgument("kategori") { type = NavType.StringType; defaultValue = "Semua" }
             )
+        ) { backStackEntry ->
+            val lokasi = backStackEntry.arguments?.getString("lokasi") ?: ""
+            CekBarangScreenTransfer(lokasiId = lokasi)
+        }
+        composable(
+            "proyekItemListPage?lokasi={lokasi}&kategori={kategori}",
+            arguments = listOf(
+                navArgument("lokasi") { type = NavType.StringType; defaultValue = "" },
+                navArgument("kategori") { type = NavType.StringType; defaultValue = "Semua" }
+            )
+        ) { backStackEntry ->
+            val lokasi = backStackEntry.arguments?.getString("lokasi") ?: ""
+            com.rosaliscagroup.admin.ui.proyek.CekBarangScreenTransfer(lokasiId = lokasi)
         }
     }
 }
@@ -583,3 +649,4 @@ fun BottomNavigationBarPreview() {
         BottomNavigationBar(navController = navController)
     }
 }
+
