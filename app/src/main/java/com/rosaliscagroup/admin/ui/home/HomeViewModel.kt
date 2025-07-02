@@ -20,7 +20,7 @@ class HomeViewModel @Inject constructor(
     // Tambahkan StateFlow untuk recent activities realtime
     val recentActivities: StateFlow<List<Activity>> =
         combine(
-            homeRepository.getRecentActivitiesRealtime(5),
+            homeRepository.getRecentActivitiesRealtime(4),
             EquipmentRepository.getLatestEquipmentFlow()
         ) { activities, latestEquipment ->
             if (latestEquipment == null) return@combine activities

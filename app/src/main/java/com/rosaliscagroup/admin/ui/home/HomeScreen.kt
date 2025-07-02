@@ -237,7 +237,7 @@ private fun HomeScreen(
                 Text("No recent activities.", color = Color.Gray)
             } else {
                 Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
-                    recentActivities.forEach { activity ->
+                    recentActivities.take(3).forEach { activity ->
                         ActivityItem(
                             icon = Icons.Default.CheckCircle,
                             iconTint = Color(0xFF4CAF50),
@@ -421,7 +421,3 @@ fun HomeScreenPreview() {
         )
     }
 }
-
-
-
-

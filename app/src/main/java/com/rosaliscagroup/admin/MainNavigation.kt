@@ -349,17 +349,7 @@ fun MainNavigation() {
         }
         composable("profile") {
             Scaffold(
-                topBar = {
-                    AppBar(
-                        title = "Profile",
-                        navController = navController,
-                        drawerState = rememberDrawerState(DrawerValue.Closed),
-                        scope = scope,
-                        showMenuIcon = false,
-                        userName = userName,
-                        userPhotoUrl = userPhotoUrl
-                    )
-                },
+                // Hapus topBar agar AppBar tidak muncul di menu profile
                 content = { padding ->
                     Box(
                         modifier = Modifier
