@@ -1,22 +1,9 @@
 package com.rosaliscagroup.admin.ui.transfer
 
-import android.net.Uri
-import android.content.Intent
-import android.provider.MediaStore
-import androidx.activity.compose.rememberLauncherForActivityResult
-import androidx.activity.result.contract.ActivityResultContracts
-import androidx.activity.result.ActivityResult
-import androidx.activity.compose.BackHandler
-import androidx.compose.foundation.background
-import androidx.compose.foundation.Image
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.AddAPhoto
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -32,10 +19,6 @@ import coil.compose.rememberAsyncImagePainter
 import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.foundation.border
 import androidx.compose.ui.text.font.FontWeight
-import kotlinx.coroutines.launch
-import com.rosaliscagroup.admin.data.SkuRepository
-import kotlinx.coroutines.Job
-import kotlinx.coroutines.delay
 import com.rosaliscagroup.admin.data.entity.Location
 import com.rosaliscagroup.admin.repository.HomeRepositoryImpl
 import com.rosaliscagroup.admin.repository.EquipmentRepository

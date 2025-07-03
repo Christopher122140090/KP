@@ -505,7 +505,8 @@ fun MainNavigation() {
                 content = { padding ->
                     CekBarangScreen(
                         onTransfer = { equipmentUi ->
-                            navController.navigate("transfer?itemId=${equipmentUi.id}")
+                            val equipmentJson = java.net.URLEncoder.encode(Json.encodeToString(equipmentUi), "UTF-8")
+                            navController.navigate("transfer?equipment=$equipmentJson")
                         }
                     )
                 },

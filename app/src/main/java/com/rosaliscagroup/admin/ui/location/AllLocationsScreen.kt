@@ -10,14 +10,20 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.graphics.Color
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.LocationOn
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.ui.text.font.FontWeight
 import androidx.navigation.NavController
 import com.rosaliscagroup.admin.data.entity.Location
+import com.rosaliscagroup.admin.ui.proyek.Proyek
+import androidx.compose.foundation.clickable
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun AllLocationsScreen(
     locations: List<Location>,
-    navController: NavController,
+    navController: NavController? = null,
+    onViewAllClick: (() -> Unit)? = null,
     onBack: () -> Unit = {}
 ) {
     Scaffold(
@@ -34,6 +40,7 @@ fun AllLocationsScreen(
         },
         containerColor = Color.White
     ) { innerPadding ->
+        val selectedProyek = remember { mutableStateOf<Proyek?>(null) }
         Column(
             modifier = Modifier
                 .fillMaxSize()
@@ -53,7 +60,8 @@ fun AllLocationsScreen(
                     Card(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .padding(vertical = 8.dp),
+                            .padding(vertical = 8.dp)
+                            .clickable { selectedProyek.value = Proyek(location.id, location.name, location.address) },
                         colors = CardDefaults.cardColors(containerColor = Color(0xFFF9FAFB)),
                         elevation = CardDefaults.cardElevation(2.dp)
                     ) {
@@ -73,6 +81,11 @@ fun AllLocationsScreen(
                                 if (location.status.isNotBlank()) {
                                     Text("Status: ${location.status}", style = MaterialTheme.typography.bodySmall, color = if (location.status == "active") Color(0xFF388E3C) else Color(0xFFD32F2F))
                                 }
+                                if (onViewAllClick != null && locations.isNotEmpty()) {
+                                    TextButton(onClick = onViewAllClick) {
+                                        Text("Lihat Semua")
+                                    }
+                                }
                             }
                             if (location.contactPerson.isNotBlank()) {
                                 Spacer(modifier = Modifier.height(2.dp))
@@ -87,6 +100,33 @@ fun AllLocationsScreen(
                     }
                 }
             }
+        }
+        // Popup dialog for location details
+        if (selectedProyek.value != null) {
+            val proyek = selectedProyek.value!!
+            AlertDialog(
+                onDismissRequest = { selectedProyek.value = null },
+                title = {
+                    Text(text = "Detail Lokasi", fontWeight = FontWeight.Bold)
+                },
+                text = {
+                    Column {
+                        Text("ID: ${proyek.id}")
+                        Text("Nama: ${proyek.nama}")
+                        Text("Alamat: ${proyek.lokasi}")
+                    }
+                },
+                confirmButton = {
+                    Button(onClick = {
+                        if (proyek.id.isNotBlank() && navController != null) {
+                            navController.navigate("proyekItemListPage?lokasi=${proyek.id}&kategori=Semua")
+                        }
+                        selectedProyek.value = null
+                    }) {
+                        Text("Lihat Item")
+                    }
+                }
+            )
         }
     }
 }
