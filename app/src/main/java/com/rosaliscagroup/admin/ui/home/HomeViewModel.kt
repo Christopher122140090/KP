@@ -3,7 +3,9 @@ package com.rosaliscagroup.admin.ui.home
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.rosaliscagroup.admin.data.entity.Activity
+import com.rosaliscagroup.admin.data.entity.Location
 import com.rosaliscagroup.admin.repository.EquipmentRepository
+import com.rosaliscagroup.admin.repository.EquipmentRepository.Equipment
 import com.rosaliscagroup.admin.repository.HomeRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.*
@@ -22,7 +24,7 @@ class HomeViewModel @Inject constructor(
     // Tambahkan StateFlow untuk recent activities realtime
     val recentActivities: StateFlow<List<Activity>> =
         combine(
-            homeRepository.getRecentActivitiesRealtime(5),
+            homeRepository.getRecentActivitiesRealtime(4),
             EquipmentRepository.getLatestEquipmentFlow()
         ) { activities, latestEquipment ->
             if (latestEquipment == null) return@combine activities
@@ -52,25 +54,30 @@ class HomeViewModel @Inject constructor(
         homeRepository.getRecentActivitiesRealtime(1000)
             .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
 
-    fun loadData(context: android.content.Context? = null, forceRefresh: Boolean = false) {
+    // Expose StateFlow untuk equipments dan locations realtime
+    val equipmentsRealtime: StateFlow<List<Equipment>> =
+        EquipmentRepository.getEquipmentsRealtime()
+            .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
+
+    val locationsRealtime: StateFlow<List<Location>> =
+        homeRepository.getLocationsRealtime()
+            .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
+
+    fun loadData(forceRefresh: Boolean = false) {
         if (isCacheValid && !forceRefresh && _uiState.value !is HomeScreenUiState.Initial) return
         viewModelScope.launch {
             _uiState.value = HomeScreenUiState.Loading
             try {
                 val totalActivities = homeRepository.getActivitiesCount()
-                val totalEquipments = homeRepository.getEquipmentsCount()
+                val totalEquipments = equipmentsRealtime.value.size
                 val totalLocations = homeRepository.getLocationsCount()
                 val totalProjects = homeRepository.getProjectsCount()
                 val totalUsers = homeRepository.getUsersCount()
                 val kondisiStat = homeRepository.getKondisiStat()
                 val projects = homeRepository.getProjects()
-                val locations = homeRepository.getLocations()
+                val locations = locationsRealtime.value
                 val newEquipmentsThisWeek = homeRepository.getNewEquipmentsThisWeek()
-                // recentActivities diambil dari StateFlow realtime
                 val recentActivitiesList = recentActivities.value
-                if (context != null) {
-                    android.widget.Toast.makeText(context, "Locations: ${locations.size}", android.widget.Toast.LENGTH_SHORT).show()
-                }
                 _uiState.value = HomeScreenUiState.Success(
                     kondisiStat = kondisiStat,
                     totalActivities = totalActivities,
@@ -85,9 +92,6 @@ class HomeViewModel @Inject constructor(
                 )
                 isCacheValid = true
             } catch (e: Exception) {
-                if (context != null) {
-                    android.widget.Toast.makeText(context, "Error: ${e.message}", android.widget.Toast.LENGTH_LONG).show()
-                }
                 _uiState.value = HomeScreenUiState.Error(msg = e.message ?: "Something went wrong")
             }
         }

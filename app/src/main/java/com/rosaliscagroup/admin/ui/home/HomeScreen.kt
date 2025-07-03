@@ -78,21 +78,16 @@ internal fun HomeRoute(
     val context = LocalContext.current
     val uiState = viewModel.uiState.collectAsStateWithLifecycle().value
     val recentActivities = viewModel.recentActivities.collectAsStateWithLifecycle().value
-    // Only fetch if cache is truly empty (Initial state)
-    val shouldFetch = uiState is HomeScreenUiState.Initial
-
-    // Only run on first composition (not on every navigation)
-    LaunchedEffect(shouldFetch) {
-        if (shouldFetch) {
-            viewModel.loadData(context)
-        }
-    }
-
+    // Ambil data realtime
+    val equipments = viewModel.equipmentsRealtime.collectAsStateWithLifecycle().value
+    val locations = viewModel.locationsRealtime.collectAsStateWithLifecycle().value
     HomeScreen(
         uiState = uiState,
         recentActivities = recentActivities,
+        equipments = equipments,
+        locations = locations,
         loadData = {}, // No-op, handled by LaunchedEffect
-        onManualRefresh = { viewModel.loadData(context, forceRefresh = true) },
+        onManualRefresh = { viewModel.loadData(forceRefresh = true) },
         navController = navController
     )
 }
@@ -102,6 +97,8 @@ internal fun HomeRoute(
 private fun HomeScreen(
     uiState: HomeScreenUiState,
     recentActivities: List<Activity>,
+    equipments: List<com.rosaliscagroup.admin.repository.EquipmentRepository.Equipment>,
+    locations: List<com.rosaliscagroup.admin.data.entity.Location>,
     loadData: () -> Unit,
     onManualRefresh: () -> Unit,
     navController: NavController
@@ -118,6 +115,7 @@ private fun HomeScreen(
         )
     }
 
+    // Tampilkan data dummy seperti di preview
     Scaffold(
         containerColor = Color.White
     ) { innerPadding ->
@@ -143,37 +141,52 @@ private fun HomeScreen(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.spacedBy(16.dp)
                 ) {
+                    // Pastikan kedua Card memiliki modifier.weight(1f) agar lebar sama
                     Card(
-                        modifier = Modifier.weight(1f),
+                        modifier = Modifier
+                            .weight(1f)
+                            .height(120.dp), // Tambahkan tinggi tetap agar sinkron
                         shape = RoundedCornerShape(8.dp),
                         colors = CardDefaults.cardColors(containerColor = Color(0xFFE3F2FD))
                     ) {
-                        Column(modifier = Modifier.padding(16.dp)) {
+                        Column(
+                            modifier = Modifier.fillMaxSize().padding(16.dp),
+                            verticalArrangement = Arrangement.SpaceBetween
+                        ) {
                             Row(verticalAlignment = Alignment.CenterVertically) {
                                 Text("Total Equipment", style = MaterialTheme.typography.bodyMedium)
                                 Spacer(modifier = Modifier.weight(1f))
                                 Icon(Icons.Default.Warehouse, contentDescription = "Total Equipment Icon", tint = Color(0xFF2196F3))
                             }
-                            val totalEquipments = if (uiState is HomeScreenUiState.Success) uiState.totalEquipments else 0
+                            val totalEquipments = equipments.size
                             Text("$totalEquipments", style = MaterialTheme.typography.headlineMedium)
                             val newEquipmentsThisWeek = if (uiState is HomeScreenUiState.Success) uiState.newEquipmentsThisWeek else 0
                             Text("+$newEquipmentsThisWeek this week", style = MaterialTheme.typography.bodySmall, color = Color(0xFF4CAF50))
                         }
                     }
                     Card(
-                        modifier = Modifier.weight(1f),
+                        modifier = Modifier
+                            .weight(1f)
+                            .height(120.dp), // Tambahkan tinggi tetap agar sinkron
                         shape = RoundedCornerShape(8.dp),
                         colors = CardDefaults.cardColors(containerColor = Color(0xFFFFF3E0))
                     ) {
-                        Column(modifier = Modifier.padding(16.dp)) {
+                        Column(
+                            modifier = Modifier.fillMaxSize().padding(16.dp),
+                            verticalArrangement = Arrangement.SpaceBetween
+                        ) {
                             Row(verticalAlignment = Alignment.CenterVertically) {
                                 Text("Active Projects", style = MaterialTheme.typography.bodyMedium)
                                 Spacer(modifier = Modifier.weight(1f))
                                 Icon(Icons.Default.LocationOn, contentDescription = "Active Projects Icon", tint = Color(0xFFFF9800))
                             }
                             // Active Projects: jumlah lokasi dengan status == "active"
-                            val activeProjects = if (uiState is HomeScreenUiState.Success) uiState.locations.count { it.status == "active" } else 0
+                            val activeProjects = locations.count { it.status == "active" }
                             Text("$activeProjects", style = MaterialTheme.typography.headlineMedium)
+                            // Tambahan: jumlah proyek baru dalam 1 minggu
+                            val oneWeekAgo = System.currentTimeMillis() - 7 * 24 * 60 * 60 * 1000L
+                            val newProjectsThisWeek = locations.count { it.status == "active" && it.createdAt >= oneWeekAgo }
+                            Text("+$newProjectsThisWeek this week", style = MaterialTheme.typography.bodySmall, color = Color(0xFF4CAF50))
                             Text("", style = MaterialTheme.typography.bodySmall, color = Color(0xFFF44336))
                         }
                     }
@@ -203,39 +216,39 @@ private fun HomeScreen(
                     Text("Locations", style = MaterialTheme.typography.titleMedium)
                     Spacer(modifier = Modifier.weight(1f))
                     TextButton(onClick = { navController.navigate("ViewProyekPage") }) {
-                        Text("View All (${if (uiState is HomeScreenUiState.Success) uiState.locations.size else 0})")
+                        // Ganti dari uiState.locations.size ke locations.size agar realtime
+                        Text("View All (${locations.size})")
                     }
                 }
                 Spacer(modifier = Modifier.height(16.dp))
-                if (uiState is HomeScreenUiState.Success) {
-                    val locationsToShow = uiState.locations.take(3)
-                    Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
-                        locationsToShow.forEach { location ->
-                            Card(
-                                modifier = Modifier.fillMaxWidth(),
-                                shape = RoundedCornerShape(8.dp),
-                                colors = CardDefaults.cardColors(containerColor = Color.White),
-                                elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
+                // Ganti dari uiState.locations.take(3) ke locations.take(3) agar realtime
+                val locationsToShow = locations.take(3)
+                Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                    locationsToShow.forEach { location ->
+                        Card(
+                            modifier = Modifier.fillMaxWidth(),
+                            shape = RoundedCornerShape(8.dp),
+                            colors = CardDefaults.cardColors(containerColor = Color.White),
+                            elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
+                        ) {
+                            Row(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(16.dp),
+                                verticalAlignment = Alignment.CenterVertically
                             ) {
-                                Row(
-                                    modifier = Modifier
-                                        .fillMaxWidth()
-                                        .padding(16.dp),
-                                    verticalAlignment = Alignment.CenterVertically
-                                ) {
-                                    Icon(Icons.Default.LocationOn, contentDescription = location.name, modifier = Modifier.size(40.dp), tint = Color(0xFF2196F3))
-                                    Spacer(modifier = Modifier.width(16.dp))
-                                    Column(modifier = Modifier.weight(1f)) {
-                                        Text(location.name, style = MaterialTheme.typography.titleMedium)
-                                        if (location.address.isNotBlank()) {
-                                            Text(location.address, style = MaterialTheme.typography.bodySmall, color = Color.Gray)
-                                        }
-                                        if (location.type.isNotBlank()) {
-                                            Text("Tipe: ${location.type}", style = MaterialTheme.typography.bodySmall, color = Color(0xFF1976D2))
-                                        }
-                                        if (location.status.isNotBlank()) {
-                                            Text("Status: ${location.status}", style = MaterialTheme.typography.bodySmall, color = if (location.status == "active") Color(0xFF388E3C) else Color(0xFFD32F2F))
-                                        }
+                                Icon(Icons.Default.LocationOn, contentDescription = location.name, modifier = Modifier.size(40.dp), tint = Color(0xFF2196F3))
+                                Spacer(modifier = Modifier.width(16.dp))
+                                Column(modifier = Modifier.weight(1f)) {
+                                    Text(location.name, style = MaterialTheme.typography.titleMedium)
+                                    if (location.address.isNotBlank()) {
+                                        Text(location.address, style = MaterialTheme.typography.bodySmall, color = Color.Gray)
+                                    }
+                                    if (location.type.isNotBlank()) {
+                                        Text("Tipe: ${location.type}", style = MaterialTheme.typography.bodySmall, color = Color(0xFF1976D2))
+                                    }
+                                    if (location.status.isNotBlank()) {
+                                        Text("Status: ${location.status}", style = MaterialTheme.typography.bodySmall, color = if (location.status == "active") Color(0xFF388E3C) else Color(0xFFD32F2F))
                                     }
                                 }
                             }
@@ -248,33 +261,33 @@ private fun HomeScreen(
 
                 Spacer(modifier = Modifier.height(24.dp))
 
-                // Recent Activities (realtime)
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Text("Recent Activities", style = MaterialTheme.typography.titleMedium)
-                    Spacer(modifier = Modifier.weight(1f))
-                    TextButton(onClick = { navController.navigate("ViewActivitiesPage") }) {
-                        Text("View All")
+            // Recent Activities (realtime)
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text("Recent Activities", style = MaterialTheme.typography.titleMedium)
+                Spacer(modifier = Modifier.weight(1f))
+                TextButton(onClick = { navController.navigate("ViewActivitiesPage") }) {
+                    Text("View All")
+                }
+            }
+            Spacer(modifier = Modifier.height(16.dp))
+            if (recentActivities.isEmpty()) {
+                Text("No recent activities.", color = Color.Gray)
+            } else {
+                Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                    recentActivities.take(3).forEach { activity ->
+                        ActivityItem(
+                            icon = Icons.Default.CheckCircle,
+                            iconTint = Color(0xFF4CAF50),
+                            title = activity.type,
+                            details = activity.details,
+                            time = getRelativeTime(activity.createdAt)
+                        )
                     }
                 }
-                Spacer(modifier = Modifier.height(16.dp))
-                if (recentActivities.isEmpty()) {
-                    Text("No recent activities.", color = Color.Gray)
-                } else {
-                    Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
-                        recentActivities.forEach { activity ->
-                            ActivityItem(
-                                icon = Icons.Default.CheckCircle,
-                                iconTint = Color(0xFF4CAF50),
-                                title = activity.type,
-                                details = activity.details,
-                                time = getRelativeTime(activity.createdAt)
-                            )
-                        }
-                    }
-                }
+            }
 
                 Spacer(modifier = Modifier.height(24.dp))
 
@@ -444,10 +457,11 @@ fun HomeScreenPreview() {
                 newEquipmentsThisWeek = 0 // <-- fix preview error
             ),
             recentActivities = emptyList(),
+            equipments = emptyList(), // <-- fix: tambahkan parameter equipments
+            locations = emptyList(), // <-- fix: tambahkan parameter locations
             loadData = {},
             onManualRefresh = {},
             navController = rememberNavController()
         )
     }
 }
-

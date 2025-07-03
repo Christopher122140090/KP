@@ -136,4 +136,30 @@ object EquipmentRepository {
                 "updatedAt" to now
             )).await()
     }
+
+    fun getEquipmentsRealtime(): Flow<List<Equipment>> = callbackFlow {
+        val listener = db.collection("equipments")
+            .addSnapshotListener { snapshot, error ->
+                if (error != null) {
+                    close(error)
+                    return@addSnapshotListener
+                }
+                val equipments = snapshot?.documents?.mapNotNull { doc ->
+                    val data = doc.data ?: return@mapNotNull null
+                    Equipment(
+                        id = doc.id,
+                        nama = data["nama"] as? String ?: "",
+                        deskripsi = data["deskripsi"] as? String ?: "",
+                        kategori = data["kategori"] as? String ?: "",
+                        lokasiId = data["lokasiId"] as? String ?: "",
+                        sku = data["sku"] as? String ?: "",
+                        gambarUri = data["gambarUri"] as? String ?: "",
+                        createdAt = data["createdAt"] as? com.google.firebase.Timestamp,
+                        updatedAt = data["updatedAt"] as? com.google.firebase.Timestamp
+                    )
+                } ?: emptyList()
+                trySend(equipments)
+            }
+        awaitClose { listener.remove() }
+    }
 }
