@@ -12,8 +12,9 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.ExitToApp
-import androidx.compose.material.icons.filled.Person
+import androidx.compose.material.icons.filled.Inventory2
+import androidx.compose.material.icons.filled.LocationOn
+import androidx.compose.material.icons.automirrored.filled.ArrowForwardIos
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.ui.tooling.preview.Preview
 
@@ -22,54 +23,119 @@ fun CheckNav(
     navController: NavController,
     modifier: Modifier = Modifier
 ) {
-    Column(
-        modifier = modifier
-            .fillMaxSize()
-            .background(Color(0xFFE3F2FD))
-            .padding(16.dp),
-        verticalArrangement = Arrangement.Top,
-        horizontalAlignment = Alignment.CenterHorizontally
-    ) {
-        Spacer(Modifier.height(32.dp))
-        Card(
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(60.dp)
-                .padding(bottom = 16.dp),
-            shape = RoundedCornerShape(12.dp),
-            colors = CardDefaults.cardColors(containerColor = Color.White),
-            elevation = CardDefaults.cardElevation(2.dp)
+    Scaffold { paddingValues ->
+        Column(
+            modifier = modifier
+                .padding(paddingValues)
+                .fillMaxSize()
+                .background(Color.White)
+                .padding(16.dp),
+            verticalArrangement = Arrangement.Top,
+            horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            Row(
+            Text(
+                text = "Pilih Jenis Pemeriksaan",
+                style = MaterialTheme.typography.headlineMedium,
+                modifier = Modifier.align(Alignment.Start)
+            )
+            Spacer(Modifier.height(8.dp))
+            Text(
+                text = "Pilih jenis item atau lokasi yang ingin Anda periksa di proyek konstruksi",
+                style = MaterialTheme.typography.bodyMedium,
+                modifier = Modifier.align(Alignment.Start)
+            )
+            Spacer(Modifier.height(16.dp))
+
+            // Card 1: Pemeriksaan Barang
+            Card(
                 modifier = Modifier
-                    .fillMaxSize()
-                    .clickable { navController.navigate("cek_barang") }
-                    .padding(horizontal = 16.dp),
-                verticalAlignment = Alignment.CenterVertically
+                    .fillMaxWidth()
+                    .padding(bottom = 16.dp),
+                shape = RoundedCornerShape(12.dp),
+                colors = CardDefaults.cardColors(containerColor = Color.White),
+                elevation = CardDefaults.cardElevation(2.dp)
             ) {
-                Icon(Icons.Default.Person, contentDescription = "Cek Item", tint = Color(0xFF1976D2))
-                Spacer(Modifier.width(16.dp))
-                Text("Cek Item", style = MaterialTheme.typography.titleMedium)
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .clickable { navController.navigate("Cek_Barang") }
+                        .padding(16.dp)
+                ) {
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Box(
+                            modifier = Modifier
+                                .background(Color(0xFFFFECB3), shape = RoundedCornerShape(8.dp))
+                                .padding(12.dp)
+                        ) {
+                            Icon(Icons.Default.Inventory2, contentDescription = "Cek Barang Icon", tint = Color(0xFFF57C00)) // Warna oranye lebih berani
+                        }
+                        Spacer(Modifier.width(16.dp))
+                        Column {
+                            Text("Cek Item", style = MaterialTheme.typography.titleMedium)
+                            Text("Periksa material, alat, atau peralatan konstruksi di inventori proyek", style = MaterialTheme.typography.bodySmall)
+                        }
+                        Spacer(Modifier.weight(1f))
+                        Icon(Icons.AutoMirrored.Filled.ArrowForwardIos, contentDescription = "Arrow")
+                    }
+                    Spacer(Modifier.height(16.dp))
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                            Text("Material")
+                            Text("Alat")
+                            Text("Equipment")
+                    }
+                }
             }
-        }
-        Card(
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(60.dp),
-            shape = RoundedCornerShape(12.dp),
-            colors = CardDefaults.cardColors(containerColor = Color.White),
-            elevation = CardDefaults.cardElevation(2.dp)
-        ) {
-            Row(
+
+            // Card 2: Pemeriksaan Lokasi
+            Card(
                 modifier = Modifier
-                    .fillMaxSize()
-                    .clickable { navController.navigate("ViewProyekPage") }
-                    .padding(horizontal = 16.dp),
-                verticalAlignment = Alignment.CenterVertically
+                    .fillMaxWidth(),
+                shape = RoundedCornerShape(12.dp),
+                colors = CardDefaults.cardColors(containerColor = Color.White),
+                elevation = CardDefaults.cardElevation(2.dp)
             ) {
-                Icon(Icons.Default.ExitToApp, contentDescription = "Cek Proyek", tint = Color(0xFF1976D2))
-                Spacer(Modifier.width(16.dp))
-                Text("Cek Lokasi", style = MaterialTheme.typography.titleMedium)
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .clickable { navController.navigate("ViewProyekPage") }
+                        .padding(16.dp)
+                ) {
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Box(
+                            modifier = Modifier
+                                .background(Color(0xFFBBDEFB), shape = RoundedCornerShape(8.dp))
+                                .padding(12.dp)
+                        ) {
+                            Icon(Icons.Default.LocationOn, contentDescription = "Cek Lokasi Icon", tint = Color(0xFF1976D2)) // Warna biru lebih berani
+                        }
+                        Spacer(Modifier.width(16.dp))
+                        Column {
+                            Text("Cek Lokasi", style = MaterialTheme.typography.titleMedium)
+                            Text("Periksa lokasi seperti gudang, area kerja, atau titik distribusi material", style = MaterialTheme.typography.bodySmall)
+                        }
+                        Spacer(Modifier.weight(1f))
+                        Icon(Icons.AutoMirrored.Filled.ArrowForwardIos, contentDescription = "Arrow")
+                    }
+                    Spacer(Modifier.height(16.dp))
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        Text("Gudang")
+                        Text("Area Kerja")
+                        Text("Site Office")
+
+                    }
+                }
             }
         }
     }
@@ -78,7 +144,6 @@ fun CheckNav(
 @Preview(showBackground = true)
 @Composable
 fun CheckNavPreview() {
-    // Use a minimal fake NavController for preview
     val fakeNavController = NavController(LocalContext.current)
     MaterialTheme {
         CheckNav(navController = fakeNavController)
