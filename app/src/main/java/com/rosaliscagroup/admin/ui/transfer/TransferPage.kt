@@ -1,144 +1,174 @@
 package com.rosaliscagroup.admin.ui.transfer
 
+import android.net.Uri
+import android.content.Intent
+import android.provider.MediaStore
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
+import androidx.activity.result.ActivityResult
+import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.background
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.AlertDialog
-import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedButton
-import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
+import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.foundation.verticalScroll
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.AddAPhoto
+import androidx.compose.material3.*
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import androidx.lifecycle.viewmodel.compose.viewModel
-import androidx.navigation.NavController
-import androidx.navigation.compose.rememberNavController
-import com.rosaliscagroup.admin.ui.transfer.TransferViewModel
+import androidx.compose.ui.unit.sp
+import coil.compose.rememberAsyncImagePainter
+import androidx.compose.ui.focus.onFocusChanged
+import androidx.compose.foundation.border
+import androidx.compose.ui.text.font.FontWeight
+import kotlinx.coroutines.launch
+import com.rosaliscagroup.admin.data.SkuRepository
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.delay
+import com.rosaliscagroup.admin.data.entity.Location
+import com.rosaliscagroup.admin.repository.HomeRepositoryImpl
+import com.rosaliscagroup.admin.repository.EquipmentRepository
+import com.rosaliscagroup.admin.ui.item.EquipmentUi
 
-data class LokasiProyek(
-    val id: String,
-    val nama: String,
-    val alamat: String,
-    val items: List<ItemBarang>
-)
-
-data class ItemBarang(
-    val id: String,
-    val nama: String,
-    val kategori: String
-)
-
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun TransferPage(
-    navController: NavController,
-    viewModel: TransferViewModel = viewModel(TransferViewModel::class.java)
+fun TransferItem(
+    equipment: EquipmentUi, // Tambahkan parameter equipment
+    onSimpan: (String, String) -> Unit, // id barang, lokasi baru
+    onCancel: (() -> Unit)? = null
 ) {
-    val lokasiList = viewModel.lokasiList.collectAsStateWithLifecycle().value
-    val selectedLokasi = remember { mutableStateOf<LokasiProyek?>(null) }
-    val selectedKategori = remember { mutableStateOf<String?>(null) }
+    var lokasiId by remember { mutableStateOf(equipment.lokasiId) }
+    var lokasiList by remember { mutableStateOf(listOf<Location>()) }
+    var lokasiLoading by remember { mutableStateOf(true) }
+    val scrollState = rememberScrollState()
+    var lokasiExpanded by remember { mutableStateOf(false) }
+
+    // Fetch lokasi dari Firestore
+    LaunchedEffect(Unit) {
+        lokasiLoading = true
+        try {
+            val lokasiRepo = HomeRepositoryImpl()
+            lokasiList = lokasiRepo.getLocations()
+        } catch (_: Exception) {}
+        lokasiLoading = false
+    }
 
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .background(Color(0xFFF5F7FA))
-            .padding(16.dp)
+            .verticalScroll(scrollState)
+            .padding(24.dp)
     ) {
-        Text(
-            text = if (lokasiList.isEmpty()) "Belum ada lokasi terdaftar" else "Daftar Lokasi Proyek",
-            style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold),
-            modifier = Modifier.padding(bottom = 16.dp)
+        Text("Transfer Item", style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold))
+        Spacer(modifier = Modifier.height(16.dp))
+        // Nama (read-only)
+        OutlinedTextField(
+            value = equipment.nama,
+            onValueChange = {},
+            label = { Text("Nama") },
+            enabled = false,
+            modifier = Modifier.fillMaxWidth()
         )
-        if (lokasiList.isEmpty()) {
-            Box(
-                modifier = Modifier.fillMaxSize(),
-                contentAlignment = Alignment.Center
+        Spacer(modifier = Modifier.height(8.dp))
+        // Kategori (read-only)
+        OutlinedTextField(
+            value = equipment.kategori,
+            onValueChange = {},
+            label = { Text("Kategori") },
+            enabled = false,
+            modifier = Modifier.fillMaxWidth()
+        )
+        Spacer(modifier = Modifier.height(8.dp))
+        // SKU (read-only)
+        OutlinedTextField(
+            value = equipment.sku,
+            onValueChange = {},
+            label = { Text("SKU") },
+            enabled = false,
+            modifier = Modifier.fillMaxWidth()
+        )
+        Spacer(modifier = Modifier.height(8.dp))
+        // Deskripsi (read-only)
+        OutlinedTextField(
+            value = equipment.deskripsi,
+            onValueChange = {},
+            label = { Text("Deskripsi") },
+            enabled = false,
+            modifier = Modifier.fillMaxWidth()
+        )
+        Spacer(modifier = Modifier.height(8.dp))
+        // Lokasi (editable)
+        ExposedDropdownMenuBox(
+            expanded = lokasiExpanded,
+            onExpandedChange = { lokasiExpanded = !lokasiExpanded }
+        ) {
+            OutlinedTextField(
+                value = lokasiList.find { it.id == lokasiId }?.name ?: "",
+                onValueChange = {},
+                label = { Text("Lokasi Baru") },
+                readOnly = true,
+                modifier = Modifier.fillMaxWidth().menuAnchor(),
+                trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = lokasiExpanded) }
+            )
+            ExposedDropdownMenu(
+                expanded = lokasiExpanded,
+                onDismissRequest = { lokasiExpanded = false }
             ) {
-                Text("Data lokasi kosong.", color = Color.Gray)
-            }
-        } else {
-            LazyColumn(verticalArrangement = Arrangement.spacedBy(12.dp)) {
-                items(lokasiList) { lokasi ->
-                    Card(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .clickable { selectedLokasi.value = lokasi; selectedKategori.value = null },
-                        shape = RoundedCornerShape(12.dp),
-                        colors = CardDefaults.cardColors(containerColor = Color.White),
-                        elevation = CardDefaults.cardElevation(2.dp)
-                    ) {
-                        Column(modifier = Modifier.padding(16.dp)) {
-                            Text(
-                                text = lokasi.nama,
-                                style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold)
-                            )
-                            Spacer(modifier = Modifier.height(4.dp))
-                            Text(
-                                text = "Alamat: ${lokasi.alamat}",
-                                style = MaterialTheme.typography.bodyMedium
-                            )
+                lokasiList.forEach { l ->
+                    DropdownMenuItem(
+                        text = { Text(l.name) },
+                        onClick = {
+                            lokasiId = l.id
+                            lokasiExpanded = false
                         }
-                    }
+                    )
                 }
             }
         }
-    }
-
-    // Pop up dialog untuk menampilkan detail lokasi (versi baru)
-    if (selectedLokasi.value != null) {
-        val lokasi = selectedLokasi.value!!
-        AlertDialog(
-            onDismissRequest = { selectedLokasi.value = null },
-            title = {
-                Text(text = "Detail Lokasi Proyek", fontWeight = FontWeight.Bold)
-            },
-            text = {
-                Column {
-                    Text("ID: ${lokasi.id}")
-                    Text("Nama: ${lokasi.nama}")
-                    Text("Alamat: ${lokasi.alamat}")
-                    Spacer(modifier = Modifier.height(8.dp))
-                    Text("Daftar Item:", fontWeight = FontWeight.Bold)
-                    if (lokasi.items.isEmpty()) {
-                        Text("Tidak ada item.")
-                    } else {
-                        lokasi.items.forEach { item ->
-                            Text("- ${item.nama} (${item.kategori})")
-                        }
-                    }
-                }
-            },
-            confirmButton = {
-                Button(onClick = {
-                    navController.navigate("itemListPage?lokasi=${lokasi.id}&kategori=Semua")
-                    selectedLokasi.value = null
-                }) {
-                    Text("Modifikasi Item")
-                }
+        Spacer(modifier = Modifier.height(16.dp))
+        Row {
+            Button(
+                onClick = { onSimpan(equipment.id, lokasiId) },
+                enabled = !lokasiLoading,
+                colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF1976D2)),
+                shape = RoundedCornerShape(8.dp)
+            ) {
+                Text("Simpan Transfer", color = Color.White)
             }
-        )
+            Spacer(modifier = Modifier.width(8.dp))
+            OutlinedButton(onClick = { onCancel?.invoke() }) {
+                Text("Batal")
+            }
+        }
     }
+}
+
+// Preview harus berada di paling bawah file, setelah semua fungsi utama
+@Preview(showBackground = true)
+@Composable
+fun TransferItemPreview() {
+    TransferItem(
+        equipment = EquipmentUi(
+            id = "1",
+            nama = "Excavator",
+            deskripsi = "Alat berat untuk menggali",
+            kategori = "Alat Berat",
+            lokasiId = "Lokasi A",
+            sku = "SKU123"
+        ),
+        onSimpan = { _, _ -> },
+        onCancel = {}
+    )
 }
 

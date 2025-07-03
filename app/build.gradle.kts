@@ -7,10 +7,11 @@ plugins {
 
     // Add the Google services Gradle plugin
     id("com.google.gms.google-services")
+    id("org.jetbrains.kotlin.plugin.serialization") version "1.9.0"
 }
 
 android {
-    namespace = "com.hadiyarajesh.admin"
+    namespace = "com.rosalisca.admin"
     compileSdk = 35
 
     defaultConfig {
@@ -124,6 +125,7 @@ dependencies {
     implementation("androidx.compose.material3:material3:1.1.0")
     implementation("com.google.accompanist:accompanist-systemuicontroller:0.30.1")
     implementation("io.coil-kt:coil-compose:2.4.0")
+    implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.6.3")
 }
 
 // Pass options to Room ksp processor

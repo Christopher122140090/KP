@@ -335,8 +335,20 @@ fun CekBarangScreenTransfer(
                 }
             },
             confirmButton = {
-                TextButton(onClick = { selectedBarangState.value = null }) {
-                    Text("Tutup")
+                Row {
+                    TextButton(onClick = { selectedBarangState.value = null }) {
+                        Text("Tutup", color = Color.Black)
+                    }
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Button(
+                        onClick = { /* TODO: Transfer Item action */ },
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = Color(0xFF1565C0),
+                            contentColor = Color.White
+                        )
+                    ) {
+                        Text("Transfer Item", color = Color.White)
+                    }
                 }
             },
             shape = androidx.compose.foundation.shape.RoundedCornerShape(16.dp),
@@ -609,7 +621,7 @@ fun CekBarangScreenTransfer(
                     modifier = Modifier.Companion.fillMaxSize(),
                     contentAlignment = Alignment.Companion.Center
                 ) {
-                    Text("Tidak ada data barang.", color = Color.Companion.Gray)
+                    Text("Tidak ada data barang.", color = Color(0xFF1565C0))
                 }
             } else {
                 LazyColumn(

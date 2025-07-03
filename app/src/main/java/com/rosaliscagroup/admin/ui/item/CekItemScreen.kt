@@ -42,7 +42,9 @@ import coil.compose.rememberAsyncImagePainter
 import com.rosaliscagroup.admin.repository.EquipmentRepository
 import com.rosaliscagroup.admin.data.entity.Location
 import com.rosaliscagroup.admin.repository.HomeRepositoryImpl
+import kotlinx.serialization.Serializable
 
+@Serializable
 data class EquipmentUi(
     val id: String = "",
     val nama: String = "",
@@ -140,7 +142,8 @@ fun BarangTable(
 @OptIn(androidx.compose.material3.ExperimentalMaterial3Api::class)
 @Composable
 fun CekBarangScreen(
-    onDetail: (EquipmentUi) -> Unit = {}
+    onDetail: (EquipmentUi) -> Unit = {},
+    onTransfer: (EquipmentUi) -> Unit = {} // Tambahkan parameter callback transfer
 ) {
     val context = LocalContext.current
     val coroutineScope = rememberCoroutineScope()
@@ -239,8 +242,21 @@ fun CekBarangScreen(
                 }
             },
             confirmButton = {
-                TextButton(onClick = { selectedBarang = null }) {
-                    Text("Tutup")
+                Row {
+                    TextButton(onClick = { selectedBarang = null }) {
+                        Text("Tutup", color = Color.Black)
+                    }
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Button(
+                        onClick = {
+                            onTransfer(selectedBarang!!)
+                            selectedBarang = null // Tutup dialog setelah navigasi
+                        },
+                        colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF1976D2)),
+                        shape = RoundedCornerShape(8.dp)
+                    ) {
+                        Text("Transfer Item", color = Color.White)
+                    }
                 }
             },
             shape = RoundedCornerShape(16.dp),
