@@ -474,36 +474,11 @@ fun MainNavigation() {
             }
             val homeViewModel: com.rosaliscagroup.admin.ui.home.HomeViewModel = androidx.hilt.navigation.compose.hiltViewModel(parentEntry)
             val uiState = homeViewModel.uiState.collectAsState().value
-            Scaffold(
-                topBar = {
-                    AppBar(
-                        title = "Daftar Lokasi",
-                        navController = navController,
-                        drawerState = rememberDrawerState(DrawerValue.Closed),
-                        scope = scope,
-                        showMenuIcon = false,
-                        userName = userName,
-                        userPhotoUrl = userPhotoUrl
-                    )
-                },
-                content = { padding ->
-                    com.rosaliscagroup.admin.ui.proyek.ViewProyek(
-                        proyekList = if (uiState is com.rosaliscagroup.admin.ui.home.HomeScreenUiState.Success) uiState.locations.map {
-                            com.rosaliscagroup.admin.ui.proyek.Proyek(
-                                id = it.id,
-                                nama = it.name,
-                                lokasi = it.address
-                            )
-                        } else emptyList(),
-                        modifier = Modifier.padding(padding),
-                        navController = navController // <-- pastikan navController diisi
-                    )
-                },
-                bottomBar = {
-                    if (isLoggedIn && showNavbar) {
-                        BottomNavigationBar(navController = navController)
-                    }
-                }
+            val locations = homeViewModel.locationsRealtime.collectAsState().value
+            com.rosaliscagroup.admin.ui.location.AllLocationsScreen(
+                locations = locations,
+                navController = navController,
+                onBack = { navController.popBackStack() }
             )
         }
         composable("cek_barang") {
@@ -620,6 +595,16 @@ fun MainNavigation() {
             val lokasi = backStackEntry.arguments?.getString("lokasi") ?: ""
             com.rosaliscagroup.admin.ui.proyek.CekBarangScreenTransfer(lokasiId = lokasi)
         }
+        composable("ViewActivitiesPage") { backStackEntry ->
+            val parentEntry = remember(backStackEntry) {
+                navController.getBackStackEntry("home")
+            }
+            val homeViewModel: com.rosaliscagroup.admin.ui.home.HomeViewModel = androidx.hilt.navigation.compose.hiltViewModel(parentEntry)
+            com.rosaliscagroup.admin.ui.activities.ViewActivitiesPage(
+                homeViewModel = homeViewModel,
+                modifier = Modifier.fillMaxSize()
+            )
+        }
     }
 }
 
@@ -649,4 +634,3 @@ fun BottomNavigationBarPreview() {
         BottomNavigationBar(navController = navController)
     }
 }
-
