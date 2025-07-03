@@ -319,14 +319,9 @@ fun MainNavigation() {
                     )
                 },
                 content = { padding ->
-                    CekBarangScreen(
-                        onTransfer = { equipmentUi ->
-                            // Navigasi ke halaman transfer dengan membawa seluruh data EquipmentUi sebagai JSON
-                            val equipmentJson = java.net.URLEncoder.encode(
-                                Json.encodeToString(equipmentUi), "UTF-8"
-                            )
-                            navController.navigate("transfer?equipment=$equipmentJson")
-                        }
+                    CheckNav(
+                        navController = navController,
+                        modifier = Modifier.padding(padding)
                     )
                 },
                 bottomBar = {

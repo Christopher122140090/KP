@@ -11,12 +11,12 @@ plugins {
 }
 
 android {
-    namespace = "com.rosalisca.admin"
+    namespace = "com.rosaliscagroup.admin"
     compileSdk = 35
 
     defaultConfig {
         applicationId = "com.rosaliscagroup.admin"
-        minSdk = 23 // dinaikkan dari 21 ke 23 agar kompatibel dengan Firebase Auth
+        minSdk = 23
         targetSdk = 35
         versionCode = 1
         versionName = "1.0"

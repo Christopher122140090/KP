@@ -44,7 +44,7 @@ import coil.compose.rememberAsyncImagePainter
 import com.google.accompanist.systemuicontroller.rememberSystemUiController
 import com.google.accompanist.swiperefresh.SwipeRefresh
 import com.google.accompanist.swiperefresh.rememberSwipeRefreshState
-import com.hadiyarajesh.admin.R
+import com.rosaliscagroup.admin.R
 import com.rosaliscagroup.admin.data.entity.Activity
 import com.rosaliscagroup.admin.data.entity.Image
 import com.rosaliscagroup.admin.ui.components.ErrorItem

@@ -699,51 +699,51 @@ fun CekBarangScreenTransfer(
                 }
             }
             Spacer(modifier = Modifier.Companion.height(8.dp))
-            // Statistik Barang
-            Card(
-                modifier = Modifier.Companion
-                    .fillMaxWidth()
-                    .padding(horizontal = 16.dp),
-                shape = androidx.compose.foundation.shape.RoundedCornerShape(12.dp),
-                colors = CardDefaults.cardColors(containerColor = Color.Companion.White),
-                elevation = CardDefaults.cardElevation(2.dp)
-            ) {
-                Row(
-                    modifier = Modifier.Companion.padding(16.dp),
-                    verticalAlignment = Alignment.Companion.CenterVertically
-                ) {
-                    Column(modifier = Modifier.Companion.weight(1f)) {
-                        Text(
-                            "Statistik Barang",
-                            style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Companion.Bold)
-                        )
-                        Spacer(modifier = Modifier.Companion.height(8.dp))
-                        Row {
-                            Text(
-                                "24",
-                                style = MaterialTheme.typography.headlineMedium.copy(
-                                    color = Color(0xFF1976D2)
-                                )
-                            )
-                            Spacer(modifier = Modifier.Companion.width(8.dp))
-                            Text("Total Barang", style = MaterialTheme.typography.bodyMedium)
-                        }
-                    }
-                    Column(horizontalAlignment = Alignment.Companion.End) {
-                        Spacer(modifier = Modifier.Companion.height(8.dp))
-                        Row {
-                            Text(
-                                "18",
-                                style = MaterialTheme.typography.headlineMedium.copy(
-                                    color = Color(0xFF388E3C)
-                                )
-                            )
-                            Spacer(modifier = Modifier.Companion.width(8.dp))
-                            Text("Tersedia", style = MaterialTheme.typography.bodyMedium)
-                        }
-                    }
-                }
-            }
+//            // Statistik Barang
+//            Card(
+//                modifier = Modifier.Companion
+//                    .fillMaxWidth()
+//                    .padding(horizontal = 16.dp),
+//                shape = androidx.compose.foundation.shape.RoundedCornerShape(12.dp),
+//                colors = CardDefaults.cardColors(containerColor = Color.Companion.White),
+//                elevation = CardDefaults.cardElevation(2.dp)
+//            ) {
+//                Row(
+//                    modifier = Modifier.Companion.padding(16.dp),
+//                    verticalAlignment = Alignment.Companion.CenterVertically
+//                ) {
+//                    Column(modifier = Modifier.Companion.weight(1f)) {
+//                        Text(
+//                            "Statistik Barang",
+//                            style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Companion.Bold)
+//                        )
+//                        Spacer(modifier = Modifier.Companion.height(8.dp))
+//                        Row {
+//                            Text(
+//                                "24",
+//                                style = MaterialTheme.typography.headlineMedium.copy(
+//                                    color = Color(0xFF1976D2)
+//                                )
+//                            )
+//                            Spacer(modifier = Modifier.Companion.width(8.dp))
+//                            Text("Total Barang", style = MaterialTheme.typography.bodyMedium)
+//                        }
+//                    }
+//                    Column(horizontalAlignment = Alignment.Companion.End) {
+//                        Spacer(modifier = Modifier.Companion.height(8.dp))
+//                        Row {
+//                            Text(
+//                                "18",
+//                                style = MaterialTheme.typography.headlineMedium.copy(
+//                                    color = Color(0xFF388E3C)
+//                                )
+//                            )
+//                            Spacer(modifier = Modifier.Companion.width(8.dp))
+//                            Text("Tersedia", style = MaterialTheme.typography.bodyMedium)
+//                        }
+//                    }
+//                }
+//            }
             Spacer(modifier = Modifier.Companion.height(16.dp))
         }
     }

@@ -504,40 +504,8 @@ fun CekBarangScreen(
                     }
                 }
             }
-            Spacer(modifier = Modifier.height(8.dp))
-            // Statistik Barang
-            Card(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 16.dp),
-                shape = RoundedCornerShape(12.dp),
-                colors = CardDefaults.cardColors(containerColor = Color.White),
-                elevation = CardDefaults.cardElevation(2.dp)
-            ) {
-                Row(
-                    modifier = Modifier.padding(16.dp),
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Column(modifier = Modifier.weight(1f)) {
-                        Text("Statistik Barang", style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold))
-                        Spacer(modifier = Modifier.height(8.dp))
-                        Row {
-                            Text("24", style = MaterialTheme.typography.headlineMedium.copy(color = Color(0xFF1976D2)))
-                            Spacer(modifier = Modifier.width(8.dp))
-                            Text("Total Barang", style = MaterialTheme.typography.bodyMedium)
-                        }
-                    }
-                    Column(horizontalAlignment = Alignment.End) {
-                        Spacer(modifier = Modifier.height(8.dp))
-                        Row {
-                            Text("18", style = MaterialTheme.typography.headlineMedium.copy(color = Color(0xFF388E3C)))
-                            Spacer(modifier = Modifier.width(8.dp))
-                            Text("Tersedia", style = MaterialTheme.typography.bodyMedium)
-                        }
-                    }
-                }
-            }
-            Spacer(modifier = Modifier.height(16.dp))
+
+            Spacer(modifier = Modifier.height(32.dp))
         }
     }
 }
