@@ -160,8 +160,15 @@ private fun HomeScreen(
                             }
                             val totalEquipments = equipments.size
                             Text("$totalEquipments", style = MaterialTheme.typography.headlineMedium)
-                            val newEquipmentsThisWeek = if (uiState is HomeScreenUiState.Success) uiState.newEquipmentsThisWeek else 0
-                            Text("+$newEquipmentsThisWeek this week", style = MaterialTheme.typography.bodySmall, color = Color(0xFF4CAF50))
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                horizontalArrangement = Arrangement.SpaceBetween,
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                val newEquipmentsThisWeek = if (uiState is HomeScreenUiState.Success) uiState.newEquipmentsThisWeek else 0
+                                Text("+$newEquipmentsThisWeek this week", style = MaterialTheme.typography.bodySmall, color = Color(0xFF4CAF50))
+                                Text("", style = MaterialTheme.typography.bodySmall, color = Color(0xFFF44336))
+                            }
                         }
                     }
                     Card(
@@ -181,13 +188,19 @@ private fun HomeScreen(
                                 Icon(Icons.Default.LocationOn, contentDescription = "Active Projects Icon", tint = Color(0xFFFF9800))
                             }
                             // Active Projects: jumlah lokasi dengan status == "active"
-                            val activeProjects = locations.count { it.status == "active" }
+                            val activeProjects = locations.size
                             Text("$activeProjects", style = MaterialTheme.typography.headlineMedium)
-                            // Tambahan: jumlah proyek baru dalam 1 minggu
-                            val oneWeekAgo = System.currentTimeMillis() - 7 * 24 * 60 * 60 * 1000L
-                            val newProjectsThisWeek = locations.count { it.status == "active" && it.createdAt >= oneWeekAgo }
-                            Text("+$newProjectsThisWeek this week", style = MaterialTheme.typography.bodySmall, color = Color(0xFF4CAF50))
-                            Text("", style = MaterialTheme.typography.bodySmall, color = Color(0xFFF44336))
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                horizontalArrangement = Arrangement.SpaceBetween,
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                // Tambahan: jumlah proyek baru dalam 1 minggu
+                                val oneWeekAgo = System.currentTimeMillis() - 7 * 24 * 60 * 60 * 1000L
+                                val newProjectsThisWeek = locations.count { it.createdAt >= oneWeekAgo }
+                                Text("+$newProjectsThisWeek this week", style = MaterialTheme.typography.bodySmall, color = Color(0xFF4CAF50))
+                                Text("", style = MaterialTheme.typography.bodySmall, color = Color(0xFFF44336))
+                            }
                         }
                     }
                 }
