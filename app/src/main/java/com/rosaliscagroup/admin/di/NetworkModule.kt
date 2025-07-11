@@ -1,6 +1,6 @@
 package com.rosaliscagroup.admin.di
 
-import com.hadiyarajesh.admin.BuildConfig
+import com.rosaliscagroup.admin.BuildConfig
 import com.rosaliscagroup.admin.utility.Constants
 import com.squareup.moshi.Moshi
 import dagger.Module

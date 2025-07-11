@@ -3,7 +3,7 @@ package com.rosaliscagroup.admin.data
 import android.content.Context
 import androidx.room.RoomDatabase
 import androidx.sqlite.db.SupportSQLiteDatabase
-import com.hadiyarajesh.admin.R
+import com.rosaliscagroup.admin.R
 import com.rosaliscagroup.admin.data.dao.ImageDao
 import com.rosaliscagroup.admin.data.entity.Image
 import com.rosaliscagroup.admin.utility.Constants

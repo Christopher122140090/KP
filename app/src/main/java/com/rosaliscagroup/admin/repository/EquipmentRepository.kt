@@ -128,6 +128,15 @@ object EquipmentRepository {
         awaitClose { listener.remove() }
     }
 
+    suspend fun updateEquipmentLocation(equipmentId: String, lokasiBaru: String) {
+        val now = com.google.firebase.Timestamp.now()
+        db.collection("equipments").document(equipmentId)
+            .update(mapOf(
+                "lokasiId" to lokasiBaru,
+                "updatedAt" to now
+            )).await()
+    }
+
     fun getEquipmentsRealtime(): Flow<List<Equipment>> = callbackFlow {
         val listener = db.collection("equipments")
             .addSnapshotListener { snapshot, error ->

@@ -34,17 +34,14 @@ import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
-import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.mutableStateOf
@@ -56,6 +53,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import coil.compose.rememberAsyncImagePainter
 import com.rosaliscagroup.admin.data.entity.Location
@@ -84,64 +82,64 @@ fun BarangTableTransfer(
         containerColor = Color(0xFFE3F2FD)
     ) { innerPadding ->
         Column(
-            modifier = Modifier.Companion
+            modifier = Modifier
                 .fillMaxSize()
                 .background(Color(0xFFE3F2FD))
                 .padding(
                     start = 16.dp,
                     end = 16.dp,
-                    top = innerPadding.calculateTopPadding() + 80.dp, // Jarak topbar lebih kecil agar kategori tidak terdorong ke bawah
+                    top = innerPadding.calculateTopPadding() + 80.dp,
                     bottom = innerPadding.calculateBottomPadding() + 80.dp
                 )
         ) {
             if (barangList.isEmpty()) {
                 Box(
-                    modifier = Modifier.Companion.fillMaxSize(),
-                    contentAlignment = Alignment.Companion.Center
+                    modifier = Modifier.fillMaxSize(),
+                    contentAlignment = Alignment.Center
                 ) {
                     Text("Tidak ada data barang.", color = Color(0xFF1565C0))
                 }
             } else {
                 LazyColumn(
-                    modifier = Modifier.Companion
+                    modifier = Modifier
                         .fillMaxSize()
-                        .padding(bottom = 32.dp), // Tambah bottom padding pada LazyColumn
+                        .padding(bottom = 32.dp),
                     verticalArrangement = Arrangement.spacedBy(12.dp)
                 ) {
                     items(barangList) { barang ->
                         Card(
-                            colors = CardDefaults.cardColors(containerColor = Color.Companion.White),
+                            colors = CardDefaults.cardColors(containerColor = Color.White),
                             shape = RoundedCornerShape(16.dp),
                             elevation = CardDefaults.cardElevation(2.dp),
-                            modifier = Modifier.Companion.fillMaxWidth()
+                            modifier = Modifier.fillMaxWidth()
                         ) {
-                            Column(modifier = Modifier.Companion.padding(16.dp)) {
+                            Column(modifier = Modifier.padding(16.dp)) {
                                 if (barang.gambarUri.isNotBlank()) {
                                     Image(
                                         painter = rememberAsyncImagePainter(barang.gambarUri),
                                         contentDescription = "Gambar Barang",
-                                        modifier = Modifier.Companion
+                                        modifier = Modifier
                                             .fillMaxWidth()
                                             .height(180.dp),
                                         contentScale = ContentScale.Crop
                                     )
-                                    Spacer(modifier = Modifier.Companion.height(8.dp))
+                                    Spacer(modifier = Modifier.height(8.dp))
                                 }
                                 Text(
                                     barang.nama,
                                     style = MaterialTheme.typography.titleMedium.copy(
                                         color = Color(0xFF000000),
-                                        fontWeight = FontWeight.Companion.Bold
+                                        fontWeight = FontWeight.Bold
                                     )
                                 )
-                                Spacer(modifier = Modifier.Companion.height(4.dp))
+                                Spacer(modifier = Modifier.height(4.dp))
                                 Text(
                                     "Kategori: " + (barang.kategori.trim()
                                         .ifBlank { "Tidak diketahui" }
                                         .replaceFirstChar { it.uppercase() }),
                                     color = Color(0xFF000000)
                                 )
-                                Spacer(modifier = Modifier.Companion.height(4.dp))
+                                Spacer(modifier = Modifier.height(4.dp))
                                 Text("Lokasi: ${barang.lokasiId}", color = Color(0xFF000000))
                                 if (barang.deskripsi.isNotBlank()) {
                                     Text(
@@ -152,18 +150,18 @@ fun BarangTableTransfer(
                                 Text("SKU: ${barang.sku}", color = Color(0xFF000000))
                                 Text(
                                     "Created: ${barang.createdAt}",
-                                    color = Color.Companion.Gray,
+                                    color = Color.Gray,
                                     style = MaterialTheme.typography.bodySmall
                                 )
                                 Text(
                                     "Updated: ${barang.updatedAt}",
-                                    color = Color.Companion.Gray,
+                                    color = Color.Gray,
                                     style = MaterialTheme.typography.bodySmall
                                 )
-                                Spacer(modifier = Modifier.Companion.height(8.dp))
+                                Spacer(modifier = Modifier.height(8.dp))
                                 Row(
                                     horizontalArrangement = Arrangement.End,
-                                    modifier = Modifier.Companion.fillMaxWidth()
+                                    modifier = Modifier.fillMaxWidth()
                                 ) {
                                     IconButton(onClick = { onEdit(barang) }) {
                                         Icon(
@@ -192,7 +190,7 @@ fun BarangTableTransfer(
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun CekBarangScreenTransfer(
-    lokasiId: String, // Tambahkan parameter lokasiId
+    lokasiId: String,
     onDetail: (EquipmentUi) -> Unit = {}
 ) {
     val context = LocalContext.current
@@ -211,7 +209,6 @@ fun CekBarangScreenTransfer(
     )
     val selectedKategoriState = remember { mutableStateOf("Semua") }
     val selectedBarangState = remember { mutableStateOf<EquipmentUi?>(null) }
-    val showTambahSheetState = remember { mutableStateOf(false) }
 
     val barangList = barangListState.value
     val lokasiList = lokasiListState.value
@@ -219,7 +216,6 @@ fun CekBarangScreenTransfer(
     val searchQuery = searchQueryState.value
     val selectedKategori = selectedKategoriState.value
     val selectedBarang = selectedBarangState.value
-    val showTambahSheet = showTambahSheetState.value
 
     LaunchedEffect(Unit) {
         loadingState.value = true
@@ -258,238 +254,102 @@ fun CekBarangScreenTransfer(
             title = null,
             text = {
                 Column(
-                    modifier = Modifier.Companion
+                    modifier = Modifier
                         .fillMaxWidth()
-                        .background(Color.Companion.White)
+                        .background(Color.White)
                 ) {
-                    if (!selectedBarang!!.gambarUri.isNullOrBlank()) {
+                    if (selectedBarang.gambarUri.isNotBlank()) {
                         Image(
-                            painter = rememberAsyncImagePainter(selectedBarang!!.gambarUri),
+                            painter = rememberAsyncImagePainter(selectedBarang.gambarUri),
                             contentDescription = "Gambar Barang",
-                            modifier = Modifier.Companion
+                            modifier = Modifier
                                 .fillMaxWidth()
                                 .height(180.dp)
                                 .background(
                                     Color(0xFFF5F5F5),
-                                    androidx.compose.foundation.shape.RoundedCornerShape(12.dp)
+                                    RoundedCornerShape(12.dp)
                                 ),
                             contentScale = ContentScale.Crop
                         )
-                        Spacer(modifier = Modifier.Companion.height(12.dp))
+                        Spacer(modifier = Modifier.height(12.dp))
                     }
                     Text(
-                        selectedBarang!!.nama,
-                        style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Companion.Bold),
+                        selectedBarang.nama,
+                        style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold),
                         color = Color(0xFF1976D2)
                     )
-                    Spacer(modifier = Modifier.Companion.height(8.dp))
+                    Spacer(modifier = Modifier.height(8.dp))
                     Text(
-                        "Kategori: ${selectedBarang!!.kategori}",
+                        "Kategori: ${selectedBarang.kategori}",
                         style = MaterialTheme.typography.bodyMedium
                     )
                     Text(
-                        "Lokasi: ${selectedBarang!!.lokasiId}",
+                        "Lokasi: ${selectedBarang.lokasiId}",
                         style = MaterialTheme.typography.bodyMedium
                     )
                     Text(
-                        "SKU: ${selectedBarang!!.sku}",
+                        "SKU: ${selectedBarang.sku}",
                         style = MaterialTheme.typography.bodyMedium
                     )
-                    if (!selectedBarang!!.deskripsi.isNullOrBlank()) {
-                        Spacer(modifier = Modifier.Companion.height(8.dp))
+                    if (selectedBarang.deskripsi.isNotBlank()) {
+                        Spacer(modifier = Modifier.height(8.dp))
                         Text(
                             "Deskripsi:",
                             style = MaterialTheme.typography.labelMedium,
-                            color = Color.Companion.Gray
+                            color = Color.Gray
                         )
                         Text(
-                            selectedBarang!!.deskripsi,
+                            selectedBarang.deskripsi,
                             style = MaterialTheme.typography.bodyMedium
                         )
                     }
-                    Spacer(modifier = Modifier.Companion.height(8.dp))
+                    Spacer(modifier = Modifier.height(8.dp))
                     Row {
                         Text(
                             "Created: ",
                             style = MaterialTheme.typography.labelSmall,
-                            color = Color.Companion.Gray
+                            color = Color.Gray
                         )
                         Text(
-                            selectedBarang!!.createdAt,
+                            selectedBarang.createdAt,
                             style = MaterialTheme.typography.bodySmall,
-                            color = Color.Companion.Gray
+                            color = Color.Gray
                         )
                     }
                     Row {
                         Text(
                             "Updated: ",
                             style = MaterialTheme.typography.labelSmall,
-                            color = Color.Companion.Gray
+                            color = Color.Gray
                         )
                         Text(
-                            selectedBarang!!.updatedAt,
+                            selectedBarang.updatedAt,
                             style = MaterialTheme.typography.bodySmall,
-                            color = Color.Companion.Gray
+                            color = Color.Gray
                         )
                     }
                 }
             },
             confirmButton = {
-                TextButton(onClick = { selectedBarangState.value = null }) {
-                    Text("Tutup")
+                Row {
+                    TextButton(onClick = { selectedBarangState.value = null }) {
+                        Text("Tutup", color = Color.Black)
+                    }
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Button(
+                        onClick = { /* TODO: Transfer Item action */ },
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = Color(0xFF1565C0),
+                            contentColor = Color.White
+                        )
+                    ) {
+                        Text("Transfer Item", color = Color.White)
+                    }
                 }
             },
-            shape = androidx.compose.foundation.shape.RoundedCornerShape(16.dp),
-            containerColor = Color.Companion.White
+            shape = RoundedCornerShape(16.dp),
+            containerColor = Color.White
         )
-    }
-
-    if (showTambahSheet) {
-        ModalBottomSheet(
-            onDismissRequest = { showTambahSheetState.value = false },
-            shape = RoundedCornerShape(topStart = 24.dp, topEnd = 24.dp),
-            containerColor = Color(0xFFF9FAFB)
-        ) {
-            Column(
-                modifier = Modifier.Companion
-                    .fillMaxWidth()
-                    .padding(24.dp)
-            ) {
-                Text(
-                    "Pilih Jenis Item",
-                    style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Companion.Bold),
-                    color = Color(0xFF23272E)
-                )
-                Spacer(modifier = Modifier.Companion.height(4.dp))
-                Text(
-                    "Pilih jenis item yang ingin Anda tambahkan ke dalam proyek konstruksi",
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = Color(0xFF6B7280)
-                )
-                Spacer(modifier = Modifier.Companion.height(24.dp))
-                // Kartu Tambahkan Barang
-                Card(
-                    modifier = Modifier.Companion
-                        .fillMaxWidth()
-                        .clickable { /* TODO: Navigasi ke tambah barang */ showTambahSheetState.value = false
-                        },
-                    shape = androidx.compose.foundation.shape.RoundedCornerShape(16.dp),
-                    colors = CardDefaults.cardColors(containerColor = Color.Companion.White),
-                    elevation = CardDefaults.cardElevation(2.dp)
-                ) {
-                    Row(
-                        modifier = Modifier.Companion.padding(20.dp),
-                        verticalAlignment = Alignment.Companion.CenterVertically
-                    ) {
-                        Box(
-                            modifier = Modifier.Companion
-                                .size(48.dp)
-                                .background(
-                                    Color(0xFFFFF3E0),
-                                    androidx.compose.foundation.shape.RoundedCornerShape(12.dp)
-                                ),
-                            contentAlignment = Alignment.Companion.Center
-                        ) {
-                            Icon(
-                                Icons.Default.Inventory,
-                                contentDescription = null,
-                                tint = Color(0xFFFF7043),
-                                modifier = Modifier.Companion.size(28.dp)
-                            )
-                        }
-                        Spacer(modifier = Modifier.Companion.width(16.dp))
-                        Column(modifier = Modifier.Companion.weight(1f)) {
-                            Text(
-                                "Tambahkan Barang",
-                                style = MaterialTheme.typography.titleMedium.copy(
-                                    fontWeight = FontWeight.Companion.Bold,
-                                    color = Color(0xFF23272E)
-                                )
-                            )
-                            Spacer(modifier = Modifier.Companion.height(2.dp))
-                            Text(
-                                "Tambahkan material, alat, atau peralatan konstruksi ke dalam inventori proyek",
-                                style = MaterialTheme.typography.bodySmall,
-                                color = Color(0xFF6B7280)
-                            )
-                            Spacer(modifier = Modifier.Companion.height(8.dp))
-                            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                                Chip(text = "Material")
-                                Chip(text = "Alat")
-                                Chip(text = "Equipment")
-                            }
-                        }
-                        Icon(
-                            Icons.Default.KeyboardArrowRight,
-                            contentDescription = null,
-                            tint = Color(0xFFB0B0B0),
-                            modifier = Modifier.Companion.size(18.dp)
-                        )
-                    }
-                }
-                Spacer(modifier = Modifier.Companion.height(16.dp))
-                // Kartu Tambahkan Lokasi
-                Card(
-                    modifier = Modifier.Companion
-                        .fillMaxWidth()
-                        .clickable { /* TODO: Navigasi ke tambah lokasi */ showTambahSheetState.value = false
-                        },
-                    shape = androidx.compose.foundation.shape.RoundedCornerShape(16.dp),
-                    colors = CardDefaults.cardColors(containerColor = Color.Companion.White),
-                    elevation = CardDefaults.cardElevation(2.dp)
-                ) {
-                    Row(
-                        modifier = Modifier.Companion.padding(20.dp),
-                        verticalAlignment = Alignment.Companion.CenterVertically
-                    ) {
-                        Box(
-                            modifier = Modifier.Companion
-                                .size(48.dp)
-                                .background(
-                                    Color(0xFFE3F0FF),
-                                    androidx.compose.foundation.shape.RoundedCornerShape(12.dp)
-                                ),
-                            contentAlignment = Alignment.Companion.Center
-                        ) {
-                            Icon(
-                                Icons.Default.LocationOn,
-                                contentDescription = null,
-                                tint = Color(0xFF1976D2),
-                                modifier = Modifier.Companion.size(28.dp)
-                            )
-                        }
-                        Spacer(modifier = Modifier.Companion.width(16.dp))
-                        Column(modifier = Modifier.Companion.weight(1f)) {
-                            Text(
-                                "Tambahkan Lokasi",
-                                style = MaterialTheme.typography.titleMedium.copy(
-                                    fontWeight = FontWeight.Companion.Bold,
-                                    color = Color(0xFF23272E)
-                                )
-                            )
-                            Spacer(modifier = Modifier.Companion.height(2.dp))
-                            Text(
-                                "Tambahkan lokasi baru seperti gudang, area kerja, atau titik distribusi material",
-                                style = MaterialTheme.typography.bodySmall,
-                                color = Color(0xFF6B7280)
-                            )
-                            Spacer(modifier = Modifier.Companion.height(8.dp))
-                            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                                Chip(text = "Gudang")
-                                Chip(text = "Area Kerja")
-                                Chip(text = "Site Office")
-                            }
-                        }
-                        Icon(
-                            Icons.Default.KeyboardArrowRight,
-                            contentDescription = null,
-                            tint = Color(0xFFB0B0B0),
-                            modifier = Modifier.Companion.size(18.dp)
-                        )
-                    }
-                }
-            }
-        }
     }
 
     Scaffold(
@@ -498,7 +358,7 @@ fun CekBarangScreenTransfer(
                 title = {
                     Text(
                         "Cek Barang",
-                        style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Companion.Bold)
+                        style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold)
                     )
                 },
                 actions = {
@@ -508,49 +368,37 @@ fun CekBarangScreenTransfer(
                 }
             )
         },
-        floatingActionButton = {
-            FloatingActionButton(
-                onClick = { showTambahSheetState.value = true },
-                containerColor = Color(0xFF1976D2)
-            ) {
-                Icon(
-                    Icons.Default.Add,
-                    contentDescription = "Tambah Barang",
-                    tint = Color.Companion.White
-                )
-            }
-        },
         bottomBar = {
-            // ...bottom navigation sudah ada di layout utama...
+            // Bottom navigation already exists in the main layout
         },
-        containerColor = Color.Companion.White
+        containerColor = Color.White
     ) { innerPadding ->
         Column(
-            modifier = Modifier.Companion
+            modifier = Modifier
                 .fillMaxSize()
-                .background(Color.Companion.White)
+                .background(Color.White)
                 .padding(innerPadding)
         ) {
-            Spacer(modifier = Modifier.Companion.height(8.dp))
+            Spacer(modifier = Modifier.height(8.dp))
             OutlinedTextField(
                 value = searchQuery,
                 onValueChange = { searchQueryState.value = it },
                 placeholder = { Text("Cari barang...") },
-                modifier = Modifier.Companion
+                modifier = Modifier
                     .fillMaxWidth()
                     .padding(horizontal = 16.dp),
                 singleLine = true,
-                shape = androidx.compose.foundation.shape.RoundedCornerShape(12.dp)
+                shape = RoundedCornerShape(12.dp)
             )
-            Spacer(modifier = Modifier.Companion.height(8.dp))
+            Spacer(modifier = Modifier.height(8.dp))
             Row(
-                modifier = Modifier.Companion
+                modifier = Modifier
                     .fillMaxWidth()
                     .padding(horizontal = 16.dp),
                 horizontalArrangement = Arrangement.spacedBy(16.dp)
             ) {
                 Column(
-                    modifier = Modifier.Companion.weight(1f),
+                    modifier = Modifier.weight(1f),
                     verticalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
                     kategoriOptions.take(3).forEach { kategori ->
@@ -561,19 +409,19 @@ fun CekBarangScreenTransfer(
                                 containerColor = if (selected) Color(0xFF1976D2) else Color(
                                     0xFFF5F5F5
                                 ),
-                                contentColor = if (selected) Color.Companion.White else Color(
+                                contentColor = if (selected) Color.White else Color(
                                     0xFF1976D2
                                 )
                             ),
-                            shape = androidx.compose.foundation.shape.RoundedCornerShape(8.dp),
-                            modifier = Modifier.Companion.fillMaxWidth()
+                            shape = RoundedCornerShape(8.dp),
+                            modifier = Modifier.fillMaxWidth()
                         ) {
                             Text(kategori, maxLines = 1)
                         }
                     }
                 }
                 Column(
-                    modifier = Modifier.Companion.weight(1f),
+                    modifier = Modifier.weight(1f),
                     verticalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
                     kategoriOptions.drop(3).forEach { kategori ->
@@ -584,99 +432,97 @@ fun CekBarangScreenTransfer(
                                 containerColor = if (selected) Color(0xFF1976D2) else Color(
                                     0xFFF5F5F5
                                 ),
-                                contentColor = if (selected) Color.Companion.White else Color(
+                                contentColor = if (selected) Color.White else Color(
                                     0xFF1976D2
                                 )
                             ),
-                            shape = androidx.compose.foundation.shape.RoundedCornerShape(8.dp),
-                            modifier = Modifier.Companion.fillMaxWidth()
+                            shape = RoundedCornerShape(8.dp),
+                            modifier = Modifier.fillMaxWidth()
                         ) {
                             Text(kategori, maxLines = 1)
                         }
                     }
                 }
             }
-            Spacer(modifier = Modifier.Companion.height(8.dp))
+            Spacer(modifier = Modifier.height(8.dp))
             if (loading) {
                 Box(
-                    modifier = Modifier.Companion.fillMaxSize(),
-                    contentAlignment = Alignment.Companion.Center
+                    modifier = Modifier.fillMaxSize(),
+                    contentAlignment = Alignment.Center
                 ) {
                     CircularProgressIndicator()
                 }
             } else if (filteredBarang.isEmpty()) {
                 Box(
-                    modifier = Modifier.Companion.fillMaxSize(),
-                    contentAlignment = Alignment.Companion.Center
+                    modifier = Modifier.fillMaxSize(),
+                    contentAlignment = Alignment.Center
                 ) {
-                    Text("Tidak ada data barang.", color = Color.Companion.Gray)
+                    Text("Tidak ada data barang.", color = Color(0xFF1565C0))
                 }
             } else {
                 LazyColumn(
-                    modifier = Modifier.Companion
+                    modifier = Modifier
                         .fillMaxWidth()
                         .weight(1f),
                     verticalArrangement = Arrangement.spacedBy(12.dp)
                 ) {
                     items(filteredBarang) { barang ->
                         Card(
-                            modifier = Modifier.Companion.fillMaxWidth(),
-                            shape = androidx.compose.foundation.shape.RoundedCornerShape(12.dp),
-                            colors = CardDefaults.cardColors(containerColor = Color.Companion.White),
+                            modifier = Modifier.fillMaxWidth(),
+                            shape = RoundedCornerShape(12.dp),
+                            colors = CardDefaults.cardColors(containerColor = Color.White),
                             elevation = CardDefaults.cardElevation(2.dp)
                         ) {
                             Row(
-                                modifier = Modifier.Companion.padding(12.dp),
-                                verticalAlignment = Alignment.Companion.CenterVertically
+                                modifier = Modifier.padding(12.dp),
+                                verticalAlignment = Alignment.CenterVertically
                             ) {
                                 if (barang.gambarUri.isNotBlank()) {
                                     Image(
                                         painter = rememberAsyncImagePainter(barang.gambarUri),
                                         contentDescription = "Gambar Barang",
-                                        modifier = Modifier.Companion
+                                        modifier = Modifier
                                             .size(64.dp)
                                             .background(
                                                 Color(0xFFF5F5F5),
-                                                androidx.compose.foundation.shape.RoundedCornerShape(
-                                                    8.dp
-                                                )
+                                                RoundedCornerShape(8.dp)
                                             ),
                                         contentScale = ContentScale.Crop
                                     )
-                                    Spacer(modifier = Modifier.Companion.width(12.dp))
+                                    Spacer(modifier = Modifier.width(12.dp))
                                 }
-                                Column(modifier = Modifier.Companion.weight(1f)) {
+                                Column(modifier = Modifier.weight(1f)) {
                                     Text(
                                         barang.nama,
-                                        style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Companion.Bold)
+                                        style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold)
                                     )
                                     Text(
                                         barang.kategori,
                                         style = MaterialTheme.typography.bodySmall,
-                                        color = Color.Companion.Gray
+                                        color = Color.Gray
                                     )
                                     Text(
                                         barang.deskripsi,
                                         style = MaterialTheme.typography.bodySmall,
-                                        color = Color.Companion.Gray
+                                        color = Color.Gray
                                     )
                                     Text(
                                         barang.createdAt,
                                         style = MaterialTheme.typography.bodySmall,
-                                        color = Color.Companion.Gray
+                                        color = Color.Gray
                                     )
                                 }
-                                Column(horizontalAlignment = Alignment.Companion.End) {
+                                Column(horizontalAlignment = Alignment.End) {
                                     Text(
                                         barang.sku,
                                         style = MaterialTheme.typography.labelMedium,
-                                        color = Color.Companion.Gray,
-                                        modifier = Modifier.Companion.background(
+                                        color = Color.Gray,
+                                        modifier = Modifier.background(
                                             Color(0xFFF5F5F5),
-                                            androidx.compose.foundation.shape.RoundedCornerShape(8.dp)
+                                            RoundedCornerShape(8.dp)
                                         ).padding(horizontal = 8.dp, vertical = 2.dp)
                                     )
-                                    Spacer(modifier = Modifier.Companion.height(8.dp))
+                                    Spacer(modifier = Modifier.height(8.dp))
                                     TextButton(onClick = { selectedBarangState.value = barang }) {
                                         Text("Detail", color = Color(0xFF1976D2))
                                     }
@@ -686,53 +532,9 @@ fun CekBarangScreenTransfer(
                     }
                 }
             }
-            Spacer(modifier = Modifier.Companion.height(8.dp))
-            // Statistik Barang
-            Card(
-                modifier = Modifier.Companion
-                    .fillMaxWidth()
-                    .padding(horizontal = 16.dp),
-                shape = androidx.compose.foundation.shape.RoundedCornerShape(12.dp),
-                colors = CardDefaults.cardColors(containerColor = Color.Companion.White),
-                elevation = CardDefaults.cardElevation(2.dp)
-            ) {
-                Row(
-                    modifier = Modifier.Companion.padding(16.dp),
-                    verticalAlignment = Alignment.Companion.CenterVertically
-                ) {
-                    Column(modifier = Modifier.Companion.weight(1f)) {
-                        Text(
-                            "Statistik Barang",
-                            style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Companion.Bold)
-                        )
-                        Spacer(modifier = Modifier.Companion.height(8.dp))
-                        Row {
-                            Text(
-                                "24",
-                                style = MaterialTheme.typography.headlineMedium.copy(
-                                    color = Color(0xFF1976D2)
-                                )
-                            )
-                            Spacer(modifier = Modifier.Companion.width(8.dp))
-                            Text("Total Barang", style = MaterialTheme.typography.bodyMedium)
-                        }
-                    }
-                    Column(horizontalAlignment = Alignment.Companion.End) {
-                        Spacer(modifier = Modifier.Companion.height(8.dp))
-                        Row {
-                            Text(
-                                "18",
-                                style = MaterialTheme.typography.headlineMedium.copy(
-                                    color = Color(0xFF388E3C)
-                                )
-                            )
-                            Spacer(modifier = Modifier.Companion.width(8.dp))
-                            Text("Tersedia", style = MaterialTheme.typography.bodyMedium)
-                        }
-                    }
-                }
-            }
-            Spacer(modifier = Modifier.Companion.height(16.dp))
+            Spacer(modifier = Modifier.height(8.dp))
+
+            Spacer(modifier = Modifier.height(16.dp))
         }
     }
 }
@@ -740,192 +542,31 @@ fun CekBarangScreenTransfer(
 @Composable
 fun Chip(text: String) {
     Box(
-        modifier = Modifier.Companion
-            .background(Color(0xFFF3F4F6), androidx.compose.foundation.shape.RoundedCornerShape(50))
+        modifier = Modifier
+            .background(Color(0xFFF3F4F6), RoundedCornerShape(50))
             .padding(horizontal = 14.dp, vertical = 6.dp),
-        contentAlignment = Alignment.Companion.Center
+        contentAlignment = Alignment.Center
     ) {
         Text(
             text,
-            style = MaterialTheme.typography.labelMedium.copy(fontWeight = FontWeight.Companion.Medium),
+            style = MaterialTheme.typography.labelMedium.copy(fontWeight = FontWeight.Medium),
             color = Color(0xFF23272E)
         )
     }
 }
 
-@OptIn(ExperimentalMaterial3Api::class)
+@Preview(showBackground = true)
 @Composable
-fun TambahItemScreen(
-    onBack: () -> Unit = {},
-    onTambahBarang: () -> Unit = {},
-    onTambahLokasi: () -> Unit = {}
-) {
-    Scaffold(
-        topBar = {
-            TopAppBar(
-                title = {
-                    Text(
-                        "Tambah Item",
-                        style = MaterialTheme.typography.titleLarge.copy(
-                            fontWeight = FontWeight.Companion.Bold
-                        )
-                    )
-                },
-                navigationIcon = {
-                    IconButton(onClick = onBack) {
-                        Icon(Icons.Default.ArrowBack, contentDescription = "Kembali")
-                    }
-                },
-                actions = {},
-                colors = TopAppBarDefaults.topAppBarColors(containerColor = Color.Companion.White)
-            )
-        },
-        containerColor = Color(0xFFF9FAFB)
-    ) { innerPadding ->
-        Column(
-            modifier = Modifier.Companion
-                .fillMaxSize()
-                .background(Color(0xFFF9FAFB))
-                .padding(innerPadding)
-        ) {
-            Spacer(modifier = Modifier.Companion.height(16.dp))
-            Column(modifier = Modifier.Companion.padding(horizontal = 24.dp)) {
-                Text(
-                    "Pilih Jenis Item",
-                    style = MaterialTheme.typography.headlineSmall.copy(
-                        fontWeight = FontWeight.Companion.Bold,
-                        color = Color(0xFF23272E)
-                    )
-                )
-                Spacer(modifier = Modifier.Companion.height(4.dp))
-                Text(
-                    "Pilih jenis item yang ingin Anda tambahkan ke dalam proyek konstruksi",
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = Color(0xFF6B7280)
-                )
-            }
-            Spacer(modifier = Modifier.Companion.height(24.dp))
-            // Kartu Tambahkan Barang
-            Card(
-                modifier = Modifier.Companion
-                    .fillMaxWidth()
-                    .padding(horizontal = 16.dp)
-                    .clickable { onTambahBarang() },
-                shape = androidx.compose.foundation.shape.RoundedCornerShape(16.dp),
-                colors = CardDefaults.cardColors(containerColor = Color.Companion.White),
-                elevation = CardDefaults.cardElevation(2.dp)
-            ) {
-                Row(
-                    modifier = Modifier.Companion.padding(20.dp),
-                    verticalAlignment = Alignment.Companion.CenterVertically
-                ) {
-                    Box(
-                        modifier = Modifier.Companion
-                            .size(48.dp)
-                            .background(
-                                Color(0xFFFFF3E0),
-                                androidx.compose.foundation.shape.RoundedCornerShape(12.dp)
-                            ),
-                        contentAlignment = Alignment.Companion.Center
-                    ) {
-                        Icon(
-                            Icons.Default.Inventory,
-                            contentDescription = null,
-                            tint = Color(0xFFFF7043),
-                            modifier = Modifier.Companion.size(28.dp)
-                        )
-                    }
-                    Spacer(modifier = Modifier.Companion.width(16.dp))
-                    Column(modifier = Modifier.Companion.weight(1f)) {
-                        Text(
-                            "Tambahkan Barang",
-                            style = MaterialTheme.typography.titleMedium.copy(
-                                fontWeight = FontWeight.Companion.Bold,
-                                color = Color(0xFF23272E)
-                            )
-                        )
-                        Spacer(modifier = Modifier.Companion.height(2.dp))
-                        Text(
-                            "Tambahkan material, alat, atau peralatan konstruksi ke dalam inventori proyek",
-                            style = MaterialTheme.typography.bodySmall,
-                            color = Color(0xFF6B7280)
-                        )
-                        Spacer(modifier = Modifier.Companion.height(8.dp))
-                        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                            Chip(text = "Material")
-                            Chip(text = "Alat")
-                            Chip(text = "Equipment")
-                        }
-                    }
-                    Icon(
-                        Icons.Default.KeyboardArrowRight,
-                        contentDescription = null,
-                        tint = Color(0xFFB0B0B0),
-                        modifier = Modifier.Companion.size(18.dp)
-                    )
-                }
-            }
-            Spacer(modifier = Modifier.Companion.height(16.dp))
-            // Kartu Tambahkan Lokasi
-            Card(
-                modifier = Modifier.Companion
-                    .fillMaxWidth()
-                    .padding(horizontal = 16.dp)
-                    .clickable { onTambahLokasi() },
-                shape = androidx.compose.foundation.shape.RoundedCornerShape(16.dp),
-                colors = CardDefaults.cardColors(containerColor = Color.Companion.White),
-                elevation = CardDefaults.cardElevation(2.dp)
-            ) {
-                Row(
-                    modifier = Modifier.Companion.padding(20.dp),
-                    verticalAlignment = Alignment.Companion.CenterVertically
-                ) {
-                    Box(
-                        modifier = Modifier.Companion
-                            .size(48.dp)
-                            .background(
-                                Color(0xFFE3F0FF),
-                                androidx.compose.foundation.shape.RoundedCornerShape(12.dp)
-                            ),
-                        contentAlignment = Alignment.Companion.Center
-                    ) {
-                        Icon(
-                            Icons.Default.LocationOn,
-                            contentDescription = null,
-                            tint = Color(0xFF1976D2),
-                            modifier = Modifier.Companion.size(28.dp)
-                        )
-                    }
-                    Spacer(modifier = Modifier.Companion.width(16.dp))
-                    Column(modifier = Modifier.Companion.weight(1f)) {
-                        Text(
-                            "Tambahkan Lokasi",
-                            style = MaterialTheme.typography.titleMedium.copy(
-                                fontWeight = FontWeight.Companion.Bold,
-                                color = Color(0xFF23272E)
-                            )
-                        )
-                        Spacer(modifier = Modifier.Companion.height(2.dp))
-                        Text(
-                            "Tambahkan lokasi baru seperti gudang, area kerja, atau titik distribusi material",
-                            style = MaterialTheme.typography.bodySmall,
-                            color = Color(0xFF6B7280)
-                        )
-                        Spacer(modifier = Modifier.Companion.height(8.dp))
-                        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                            Chip(text = "Gudang")
-                            Chip(text = "Area Kerja")
-                            Chip(text = "Site Office")
-                        }
-                    }
-                    Icon(
-                        Icons.Default.KeyboardArrowRight,
-                        contentDescription = null,
-                        tint = Color(0xFFB0B0B0),
-                        modifier = Modifier.Companion.size(18.dp)
-                    )
-                }
-            }
-        }
+fun ChipPreview() {
+    MaterialTheme {
+        Chip(text = "Preview Chip")
+    }
+}
+
+@Preview(showBackground = true)
+@Composable
+fun CekBarangScreenTransferPreview() {
+    MaterialTheme {
+        CekBarangScreenTransfer(lokasiId = "12345")
     }
 }

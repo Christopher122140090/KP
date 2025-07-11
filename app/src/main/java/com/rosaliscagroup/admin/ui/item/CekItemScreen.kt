@@ -42,7 +42,9 @@ import coil.compose.rememberAsyncImagePainter
 import com.rosaliscagroup.admin.repository.EquipmentRepository
 import com.rosaliscagroup.admin.data.entity.Location
 import com.rosaliscagroup.admin.repository.HomeRepositoryImpl
+import kotlinx.serialization.Serializable
 
+@Serializable
 data class EquipmentUi(
     val id: String = "",
     val nama: String = "",
@@ -140,7 +142,8 @@ fun BarangTable(
 @OptIn(androidx.compose.material3.ExperimentalMaterial3Api::class)
 @Composable
 fun CekBarangScreen(
-    onDetail: (EquipmentUi) -> Unit = {}
+    onDetail: (EquipmentUi) -> Unit = {},
+    onTransfer: (EquipmentUi) -> Unit = {} // Tambahkan parameter callback transfer
 ) {
     val context = LocalContext.current
     val coroutineScope = rememberCoroutineScope()
@@ -239,8 +242,21 @@ fun CekBarangScreen(
                 }
             },
             confirmButton = {
-                TextButton(onClick = { selectedBarang = null }) {
-                    Text("Tutup")
+                Row {
+                    TextButton(onClick = { selectedBarang = null }) {
+                        Text("Tutup", color = Color.Black)
+                    }
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Button(
+                        onClick = {
+                            onTransfer(selectedBarang!!)
+                            selectedBarang = null // Tutup dialog setelah navigasi
+                        },
+                        colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF1976D2)),
+                        shape = RoundedCornerShape(8.dp)
+                    ) {
+                        Text("Transfer Item", color = Color.White)
+                    }
                 }
             },
             shape = RoundedCornerShape(16.dp),
@@ -488,40 +504,8 @@ fun CekBarangScreen(
                     }
                 }
             }
-            Spacer(modifier = Modifier.height(8.dp))
-            // Statistik Barang
-            Card(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 16.dp),
-                shape = RoundedCornerShape(12.dp),
-                colors = CardDefaults.cardColors(containerColor = Color.White),
-                elevation = CardDefaults.cardElevation(2.dp)
-            ) {
-                Row(
-                    modifier = Modifier.padding(16.dp),
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Column(modifier = Modifier.weight(1f)) {
-                        Text("Statistik Barang", style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold))
-                        Spacer(modifier = Modifier.height(8.dp))
-                        Row {
-                            Text("24", style = MaterialTheme.typography.headlineMedium.copy(color = Color(0xFF1976D2)))
-                            Spacer(modifier = Modifier.width(8.dp))
-                            Text("Total Barang", style = MaterialTheme.typography.bodyMedium)
-                        }
-                    }
-                    Column(horizontalAlignment = Alignment.End) {
-                        Spacer(modifier = Modifier.height(8.dp))
-                        Row {
-                            Text("18", style = MaterialTheme.typography.headlineMedium.copy(color = Color(0xFF388E3C)))
-                            Spacer(modifier = Modifier.width(8.dp))
-                            Text("Tersedia", style = MaterialTheme.typography.bodyMedium)
-                        }
-                    }
-                }
-            }
-            Spacer(modifier = Modifier.height(16.dp))
+
+            Spacer(modifier = Modifier.height(32.dp))
         }
     }
 }
@@ -703,3 +687,6 @@ fun TambahItemScreen(
         }
     }
 }
+
+
+

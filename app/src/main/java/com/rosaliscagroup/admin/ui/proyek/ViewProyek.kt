@@ -69,7 +69,9 @@ fun ViewProyek(
                     Card(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .clickable { selectedProyek.value = proyek },
+                            .clickable {
+                                navController?.navigate("editProyek/${proyek.id}")
+                            },
                         shape = RoundedCornerShape(12.dp),
                         colors = CardDefaults.cardColors(containerColor = Color.White),
                         elevation = CardDefaults.cardElevation(2.dp)
@@ -128,3 +130,8 @@ fun ViewProyekPreview() {
     )
     ViewProyek(proyekList = dummyList, onViewAllClick = {})
 }
+
+
+
+
+

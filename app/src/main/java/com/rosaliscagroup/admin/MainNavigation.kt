@@ -39,10 +39,16 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.material.icons.filled.ViewInAr
 import com.rosaliscagroup.admin.setting.ChangeNameScreen
 import androidx.compose.runtime.rememberCoroutineScope
-import com.rosaliscagroup.admin.ui.transfer.TransferPage
+import androidx.compose.ui.platform.LocalContext
+import com.rosaliscagroup.admin.ui.transfer.TransferItem
 import androidx.navigation.NavType
 import androidx.navigation.navArgument
 import com.rosaliscagroup.admin.ui.proyek.CekBarangScreenTransfer
+import kotlinx.coroutines.launch
+import kotlinx.serialization.encodeToString
+import kotlinx.serialization.decodeFromString
+import kotlinx.serialization.json.Json
+import com.rosaliscagroup.admin.ui.proyek.EditProyekScreen
 
 // Data class untuk state login
 data class LoginState(
@@ -314,7 +320,10 @@ fun MainNavigation() {
                     )
                 },
                 content = { padding ->
-                    CheckNav(navController = navController, modifier = Modifier.padding(padding))
+                    CheckNav(
+                        navController = navController,
+                        modifier = Modifier.padding(padding)
+                    )
                 },
                 bottomBar = {
                     if (isLoggedIn && showNavbar) {
@@ -495,7 +504,12 @@ fun MainNavigation() {
                     )
                 },
                 content = { padding ->
-                    CekBarangScreen()
+                    CekBarangScreen(
+                        onTransfer = { equipmentUi ->
+                            val equipmentJson = java.net.URLEncoder.encode(Json.encodeToString(equipmentUi), "UTF-8")
+                            navController.navigate("transfer?equipment=$equipmentJson")
+                        }
+                    )
                 },
                 bottomBar = {
                     if (isLoggedIn && showNavbar) {
@@ -550,7 +564,14 @@ fun MainNavigation() {
                 }
             )
         }
-        composable("transfer") {
+        composable(
+            "transfer?equipment={equipment}",
+            arguments = listOf(
+                navArgument("equipment") { type = NavType.StringType; nullable = true }
+            )
+        ) { backStackEntry ->
+            val context = LocalContext.current
+            val scope = rememberCoroutineScope()
             androidx.compose.material3.Scaffold(
                 topBar = {
                     AppBar(
@@ -565,7 +586,33 @@ fun MainNavigation() {
                 },
                 content = { padding ->
                     Box(Modifier.padding(padding)) {
-                        TransferPage(navController = navController)
+                        val equipmentJson = backStackEntry.arguments?.getString("equipment")
+                        val equipment = try {
+                            if (equipmentJson != null) {
+                                Json.decodeFromString<com.rosaliscagroup.admin.ui.item.EquipmentUi>(
+                                    java.net.URLDecoder.decode(equipmentJson, "UTF-8")
+                                )
+                            } else null
+                        } catch (_: Exception) { null }
+                        if (equipment != null) {
+                            TransferItem(
+                                equipment = equipment,
+                                onSimpan = { id, lokasiBaru ->
+                                    scope.launch {
+                                        try {
+                                            com.rosaliscagroup.admin.repository.EquipmentRepository.updateEquipmentLocation(id, lokasiBaru)
+                                            android.widget.Toast.makeText(context, "Lokasi berhasil diupdate", android.widget.Toast.LENGTH_SHORT).show()
+                                            navController.navigateUp()
+                                        } catch (e: Exception) {
+                                            android.widget.Toast.makeText(context, "Gagal update lokasi: ${e.message}", android.widget.Toast.LENGTH_SHORT).show()
+                                        }
+                                    }
+                                },
+                                onCancel = { navController.navigateUp() }
+                            )
+                        } else {
+                            Text("Data item tidak ditemukan")
+                        }
                     }
                 },
                 bottomBar = {
@@ -604,6 +651,10 @@ fun MainNavigation() {
                 homeViewModel = homeViewModel,
                 modifier = Modifier.fillMaxSize()
             )
+        }
+        composable("editProyekScreen?locationId={locationId}")  {
+            val locationId = it.arguments?.getString("locationId") ?: ""
+            EditProyekScreen(locationId = locationId, navController = navController, onBack = { navController.popBackStack() })
         }
     }
 }

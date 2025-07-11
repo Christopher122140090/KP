@@ -2,7 +2,7 @@ package com.rosaliscagroup.admin.di
 
 import android.content.Context
 import androidx.room.Room
-import com.hadiyarajesh.admin.R
+import com.rosaliscagroup.admin.R
 import com.rosaliscagroup.admin.data.AppDatabase
 import com.rosaliscagroup.admin.data.RoomDbInitializer
 import com.rosaliscagroup.admin.data.dao.ImageDao

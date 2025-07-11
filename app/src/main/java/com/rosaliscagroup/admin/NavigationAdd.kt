@@ -94,18 +94,9 @@ fun AddNav(
                         modifier = Modifier.fillMaxWidth(),
                         horizontalArrangement = Arrangement.spacedBy(8.dp) // Space between buttons
                     ) {
-                        // Material Button
-                        OutlinedButton(onClick = { /* Handle Material click */ }) {
-                            Text("Material")
-                        }
-                        // Alat Button
-                        OutlinedButton(onClick = { /* Handle Alat click */ }) {
-                            Text("Alat")
-                        }
-                        // Equipment Button
-                        OutlinedButton(onClick = { /* Handle Equipment click */ }) {
-                            Text("Equipment")
-                        }
+                        Text("Material")
+                        Text("Alat")
+                        Text("Equipment")
                     }
                 }
             }
@@ -150,18 +141,10 @@ fun AddNav(
                         modifier = Modifier.fillMaxWidth(),
                         horizontalArrangement = Arrangement.spacedBy(8.dp) // Space between buttons
                     ) {
-                        // Gudang Button
-                        OutlinedButton(onClick = { /* Handle Gudang click */ }) {
-                            Text("Gudang")
-                        }
-                        // Area Kerja Button
-                        OutlinedButton(onClick = { /* Handle Area Kerja click */ }) {
-                            Text("Area Kerja")
-                        }
-                        // Site Office Button
-                        OutlinedButton(onClick = { /* Handle Site Office click */ }) {
-                            Text("Site Office")
-                        }
+                        Text("Gudang")
+                        Text("Area Kerja")
+                        Text("Site Office")
+
                     }
                 }
             }
