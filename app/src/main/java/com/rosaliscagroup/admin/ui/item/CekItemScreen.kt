@@ -195,6 +195,9 @@ fun CekBarangScreen(
     }
 
     if (selectedBarang != null) {
+        var deleteConfirmationText by remember { mutableStateOf("") }
+        var showDeleteDialog by remember { mutableStateOf(false) }
+
         AlertDialog(
             onDismissRequest = { selectedBarang = null },
             title = null,
@@ -239,6 +242,14 @@ fun CekBarangScreen(
                         Text("Updated: ", style = MaterialTheme.typography.labelSmall, color = Color.Gray)
                         Text(selectedBarang!!.updatedAt, style = MaterialTheme.typography.bodySmall, color = Color.Gray)
                     }
+                    Spacer(modifier = Modifier.height(16.dp))
+                    Button(
+                        onClick = { showDeleteDialog = true },
+                        colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFD32F2F)),
+                        shape = RoundedCornerShape(8.dp)
+                    ) {
+                        Text("Hapus Item", color = Color.White)
+                    }
                 }
             },
             confirmButton = {
@@ -262,6 +273,77 @@ fun CekBarangScreen(
             shape = RoundedCornerShape(16.dp),
             containerColor = Color.White
         )
+
+        if (showDeleteDialog) {
+            AlertDialog(
+                onDismissRequest = { showDeleteDialog = false },
+                title = {
+                    Text("Konfirmasi Penghapusan", style = MaterialTheme.typography.titleMedium)
+                },
+                text = {
+                    Column {
+                        Text("Ketik HAPUS untuk menghapus item.")
+                        Spacer(modifier = Modifier.height(8.dp))
+                        TextField(
+                            value = deleteConfirmationText,
+                            onValueChange = { deleteConfirmationText = it },
+                            placeholder = { Text("HAPUS") },
+                            singleLine = true
+                        )
+                    }
+                },
+                confirmButton = {
+                    TextButton(
+                        onClick = {
+                            if (deleteConfirmationText == "HAPUS") {
+                                // Hapus item dari daftar lokal
+                                barangList = barangList.filter { it.id != selectedBarang?.id }
+
+                                // Hapus item dari Firestore
+                                val db = com.google.firebase.firestore.FirebaseFirestore.getInstance()
+                                selectedBarang?.let { barang ->
+                                    db.collection("equipments").document(barang.id).delete()
+                                        .addOnSuccessListener {
+                                            Toast.makeText(context, "Item berhasil dihapus", Toast.LENGTH_SHORT).show()
+                                        }
+                                        .addOnFailureListener { e ->
+                                            Toast.makeText(context, "Gagal menghapus item : ${e.message}", Toast.LENGTH_SHORT).show()
+                                        }
+
+                                    db.collection("items").whereEqualTo("sku", barang.sku).get()
+                                        .addOnSuccessListener { querySnapshot ->
+                                            for (document in querySnapshot.documents) {
+                                                document.reference.delete()
+                                                    .addOnSuccessListener {
+                                                        Toast.makeText(context, "SKU berhasil dihapus", Toast.LENGTH_SHORT).show()
+                                                    }
+                                                    .addOnFailureListener { e ->
+                                                        Toast.makeText(context, "Gagal menghapus SKU : ${e.message}", Toast.LENGTH_SHORT).show()
+                                                    }
+                                            }
+                                        }
+                                        .addOnFailureListener { e ->
+                                            Toast.makeText(context, "Gagal mencari item dengan SKU : ${e.message}", Toast.LENGTH_SHORT).show()
+                                        }
+                                }
+
+                                showDeleteDialog = false
+                                selectedBarang = null
+                            } else {
+                                Toast.makeText(context, "Input tidak valid", Toast.LENGTH_SHORT).show()
+                            }
+                        }
+                    ) {
+                        Text("Konfirmasi")
+                    }
+                },
+                dismissButton = {
+                    TextButton(onClick = { showDeleteDialog = false }) {
+                        Text("Batal")
+                    }
+                }
+            )
+        }
     }
 
     if (showTambahSheet) {
@@ -356,6 +438,7 @@ fun CekBarangScreen(
                                 Chip(text = "Area Kerja")
                                 Chip(text = "Site Office")
                             }
+                            Spacer(modifier = Modifier.height(16.dp)) // Added bottom padding to prevent overlap with navbar
                         }
                         Icon(Icons.Default.KeyboardArrowRight, contentDescription = null, tint = Color(0xFFB0B0B0), modifier = Modifier.size(18.dp))
                     }
@@ -505,7 +588,7 @@ fun CekBarangScreen(
                 }
             }
 
-            Spacer(modifier = Modifier.height(32.dp))
+            Spacer(modifier = Modifier.height(80.dp))
         }
     }
 }
@@ -525,168 +608,4 @@ fun Chip(text: String) {
         )
     }
 }
-
-@OptIn(androidx.compose.material3.ExperimentalMaterial3Api::class)
-@Composable
-fun TambahItemScreen(
-    onBack: () -> Unit = {},
-    onTambahBarang: () -> Unit = {},
-    onTambahLokasi: () -> Unit = {}
-) {
-    Scaffold(
-        topBar = {
-            TopAppBar(
-                title = {
-                    Text(
-                        "Tambah Item",
-                        style = MaterialTheme.typography.titleLarge.copy(
-                            fontWeight = FontWeight.Bold
-                        )
-                    )
-                },
-                navigationIcon = {
-                    IconButton(onClick = onBack) {
-                        Icon(Icons.Default.ArrowBack, contentDescription = "Kembali")
-                    }
-                },
-                actions = {},
-                colors = TopAppBarDefaults.topAppBarColors(containerColor = Color.White)
-            )
-        },
-        containerColor = Color(0xFFF9FAFB)
-    ) { innerPadding ->
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .background(Color(0xFFF9FAFB))
-                .padding(innerPadding)
-        ) {
-            Spacer(modifier = Modifier.height(16.dp))
-            Column(modifier = Modifier.padding(horizontal = 24.dp)) {
-                Text(
-                    "Pilih Jenis Item",
-                    style = MaterialTheme.typography.headlineSmall.copy(fontWeight = FontWeight.Bold, color = Color(0xFF23272E))
-                )
-                Spacer(modifier = Modifier.height(4.dp))
-                Text(
-                    "Pilih jenis item yang ingin Anda tambahkan ke dalam proyek konstruksi",
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = Color(0xFF6B7280)
-                )
-            }
-            Spacer(modifier = Modifier.height(24.dp))
-            // Kartu Tambahkan Barang
-            Card(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 16.dp)
-                    .clickable { onTambahBarang() },
-                shape = RoundedCornerShape(16.dp),
-                colors = CardDefaults.cardColors(containerColor = Color.White),
-                elevation = CardDefaults.cardElevation(2.dp)
-            ) {
-                Row(
-                    modifier = Modifier.padding(20.dp),
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Box(
-                        modifier = Modifier
-                            .size(48.dp)
-                            .background(Color(0xFFFFF3E0), RoundedCornerShape(12.dp)),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        Icon(
-                            Icons.Default.Inventory,
-                            contentDescription = null,
-                            tint = Color(0xFFFF7043),
-                            modifier = Modifier.size(28.dp)
-                        )
-                    }
-                    Spacer(modifier = Modifier.width(16.dp))
-                    Column(modifier = Modifier.weight(1f)) {
-                        Text(
-                            "Tambahkan Barang",
-                            style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold, color = Color(0xFF23272E))
-                        )
-                        Spacer(modifier = Modifier.height(2.dp))
-                        Text(
-                            "Tambahkan material, alat, atau peralatan konstruksi ke dalam inventori proyek",
-                            style = MaterialTheme.typography.bodySmall,
-                            color = Color(0xFF6B7280)
-                        )
-                        Spacer(modifier = Modifier.height(8.dp))
-                        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                            Chip(text = "Material")
-                            Chip(text = "Alat")
-                            Chip(text = "Equipment")
-                        }
-                    }
-                    Icon(
-                        Icons.Default.KeyboardArrowRight,
-                        contentDescription = null,
-                        tint = Color(0xFFB0B0B0),
-                        modifier = Modifier.size(18.dp)
-                    )
-                }
-            }
-            Spacer(modifier = Modifier.height(16.dp))
-            // Kartu Tambahkan Lokasi
-            Card(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 16.dp)
-                    .clickable { onTambahLokasi() },
-                shape = RoundedCornerShape(16.dp),
-                colors = CardDefaults.cardColors(containerColor = Color.White),
-                elevation = CardDefaults.cardElevation(2.dp)
-            ) {
-                Row(
-                    modifier = Modifier.padding(20.dp),
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Box(
-                        modifier = Modifier
-                            .size(48.dp)
-                            .background(Color(0xFFE3F0FF), RoundedCornerShape(12.dp)),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        Icon(
-                            Icons.Default.LocationOn,
-                            contentDescription = null,
-                            tint = Color(0xFF1976D2),
-                            modifier = Modifier.size(28.dp)
-                        )
-                    }
-                    Spacer(modifier = Modifier.width(16.dp))
-                    Column(modifier = Modifier.weight(1f)) {
-                        Text(
-                            "Tambahkan Lokasi",
-                            style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold, color = Color(0xFF23272E))
-                        )
-                        Spacer(modifier = Modifier.height(2.dp))
-                        Text(
-                            "Tambahkan lokasi baru seperti gudang, area kerja, atau titik distribusi material",
-                            style = MaterialTheme.typography.bodySmall,
-                            color = Color(0xFF6B7280)
-                        )
-                        Spacer(modifier = Modifier.height(8.dp))
-                        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                            Chip(text = "Gudang")
-                            Chip(text = "Area Kerja")
-                            Chip(text = "Site Office")
-                        }
-                    }
-                    Icon(
-                        Icons.Default.KeyboardArrowRight,
-                        contentDescription = null,
-                        tint = Color(0xFFB0B0B0),
-                        modifier = Modifier.size(18.dp)
-                    )
-                }
-            }
-        }
-    }
-}
-
-
 
