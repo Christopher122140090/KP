@@ -260,6 +260,16 @@ fun CekBarangScreen(
                     ) {
                         Text("Transfer Item", color = Color.White)
                     }
+                    Button(
+                        onClick = {
+                            onEdit(selectedBarang!!)
+                            selectedBarang = null // Tutup dialog setelah navigasi
+                        },
+                        colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF1976D2)),
+                        shape = RoundedCornerShape(8.dp)
+                    ) {
+                        Text("Edit Item", color = Color.White)
+                    }
                 }
             },
             confirmButton = {
