@@ -143,7 +143,8 @@ fun BarangTable(
 @Composable
 fun CekBarangScreen(
     onDetail: (EquipmentUi) -> Unit = {},
-    onTransfer: (EquipmentUi) -> Unit = {} // Tambahkan parameter callback transfer
+    onTransfer: (EquipmentUi) -> Unit = {},
+    onEdit: (EquipmentUi) -> Unit = {} // Added missing parameter
 ) {
     val context = LocalContext.current
     val coroutineScope = rememberCoroutineScope()
@@ -161,7 +162,6 @@ fun CekBarangScreen(
     )
     var selectedKategori by remember { mutableStateOf("Semua") }
     var selectedBarang by remember { mutableStateOf<EquipmentUi?>(null) }
-    var showTambahSheet by remember { mutableStateOf(false) }
 
     LaunchedEffect(Unit) {
         loading = true
@@ -250,14 +250,6 @@ fun CekBarangScreen(
                     ) {
                         Text("Hapus Item", color = Color.White)
                     }
-                }
-            },
-            confirmButton = {
-                Row {
-                    TextButton(onClick = { selectedBarang = null }) {
-                        Text("Tutup", color = Color.Black)
-                    }
-                    Spacer(modifier = Modifier.width(8.dp))
                     Button(
                         onClick = {
                             onTransfer(selectedBarang!!)
@@ -268,6 +260,15 @@ fun CekBarangScreen(
                     ) {
                         Text("Transfer Item", color = Color.White)
                     }
+                }
+            },
+            confirmButton = {
+                Row {
+                    TextButton(onClick = { selectedBarang = null }) {
+                        Text("Tutup", color = Color.Black)
+                    }
+                    Spacer(modifier = Modifier.width(8.dp))
+
                 }
             },
             shape = RoundedCornerShape(16.dp),
@@ -346,107 +347,6 @@ fun CekBarangScreen(
         }
     }
 
-    if (showTambahSheet) {
-        ModalBottomSheet(
-            onDismissRequest = { showTambahSheet = false },
-            shape = RoundedCornerShape(topStart = 24.dp, topEnd = 24.dp),
-            containerColor = Color(0xFFF9FAFB)
-        ) {
-            Column(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(24.dp)
-            ) {
-                Text(
-                    "Pilih Jenis Item",
-                    style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold),
-                    color = Color(0xFF23272E)
-                )
-                Spacer(modifier = Modifier.height(4.dp))
-                Text(
-                    "Pilih jenis item yang ingin Anda tambahkan ke dalam proyek konstruksi",
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = Color(0xFF6B7280)
-                )
-                Spacer(modifier = Modifier.height(24.dp))
-                // Kartu Tambahkan Barang
-                Card(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .clickable { /* TODO: Navigasi ke tambah barang */ showTambahSheet = false },
-                    shape = RoundedCornerShape(16.dp),
-                    colors = CardDefaults.cardColors(containerColor = Color.White),
-                    elevation = CardDefaults.cardElevation(2.dp)
-                ) {
-                    Row(
-                        modifier = Modifier.padding(20.dp),
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Box(
-                            modifier = Modifier
-                                .size(48.dp)
-                                .background(Color(0xFFFFF3E0), RoundedCornerShape(12.dp)),
-                            contentAlignment = Alignment.Center
-                        ) {
-                            Icon(Icons.Default.Inventory, contentDescription = null, tint = Color(0xFFFF7043), modifier = Modifier.size(28.dp))
-                        }
-                        Spacer(modifier = Modifier.width(16.dp))
-                        Column(modifier = Modifier.weight(1f)) {
-                            Text("Tambahkan Barang", style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold, color = Color(0xFF23272E)))
-                            Spacer(modifier = Modifier.height(2.dp))
-                            Text("Tambahkan material, alat, atau peralatan konstruksi ke dalam inventori proyek", style = MaterialTheme.typography.bodySmall, color = Color(0xFF6B7280))
-                            Spacer(modifier = Modifier.height(8.dp))
-                            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                                Chip(text = "Material")
-                                Chip(text = "Alat")
-                                Chip(text = "Equipment")
-                            }
-                        }
-                        Icon(Icons.Default.KeyboardArrowRight, contentDescription = null, tint = Color(0xFFB0B0B0), modifier = Modifier.size(18.dp))
-                    }
-                }
-                Spacer(modifier = Modifier.height(16.dp))
-                // Kartu Tambahkan Lokasi
-                Card(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .clickable { /* TODO: Navigasi ke tambah lokasi */ showTambahSheet = false },
-                    shape = RoundedCornerShape(16.dp),
-                    colors = CardDefaults.cardColors(containerColor = Color.White),
-                    elevation = CardDefaults.cardElevation(2.dp)
-                ) {
-                    Row(
-                        modifier = Modifier.padding(20.dp),
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Box(
-                            modifier = Modifier
-                                .size(48.dp)
-                                .background(Color(0xFFE3F0FF), RoundedCornerShape(12.dp)),
-                            contentAlignment = Alignment.Center
-                        ) {
-                            Icon(Icons.Default.LocationOn, contentDescription = null, tint = Color(0xFF1976D2), modifier = Modifier.size(28.dp))
-                        }
-                        Spacer(modifier = Modifier.width(16.dp))
-                        Column(modifier = Modifier.weight(1f)) {
-                            Text("Tambahkan Lokasi", style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold, color = Color(0xFF23272E)))
-                            Spacer(modifier = Modifier.height(2.dp))
-                            Text("Tambahkan lokasi baru seperti gudang, area kerja, atau titik distribusi material", style = MaterialTheme.typography.bodySmall, color = Color(0xFF6B7280))
-                            Spacer(modifier = Modifier.height(8.dp))
-                            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                                Chip(text = "Gudang")
-                                Chip(text = "Area Kerja")
-                                Chip(text = "Site Office")
-                            }
-                            Spacer(modifier = Modifier.height(16.dp)) // Added bottom padding to prevent overlap with navbar
-                        }
-                        Icon(Icons.Default.KeyboardArrowRight, contentDescription = null, tint = Color(0xFFB0B0B0), modifier = Modifier.size(18.dp))
-                    }
-                }
-            }
-        }
-    }
-
     Scaffold(
         topBar = {
             TopAppBar(
@@ -458,11 +358,7 @@ fun CekBarangScreen(
                 }
             )
         },
-        floatingActionButton = {
-            FloatingActionButton(onClick = { showTambahSheet = true }, containerColor = Color(0xFF1976D2)) {
-                Icon(Icons.Default.Add, contentDescription = "Tambah Barang", tint = Color.White)
-            }
-        },
+
         bottomBar = {
             // ...bottom navigation sudah ada di layout utama...
         },
@@ -609,3 +505,12 @@ fun Chip(text: String) {
     }
 }
 
+@Preview(showBackground = true)
+@Composable
+fun PreviewPopupDetailItem() {
+    CekBarangScreen(
+        onDetail = {},
+        onTransfer = {},
+        onEdit = {}
+    )
+}
