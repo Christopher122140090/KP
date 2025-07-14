@@ -137,6 +137,15 @@ object EquipmentRepository {
             )).await()
     }
 
+    suspend fun updateDescription(itemId: String, newDescription: String) {
+        val now = Timestamp.now()
+        val updates = mapOf(
+            "deskripsi" to newDescription,
+            "updatedAt" to now
+        )
+        db.collection("equipments").document(itemId).update(updates).await()
+    }
+
     fun getEquipmentsRealtime(): Flow<List<Equipment>> = callbackFlow {
         val listener = db.collection("equipments")
             .addSnapshotListener { snapshot, error ->

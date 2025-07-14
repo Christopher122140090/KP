@@ -43,6 +43,7 @@ import com.rosaliscagroup.admin.repository.EquipmentRepository
 import com.rosaliscagroup.admin.data.entity.Location
 import com.rosaliscagroup.admin.repository.HomeRepositoryImpl
 import kotlinx.serialization.Serializable
+import androidx.navigation.compose.rememberNavController
 
 @Serializable
 data class EquipmentUi(
@@ -144,8 +145,10 @@ fun BarangTable(
 fun CekBarangScreen(
     onDetail: (EquipmentUi) -> Unit = {},
     onTransfer: (EquipmentUi) -> Unit = {},
-    onEdit: (EquipmentUi) -> Unit = {} // Added missing parameter
+    onEdit: (EquipmentUi) -> Unit = {}
 ) {
+    val navController = rememberNavController()
+
     val context = LocalContext.current
     val coroutineScope = rememberCoroutineScope()
     var barangList by remember { mutableStateOf<List<EquipmentUi>>(emptyList()) }
@@ -162,6 +165,12 @@ fun CekBarangScreen(
     )
     var selectedKategori by remember { mutableStateOf("Semua") }
     var selectedBarang by remember { mutableStateOf<EquipmentUi?>(null) }
+
+    val handleEdit: (EquipmentUi) -> Unit = { equipmentUi ->
+        val itemId = equipmentUi.id.ifBlank { "unknown" }
+        val initialDescription = equipmentUi.deskripsi.ifBlank { "No description available" }
+        navController.navigate("editItem/$itemId/$initialDescription")
+    }
 
     LaunchedEffect(Unit) {
         loading = true
@@ -263,7 +272,7 @@ fun CekBarangScreen(
                     Button(
                         onClick = {
                             onEdit(selectedBarang!!)
-                            selectedBarang = null // Tutup dialog setelah navigasi
+                            selectedBarang = null // Close dialog after navigation
                         },
                         colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF1976D2)),
                         shape = RoundedCornerShape(8.dp)

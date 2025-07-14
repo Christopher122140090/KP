@@ -8,7 +8,12 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.tooling.preview.Preview
 import com.rosaliscagroup.admin.repository.EquipmentRepository
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -49,7 +54,14 @@ fun EditItemScreen(
             horizontalArrangement = Arrangement.SpaceEvenly,
             modifier = Modifier.fillMaxWidth()
         ) {
-            Button(onClick = { onSave(description) }) {
+            Button(onClick = {
+                CoroutineScope(Dispatchers.IO).launch {
+                    EquipmentRepository.updateDescription(itemId, description)
+                    withContext(Dispatchers.Main) {
+                        onSave(description)
+                    }
+                }
+            }) {
                 Text("Save")
             }
 
@@ -61,3 +73,15 @@ fun EditItemScreen(
         }
     }
 }
+
+@Preview(showBackground = true)
+@Composable
+fun PreviewEditItemScreen() {
+    EditItemScreen(
+        itemId = "123",
+        initialDescription = "Initial description of the item",
+        onSave = { /* Handle save action */ },
+        onCancel = { /* Handle cancel action */ }
+    )
+}
+

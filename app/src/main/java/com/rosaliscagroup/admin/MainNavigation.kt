@@ -49,6 +49,7 @@ import kotlinx.serialization.encodeToString
 import kotlinx.serialization.decodeFromString
 import kotlinx.serialization.json.Json
 import com.rosaliscagroup.admin.ui.proyek.EditProyekScreen
+import com.rosaliscagroup.admin.ui.item.EditItemScreen
 
 // Data class untuk state login
 data class LoginState(
@@ -508,6 +509,11 @@ fun MainNavigation() {
                         onTransfer = { equipmentUi ->
                             val equipmentJson = java.net.URLEncoder.encode(Json.encodeToString(equipmentUi), "UTF-8")
                             navController.navigate("transfer?equipment=$equipmentJson")
+                        },
+                        onEdit = { equipmentUi ->
+                            val itemId = equipmentUi.id.ifBlank { "unknown" }
+                            val initialDescription = equipmentUi.deskripsi.ifBlank { "No description available" }
+                            navController.navigate("editItem/$itemId/$initialDescription")
                         }
                     )
                 },
@@ -655,6 +661,20 @@ fun MainNavigation() {
         composable("editProyekScreen?locationId={locationId}")  {
             val locationId = it.arguments?.getString("locationId") ?: ""
             EditProyekScreen(locationId = locationId, navController = navController, onBack = { navController.popBackStack() })
+        }
+        composable("editItem/{itemId}/{initialDescription}") { backStackEntry ->
+            val itemId = backStackEntry.arguments?.getString("itemId") ?: ""
+            val initialDescription = backStackEntry.arguments?.getString("initialDescription") ?: ""
+            EditItemScreen(
+                itemId = itemId,
+                initialDescription = initialDescription,
+                onSave = { description ->
+                    navController.popBackStack()
+                },
+                onCancel = {
+                    navController.popBackStack()
+                }
+            )
         }
     }
 }
