@@ -3,6 +3,7 @@ package com.rosaliscagroup.admin.ui.transfer
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -27,8 +28,8 @@ import com.rosaliscagroup.admin.ui.item.EquipmentUi
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun TransferItem(
-    equipment: EquipmentUi, // Tambahkan parameter equipment
-    onSimpan: (String, String) -> Unit, // id barang, lokasi baru
+    equipment: EquipmentUi,
+    onSimpan: (String, String, String, String) -> Unit, // id barang, lokasi baru, pengirim, penerima
     onCancel: (() -> Unit)? = null
 ) {
     var lokasiId by remember { mutableStateOf(equipment.lokasiId) }
@@ -36,6 +37,8 @@ fun TransferItem(
     var lokasiLoading by remember { mutableStateOf(true) }
     val scrollState = rememberScrollState()
     var lokasiExpanded by remember { mutableStateOf(false) }
+    var pengirim by remember { mutableStateOf("") }
+    var penerima by remember { mutableStateOf("") }
 
     // Fetch lokasi dari Firestore
     LaunchedEffect(Unit) {
@@ -119,10 +122,38 @@ fun TransferItem(
                 }
             }
         }
+        Spacer(modifier = Modifier.height(8.dp))
+        // Pengirim (editable)
+        OutlinedTextField(
+            value = pengirim,
+            onValueChange = { pengirim = it },
+            label = { Text("Pengirim") },
+            modifier = Modifier.fillMaxWidth(),
+            singleLine = true,
+            keyboardOptions = KeyboardOptions.Default.copy(imeAction = ImeAction.Next),
+            isError = pengirim.isBlank()
+        )
+        if (pengirim.isBlank()) {
+            Text("Nama pengirim harus diisi", color = Color.Red, style = MaterialTheme.typography.bodySmall)
+        }
+        Spacer(modifier = Modifier.height(8.dp))
+        // Penerima (editable)
+        OutlinedTextField(
+            value = penerima,
+            onValueChange = { penerima = it },
+            label = { Text("Penerima") },
+            modifier = Modifier.fillMaxWidth(),
+            singleLine = true,
+            keyboardOptions = KeyboardOptions.Default.copy(imeAction = ImeAction.Done),
+            isError = penerima.isBlank()
+        )
+        if (penerima.isBlank()) {
+            Text("Nama penerima harus diisi", color = Color.Red, style = MaterialTheme.typography.bodySmall)
+        }
         Spacer(modifier = Modifier.height(16.dp))
         Row {
             Button(
-                onClick = { onSimpan(equipment.id, lokasiId) },
+                onClick = { onSimpan(equipment.id, lokasiId, pengirim, penerima) },
                 enabled = !lokasiLoading,
                 colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF1976D2)),
                 shape = RoundedCornerShape(8.dp)
@@ -137,7 +168,6 @@ fun TransferItem(
     }
 }
 
-// Preview harus berada di paling bawah file, setelah semua fungsi utama
 @Preview(showBackground = true)
 @Composable
 fun TransferItemPreview() {
@@ -150,7 +180,7 @@ fun TransferItemPreview() {
             lokasiId = "Lokasi A",
             sku = "SKU123"
         ),
-        onSimpan = { _, _ -> },
+        onSimpan = { _, _, _, _ -> },
         onCancel = {}
     )
 }

@@ -603,11 +603,11 @@ fun MainNavigation() {
                         if (equipment != null) {
                             TransferItem(
                                 equipment = equipment,
-                                onSimpan = { id, lokasiBaru ->
+                                onSimpan = { id, lokasiBaru, pengirim, penerima ->
                                     scope.launch {
                                         try {
                                             com.rosaliscagroup.admin.repository.EquipmentRepository.updateEquipmentLocation(id, lokasiBaru)
-                                            android.widget.Toast.makeText(context, "Lokasi berhasil diupdate", android.widget.Toast.LENGTH_SHORT).show()
+                                            android.widget.Toast.makeText(context, "Lokasi berhasil diupdate oleh $pengirim ke $penerima", android.widget.Toast.LENGTH_SHORT).show()
                                             navController.navigateUp()
                                         } catch (e: Exception) {
                                             android.widget.Toast.makeText(context, "Gagal update lokasi: ${e.message}", android.widget.Toast.LENGTH_SHORT).show()
