@@ -38,6 +38,10 @@ import kotlinx.coroutines.delay
 import com.rosaliscagroup.admin.data.entity.Location
 import com.rosaliscagroup.admin.repository.HomeRepositoryImpl
 import com.rosaliscagroup.admin.repository.EquipmentRepository
+import com.google.firebase.firestore.FirebaseFirestore
+import kotlinx.coroutines.tasks.await
+import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.auth.FirebaseUser
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -76,10 +80,11 @@ fun TambahItem(
     val scrollState = rememberScrollState()
 
     val kategoriOptions = listOf(
-        "Alat Berat",
+        "Mesin 1000 Herrenknecht",
         "Generator",
         "Alat Personel",
         "Alat Tambahan",
+        "Mesin 1000 Iseki",
         "dan lain-lain"
     )
     var kategoriExpanded by remember { mutableStateOf(false) }
@@ -105,6 +110,86 @@ fun TambahItem(
             lokasiList = emptyList()
         }
         lokasiLoading = false
+    }
+
+    // State untuk daftar kategori global
+    var kategoriList by remember { mutableStateOf(listOf<String>()) }
+    var kategoriLoading by remember { mutableStateOf(true) }
+    val db = FirebaseFirestore.getInstance()
+
+    // Ambil kategori dari Firestore saat halaman dibuka
+    LaunchedEffect(Unit) {
+        kategoriLoading = true
+        coroutineScope.launch {
+            try {
+                val snapshot = db.collection("categories").get().await()
+                kategoriList = snapshot.documents.mapNotNull { doc -> doc.getString("name") }.distinct().sorted()
+            } catch (_: Exception) {
+                kategoriList = kategoriOptions // fallback
+            }
+            kategoriLoading = false
+        }
+    }
+
+    // Fungsi untuk menambah kategori baru ke Firestore
+    suspend fun tambahKategoriBaru(namaKategori: String) {
+        if (namaKategori.isNotBlank() && !kategoriList.contains(namaKategori)) {
+            db.collection("categories").add(mapOf("name" to namaKategori)).await()
+            kategoriList = (kategoriList + namaKategori).distinct().sorted()
+        }
+    }
+
+    // State untuk dialog input kategori manual
+    var showKategoriDialog by remember { mutableStateOf(false) }
+    var kategoriBaruInput by remember { mutableStateOf("") }
+    var kategoriBaruError by remember { mutableStateOf(false) }
+
+    // Fungsi dialog input kategori manual
+    @Composable
+    fun KategoriInputDialog(onDismiss: () -> Unit, onConfirm: (String) -> Unit) {
+        AlertDialog(
+            onDismissRequest = onDismiss,
+            title = { Text("Tambah Kategori Baru") },
+            text = {
+                Column {
+                    OutlinedTextField(
+                        value = kategoriBaruInput,
+                        onValueChange = {
+                            kategoriBaruInput = it
+                            kategoriBaruError = false
+                        },
+                        label = { Text("Nama Kategori") },
+                        isError = kategoriBaruError,
+                        singleLine = true
+                    )
+                    if (kategoriBaruError) {
+                        Text("Kategori tidak boleh kosong atau sudah ada", color = Color.Red, fontSize = 12.sp)
+                    }
+                }
+            },
+            confirmButton = {
+                Button(onClick = {
+                    if (kategoriBaruInput.isBlank() || kategoriList.contains(kategoriBaruInput.trim())) {
+                        kategoriBaruError = true
+                    } else {
+                        onConfirm(kategoriBaruInput.trim())
+                        kategoriBaruInput = ""
+                        kategoriBaruError = false
+                    }
+                }) {
+                    Text("Tambah")
+                }
+            },
+            dismissButton = {
+                OutlinedButton(onClick = {
+                    onDismiss()
+                    kategoriBaruInput = ""
+                    kategoriBaruError = false
+                }) {
+                    Text("Batal")
+                }
+            }
+        )
     }
 
     // Hide Navbar when this page is active
@@ -359,7 +444,7 @@ fun TambahItem(
                                 onDismissRequest = { kategoriExpanded = false },
                                 modifier = Modifier.background(Color(0xFFF5F5F5))
                             ) {
-                                kategoriOptions.forEach { option ->
+                                kategoriList.forEach { option ->
                                     DropdownMenuItem(
                                         text = { Text(option, color = Color(0xFF757575)) },
                                         modifier = Modifier.fillMaxWidth(),
@@ -403,6 +488,15 @@ fun TambahItem(
                                         }
                                     )
                                 }
+                                // Opsi input manual kategori baru
+                                DropdownMenuItem(
+                                    text = { Text("+ Tambah kategori baru", color = Color(0xFF1976D2)) },
+                                    modifier = Modifier.fillMaxWidth(),
+                                    onClick = {
+                                        kategoriExpanded = false
+                                        showKategoriDialog = true
+                                    }
+                                )
                             }
                         }
                     }
@@ -584,6 +678,8 @@ fun TambahItem(
                                         isSaving = true
                                         saveProgress = 0
                                         try {
+                                            val currentUser: FirebaseUser? = FirebaseAuth.getInstance().currentUser
+                                            val namaUser = currentUser?.displayName ?: currentUser?.email ?: "User Tidak Diketahui"
                                             EquipmentRepository.addEquipmentWithImageUrl(
                                                 context = context,
                                                 nama = nama,
@@ -594,7 +690,8 @@ fun TambahItem(
                                                 sku = sku,
                                                 onProgress = { progress: Float ->
                                                     saveProgress = (progress * 100).toInt()
-                                                }
+                                                },
+                                                namaUser = namaUser
                                             )
                                             SkuRepository.confirmSku(sku, mapOf(
                                                 "nama" to nama,
@@ -644,6 +741,46 @@ fun TambahItem(
         Box(modifier = Modifier.fillMaxSize()) {
             SnackbarHost(hostState = snackbarHostState, modifier = Modifier.align(Alignment.BottomCenter))
         }
+
+        // Tampilkan dialog jika showKategoriDialog true
+        if (showKategoriDialog) {
+            KategoriInputDialog(
+                onDismiss = { showKategoriDialog = false },
+                onConfirm = { newKategori ->
+                    showKategoriDialog = false
+                    coroutineScope.launch {
+                        kategoriLoading = true
+                        tambahKategoriBaru(newKategori)
+                        kategori = newKategori
+                        kategoriError = false
+                        kategoriLoading = false
+                        // Generate SKU untuk kategori baru
+                        skuLoading = true
+                        skuError = false
+                        sku = ""
+                        skuJob?.cancel()
+                        try {
+                            val generatedSku = SkuRepository.generateAndReserveSku(newKategori)
+                            if (generatedSku != null) {
+                                sku = generatedSku
+                                skuLoading = false
+                                skuJob = launch {
+                                    delay(5 * 60 * 1000)
+                                    SkuRepository.releaseSku(generatedSku)
+                                    sku = ""
+                                }
+                            } else {
+                                skuError = true
+                                skuLoading = false
+                            }
+                        } catch (e: Exception) {
+                            skuError = true
+                            skuLoading = false
+                        }
+                    }
+                }
+            )
+        }
     }
 }
 
@@ -657,4 +794,3 @@ fun TambahItemPreview() {
         onShowNavbarChange = {} // Pastikan semua parameter diisi dengan lambda kosong
     )
 }
-

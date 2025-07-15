@@ -17,7 +17,8 @@ object EquipmentRepository {
         kategori: String,
         lokasiId: String,
         gambarUri: Uri,
-        sku: String
+        sku: String,
+        namaUser: String // Tambahkan parameter namaUser
     ) {
         val now = Timestamp.now()
         val data = hashMapOf(
@@ -35,7 +36,7 @@ object EquipmentRepository {
         val activity = hashMapOf(
             "type" to "Equipment Received",
             "createdAt" to now,
-            "details" to "$nama ($sku) - $kategori",
+            "details" to "Nama: $nama\nDari: $namaUser",
             "equipmentId" to equipmentRef.id,
             "locationId" to lokasiId,
             "projectId" to ""
@@ -53,7 +54,8 @@ object EquipmentRepository {
         lokasiId: String,
         gambarUri: Uri,
         sku: String,
-        onProgress: (Float) -> Unit
+        onProgress: (Float) -> Unit,
+        namaUser: String // Tambahkan parameter namaUser
     ) {
         // Upload gambar ke Firebase Storage
         val storageRef = com.google.firebase.storage.FirebaseStorage.getInstance().reference
@@ -67,7 +69,7 @@ object EquipmentRepository {
         val downloadUrl = imageRef.downloadUrl.await().toString()
         onProgress(0.9f)
         // Simpan data equipment dengan URL gambar dari Storage
-        addEquipment(nama, deskripsi, kategori, lokasiId, Uri.parse(downloadUrl), sku)
+        addEquipment(nama, deskripsi, kategori, lokasiId, Uri.parse(downloadUrl), sku, namaUser)
         onProgress(1.0f)
     }
 
@@ -99,6 +101,12 @@ object EquipmentRepository {
                 updatedAt = data["updatedAt"] as? com.google.firebase.Timestamp
             )
         }
+    }
+
+    suspend fun getAllCategories(): List<String> {
+        val snapshot = db.collection("categories").get().await()
+        val categories = snapshot.documents.mapNotNull { it.getString("name") }
+        return categories.distinct().sorted()
     }
 
     fun getLatestEquipmentFlow(): Flow<Equipment?> = callbackFlow {
@@ -170,5 +178,18 @@ object EquipmentRepository {
                 trySend(equipments)
             }
         awaitClose { listener.remove() }
+    }
+
+    suspend fun logTransferActivity(equipmentId: String, locationId: String, projectId: String = "", details: String = "") {
+        val now = com.google.firebase.Timestamp.now()
+        val activity = hashMapOf(
+            "type" to "Transfer",
+            "createdAt" to now,
+            "details" to details,
+            "equipmentId" to equipmentId,
+            "locationId" to locationId,
+            "projectId" to projectId
+        )
+        db.collection("activities").add(activity).await()
     }
 }

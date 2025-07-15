@@ -20,4 +20,6 @@ interface HomeRepository {
     suspend fun getLocations(): List<Location>
     fun getLocationsRealtime(): Flow<List<Location>>
     suspend fun getNewEquipmentsThisWeek(): Int
+    suspend fun addActivity(activity: Activity)
+    fun getRecentActivities(): Flow<List<Activity>>
 }

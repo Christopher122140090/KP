@@ -155,16 +155,11 @@ fun CekBarangScreen(
     var lokasiList by remember { mutableStateOf<List<Location>>(emptyList()) }
     var loading by remember { mutableStateOf(true) }
     var searchQuery by remember { mutableStateOf("") }
-    val kategoriOptions = listOf(
-        "Semua",
-        "Alat berat",
-        "Generator",
-        "Alat personel",
-        "Alat Tambahan",
-        "Lain-lain"
-    )
+    var kategoriList by remember { mutableStateOf(listOf("Semua")) }
     var selectedKategori by remember { mutableStateOf("Semua") }
     var selectedBarang by remember { mutableStateOf<EquipmentUi?>(null) }
+    var showTambahSheet by remember { mutableStateOf(false) }
+    var showKategoriDropdown by remember { mutableStateOf(false) }
 
     val handleEdit: (EquipmentUi) -> Unit = { equipmentUi ->
         val itemId = equipmentUi.id.ifBlank { "unknown" }
@@ -192,6 +187,9 @@ fun CekBarangScreen(
                     updatedAt = eq.updatedAt?.toDate()?.toString() ?: ""
                 )
             }
+            // Fetch categories from Firebase (suspend function)
+            val categories = EquipmentRepository.getAllCategories()
+            kategoriList = mutableListOf("Semua").apply { addAll(categories) }
         } catch (e: Exception) {
             Toast.makeText(context, "Gagal mengambil data: ${e.message}", Toast.LENGTH_SHORT).show()
         }
@@ -383,127 +381,99 @@ fun CekBarangScreen(
         },
         containerColor = Color.White
     ) { innerPadding ->
-        Column(
+        LazyColumn(
             modifier = Modifier
                 .fillMaxSize()
                 .background(Color.White)
                 .padding(innerPadding)
+                .navigationBarsPadding(), // Tambahkan ini agar konten tidak tertutup navigation bar
+            verticalArrangement = Arrangement.spacedBy(0.dp)
         ) {
-            Spacer(modifier = Modifier.height(8.dp))
-            OutlinedTextField(
-                value = searchQuery,
-                onValueChange = { searchQuery = it },
-                placeholder = { Text("Cari barang...") },
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 16.dp),
-                singleLine = true,
-                shape = RoundedCornerShape(12.dp)
-            )
-            Spacer(modifier = Modifier.height(8.dp))
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 16.dp),
-                horizontalArrangement = Arrangement.spacedBy(16.dp)
-            ) {
-                Column(
-                    modifier = Modifier.weight(1f),
-                    verticalArrangement = Arrangement.spacedBy(8.dp)
-                ) {
-                    kategoriOptions.take(3).forEach { kategori ->
-                        val selected = selectedKategori == kategori
-                        Button(
-                            onClick = { selectedKategori = kategori },
-                            colors = ButtonDefaults.buttonColors(
-                                containerColor = if (selected) Color(0xFF1976D2) else Color(0xFFF5F5F5),
-                                contentColor = if (selected) Color.White else Color(0xFF1976D2)
-                            ),
-                            shape = RoundedCornerShape(8.dp),
-                            modifier = Modifier.fillMaxWidth()
-                        ) {
-                            Text(kategori, maxLines = 1)
-                        }
-                    }
-                }
-                Column(
-                    modifier = Modifier.weight(1f),
-                    verticalArrangement = Arrangement.spacedBy(8.dp)
-                ) {
-                    kategoriOptions.drop(3).forEach { kategori ->
-                        val selected = selectedKategori == kategori
-                        Button(
-                            onClick = { selectedKategori = kategori },
-                            colors = ButtonDefaults.buttonColors(
-                                containerColor = if (selected) Color(0xFF1976D2) else Color(0xFFF5F5F5),
-                                contentColor = if (selected) Color.White else Color(0xFF1976D2)
-                            ),
-                            shape = RoundedCornerShape(8.dp),
-                            modifier = Modifier.fillMaxWidth()
-                        ) {
-                            Text(kategori, maxLines = 1)
-                        }
-                    }
-                }
-            }
-            Spacer(modifier = Modifier.height(8.dp))
-            if (loading) {
-                Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                    CircularProgressIndicator()
-                }
-            } else if (filteredBarang.isEmpty()) {
-                Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                    Text("Tidak ada data barang.", color = Color.Gray)
-                }
-            } else {
-                LazyColumn(
+            item {
+                Spacer(modifier = Modifier.height(8.dp))
+                OutlinedTextField(
+                    value = searchQuery,
+                    onValueChange = { searchQuery = it },
+                    placeholder = { Text("Cari barang...") },
                     modifier = Modifier
                         .fillMaxWidth()
-                        .weight(1f),
-                    verticalArrangement = Arrangement.spacedBy(12.dp)
-                ) {
-                    items(filteredBarang) { barang ->
-                        Card(
-                            modifier = Modifier.fillMaxWidth(),
-                            shape = RoundedCornerShape(12.dp),
-                            colors = CardDefaults.cardColors(containerColor = Color.White),
-                            elevation = CardDefaults.cardElevation(2.dp)
-                        ) {
-                            Row(
-                                modifier = Modifier.padding(12.dp),
-                                verticalAlignment = Alignment.CenterVertically
-                            ) {
-                                if (barang.gambarUri.isNotBlank()) {
-                                    androidx.compose.foundation.Image(
-                                        painter = rememberAsyncImagePainter(barang.gambarUri),
-                                        contentDescription = "Gambar Barang",
-                                        modifier = Modifier
-                                            .size(64.dp)
-                                            .background(Color(0xFFF5F5F5), RoundedCornerShape(8.dp)),
-                                        contentScale = androidx.compose.ui.layout.ContentScale.Crop
-                                    )
-                                    Spacer(modifier = Modifier.width(12.dp))
-                                }
-                                Column(modifier = Modifier.weight(1f)) {
-                                    Text(barang.nama, style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold))
-                                    Text(barang.kategori, style = MaterialTheme.typography.bodySmall, color = Color.Gray)
-                                    Text(barang.deskripsi, style = MaterialTheme.typography.bodySmall, color = Color.Gray)
-                                    Text(barang.createdAt, style = MaterialTheme.typography.bodySmall, color = Color.Gray)
-                                }
-                                Column(horizontalAlignment = Alignment.End) {
-                                    Text(barang.sku, style = MaterialTheme.typography.labelMedium, color = Color.Gray, modifier = Modifier.background(Color(0xFFF5F5F5), RoundedCornerShape(8.dp)).padding(horizontal = 8.dp, vertical = 2.dp))
-                                    Spacer(modifier = Modifier.height(8.dp))
-                                    TextButton(onClick = { selectedBarang = barang }) {
-                                        Text("Detail", color = Color(0xFF1976D2))
+                        .padding(horizontal = 16.dp),
+                    singleLine = true,
+                    shape = RoundedCornerShape(12.dp)
+                )
+                Spacer(modifier = Modifier.height(8.dp))
+                // UI: Button to show all categories in a modal
+                Box(modifier = Modifier.padding(8.dp)) {
+                    Button(onClick = { showKategoriDropdown = true }) {
+                        Text("Kategori: $selectedKategori")
+                    }
+                    if (showKategoriDropdown) {
+                        ModalBottomSheet(onDismissRequest = { showKategoriDropdown = false }) {
+                            Column {
+                                kategoriList.forEach { kategori ->
+                                    TextButton(onClick = {
+                                        selectedKategori = kategori
+                                        showKategoriDropdown = false
+                                    }) {
+                                        Text(kategori)
                                     }
                                 }
                             }
                         }
                     }
                 }
+                Spacer(modifier = Modifier.height(8.dp))
             }
-
-            Spacer(modifier = Modifier.height(80.dp))
+            item {
+                if (loading) {
+                    Box(modifier = Modifier.fillMaxWidth().height(200.dp), contentAlignment = Alignment.Center) {
+                        CircularProgressIndicator()
+                    }
+                } else if (filteredBarang.isEmpty()) {
+                    Box(modifier = Modifier.fillMaxWidth().height(200.dp), contentAlignment = Alignment.Center) {
+                        Text("Tidak ada data barang.", color = Color.Gray)
+                    }
+                }
+            }
+            items(filteredBarang) { barang ->
+                Card(
+                    modifier = Modifier.fillMaxWidth(),
+                    shape = RoundedCornerShape(12.dp),
+                    colors = CardDefaults.cardColors(containerColor = Color.White),
+                    elevation = CardDefaults.cardElevation(2.dp)
+                ) {
+                    Row(
+                        modifier = Modifier.padding(12.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        if (barang.gambarUri.isNotBlank()) {
+                            androidx.compose.foundation.Image(
+                                painter = rememberAsyncImagePainter(barang.gambarUri),
+                                contentDescription = "Gambar Barang",
+                                modifier = Modifier
+                                    .size(64.dp)
+                                    .background(Color(0xFFF5F5F5), RoundedCornerShape(8.dp)),
+                                contentScale = androidx.compose.ui.layout.ContentScale.Crop
+                            )
+                            Spacer(modifier = Modifier.width(12.dp))
+                        }
+                        Column(modifier = Modifier.weight(1f)) {
+                            Text(barang.nama, style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold))
+                            Text(barang.kategori, style = MaterialTheme.typography.bodySmall, color = Color.Gray)
+                            Text(barang.deskripsi, style = MaterialTheme.typography.bodySmall, color = Color.Gray)
+                            Text(barang.createdAt, style = MaterialTheme.typography.bodySmall, color = Color.Gray)
+                        }
+                        Column(horizontalAlignment = Alignment.End) {
+                            Text(barang.sku, style = MaterialTheme.typography.labelMedium, color = Color.Gray, modifier = Modifier.background(Color(0xFFF5F5F5), RoundedCornerShape(8.dp)).padding(horizontal = 8.dp, vertical = 2.dp))
+                            Spacer(modifier = Modifier.height(8.dp))
+                            TextButton(onClick = { selectedBarang = barang }) {
+                                Text("Detail", color = Color(0xFF1976D2))
+                            }
+                        }
+                    }
+                }
+            }
+            item { Spacer(modifier = Modifier.height(64.dp)) } // Ganti dari 32.dp ke 64.dp agar ada ruang ekstra di bawah
         }
     }
 }

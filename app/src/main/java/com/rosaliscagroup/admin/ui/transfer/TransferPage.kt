@@ -28,9 +28,11 @@ import com.rosaliscagroup.admin.ui.item.EquipmentUi
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun TransferItem(
-    equipment: EquipmentUi,
-    onSimpan: (String, String, String, String) -> Unit, // id barang, lokasi baru, pengirim, penerima
-    onCancel: (() -> Unit)? = null
+    equipment: EquipmentUi, // Tambahkan parameter equipment
+    onSimpan: (String, String,String, String) -> Unit, // id barang, lokasi baru
+    onCancel: (() -> Unit)? = null,
+    userName: String, // Tambahkan parameter userName
+    viewModel: com.rosaliscagroup.admin.ui.home.HomeViewModel, // Tambahkan parameter viewModel
 ) {
     var lokasiId by remember { mutableStateOf(equipment.lokasiId) }
     var lokasiList by remember { mutableStateOf(listOf<Location>()) }
@@ -153,7 +155,16 @@ fun TransferItem(
         Spacer(modifier = Modifier.height(16.dp))
         Row {
             Button(
-                onClick = { onSimpan(equipment.id, lokasiId, pengirim, penerima) },
+                onClick = {
+                    onSimpan(equipment.id, lokasiId, pengirim, penerima)
+                    viewModel.addTransferActivity(
+                        equipmentName = equipment.nama,
+                        equipmentCategory = equipment.kategori,
+                        userName = userName,
+                        fromLocation = lokasiList.find { it.id == equipment.lokasiId }?.name ?: "",
+                        toLocation = lokasiList.find { it.id == lokasiId }?.name ?: ""
+                                )
+                          },
                 enabled = !lokasiLoading,
                 colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF1976D2)),
                 shape = RoundedCornerShape(8.dp)
@@ -171,6 +182,7 @@ fun TransferItem(
 @Preview(showBackground = true)
 @Composable
 fun TransferItemPreview() {
+    val viewModel = androidx.hilt.navigation.compose.hiltViewModel<com.rosaliscagroup.admin.ui.home.HomeViewModel>()
     TransferItem(
         equipment = EquipmentUi(
             id = "1",
@@ -181,7 +193,9 @@ fun TransferItemPreview() {
             sku = "SKU123"
         ),
         onSimpan = { _, _, _, _ -> },
-        onCancel = {}
+        onCancel = {} ,
+        userName = "John Doe",
+        viewModel = viewModel
     )
 }
 

@@ -195,4 +195,46 @@ class HomeRepositoryImpl @Inject constructor() : HomeRepository {
             .get().await()
         return snapshot.size()
     }
+
+    override suspend fun addActivity(activity: Activity) {
+        val activityMap = hashMapOf(
+            "details" to activity.details,
+            "equipmentId" to activity.equipmentId,
+            "locationId" to activity.locationId,
+            "projectId" to activity.projectId,
+            "type" to activity.type,
+            // Simpan createdAt sebagai Timestamp
+            "createdAt" to com.google.firebase.Timestamp(activity.createdAt / 1000, ((activity.createdAt % 1000) * 1000000).toInt())
+        )
+        db.collection("activities").add(activityMap).await()
+    }
+
+    override fun getRecentActivities(): Flow<List<Activity>> = callbackFlow {
+        val listener = db.collection("activities")
+            .orderBy("createdAt", com.google.firebase.firestore.Query.Direction.DESCENDING)
+            .limit(20)
+            .addSnapshotListener { snapshot, _ ->
+                val activities = snapshot?.documents?.mapNotNull { doc ->
+                    val id = doc.id
+                    val createdAtTimestamp = doc.getTimestamp("createdAt")
+                    val createdAt = createdAtTimestamp?.toDate()?.time ?: 0L
+                    val details = doc.getString("details") ?: ""
+                    val equipmentId = doc.getString("equipmentId") ?: ""
+                    val locationId = doc.getString("locationId") ?: ""
+                    val projectId = doc.getString("projectId") ?: ""
+                    val type = doc.getString("type") ?: ""
+                    Activity(
+                        id = id,
+                        createdAt = createdAt,
+                        details = details,
+                        equipmentId = equipmentId,
+                        locationId = locationId,
+                        projectId = projectId,
+                        type = type
+                    )
+                } ?: emptyList()
+                trySend(activities)
+            }
+        awaitClose { listener.remove() }
+    }
 }
