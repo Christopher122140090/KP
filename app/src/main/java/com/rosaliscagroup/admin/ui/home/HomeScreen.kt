@@ -59,6 +59,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.ArrowForward
 import androidx.compose.material.icons.filled.CheckCircle
+import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.LocationOn
 import androidx.compose.material.icons.filled.Warning
 import androidx.compose.material.icons.filled.Warehouse
@@ -291,13 +292,33 @@ private fun HomeScreen(
             } else {
                 Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
                     recentActivities.take(3).forEach { activity ->
-                        ActivityItem(
-                            icon = Icons.Default.CheckCircle,
-                            iconTint = Color(0xFF4CAF50),
-                            title = activity.type,
-                            details = activity.details,
-                            time = getRelativeTime(activity.createdAt)
-                        )
+                        val (icon, iconTint) = when (activity.type) {
+                            "Transfer" -> Icons.Default.SwapHoriz to Color(0xFF1976D2)
+                            "Equipment Received" -> Icons.Default.CheckCircle to Color(0xFF4CAF50)
+                            else -> Icons.Default.Info to Color(0xFF757575)
+                        }
+                        if (activity.type == "Equipment Received") {
+                            // Ambil nama barang dari details
+                            val detailsLines = activity.details.split("\n")
+                            val namaBarang = detailsLines.getOrNull(0)?.removePrefix("Nama: ") ?: "-"
+                            // Ambil nama user yang menambahkan barang
+                            val user = detailsLines.find { it.startsWith("Dari: ") }?.removePrefix("Dari: ") ?: "-"
+                            ActivityItem(
+                                icon = icon,
+                                iconTint = iconTint,
+                                title = "Tambah Barang",
+                                details = "Nama barang: $namaBarang\nDari: $user",
+                                time = getRelativeTime(activity.createdAt)
+                            )
+                        } else {
+                            ActivityItem(
+                                icon = icon,
+                                iconTint = iconTint,
+                                title = activity.type,
+                                details = activity.details,
+                                time = getRelativeTime(activity.createdAt)
+                            )
+                        }
                     }
                 }
             }
@@ -385,13 +406,26 @@ fun ActivityCard(activity: com.rosaliscagroup.admin.data.entity.Activity) {
             .fillMaxWidth()
             .padding(vertical = 4.dp)
     ) {
-        Column(Modifier.padding(8.dp)) {
-            Text("Type: ${activity.type}", style = MaterialTheme.typography.bodyLarge)
-            Text("Details: ${activity.details}")
-            Text("Project: ${activity.projectId}")
-            Text("Equipment: ${activity.equipmentId}")
-            Text("Location: ${activity.locationId}")
-            Text("Created: ${activity.createdAt}")
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            val icon = when (activity.type) {
+                "Transfer" -> Icons.Default.SwapHoriz
+                "Equipment Received" -> Icons.Default.CheckCircle
+                else -> Icons.Default.Info
+            }
+            val iconTint = when (activity.type) {
+                "Transfer" -> Color(0xFF1976D2)
+                "Equipment Received" -> Color(0xFF388E3C)
+                else -> Color(0xFF757575)
+            }
+            Icon(icon, contentDescription = activity.type, modifier = Modifier.size(32.dp).padding(8.dp), tint = iconTint)
+            Column(Modifier.padding(8.dp)) {
+                Text("Type: ${activity.type}", style = MaterialTheme.typography.bodyLarge)
+                Text("Details: ${activity.details}")
+                Text("Project: ${activity.projectId}")
+                Text("Equipment: ${activity.equipmentId}")
+                Text("Location: ${activity.locationId}")
+                Text("Created: ${activity.createdAt}")
+            }
         }
     }
 }

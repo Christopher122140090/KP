@@ -594,6 +594,7 @@ fun MainNavigation() {
                             } else null
                         } catch (_: Exception) { null }
                         if (equipment != null) {
+                            val viewModel: com.rosaliscagroup.admin.ui.home.HomeViewModel = androidx.hilt.navigation.compose.hiltViewModel()
                             TransferItem(
                                 equipment = equipment,
                                 onSimpan = { id, lokasiBaru ->
@@ -607,7 +608,9 @@ fun MainNavigation() {
                                         }
                                     }
                                 },
-                                onCancel = { navController.navigateUp() }
+                                onCancel = { navController.navigateUp() },
+                                userName = userName, // pastikan userName sudah tersedia di scope ini
+                                viewModel = viewModel
                             )
                         } else {
                             Text("Data item tidak ditemukan")

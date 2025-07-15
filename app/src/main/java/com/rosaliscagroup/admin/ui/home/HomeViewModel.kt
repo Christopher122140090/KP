@@ -23,31 +23,8 @@ class HomeViewModel @Inject constructor(
 
     // Tambahkan StateFlow untuk recent activities realtime
     val recentActivities: StateFlow<List<Activity>> =
-        combine(
-            homeRepository.getRecentActivitiesRealtime(4),
-            EquipmentRepository.getLatestEquipmentFlow()
-        ) { activities, latestEquipment ->
-            if (latestEquipment == null) return@combine activities
-            val equipmentReceivedActivity = Activity(
-                id = latestEquipment.id,
-                createdAt = latestEquipment.createdAt?.toDate()?.time ?: 0L,
-                details = "${latestEquipment.nama} (${latestEquipment.sku}) - ${latestEquipment.kategori}",
-                equipmentId = latestEquipment.id,
-                locationId = latestEquipment.lokasiId,
-                projectId = "",
-                type = "Equipment Received"
-            )
-            // Replace jika sudah ada Equipment Received dengan id yang sama, else add di depan
-            val idx = activities.indexOfFirst { it.type == "Equipment Received" && it.equipmentId == latestEquipment.id }
-            val updated = activities.toMutableList()
-            if (idx >= 0) {
-                updated[idx] = equipmentReceivedActivity
-            } else {
-                updated.add(0, equipmentReceivedActivity)
-            }
-            updated
-        }
-        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
+        homeRepository.getRecentActivities()
+            .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
 
     // StateFlow untuk seluruh aktivitas (untuk View All)
     val allActivities: StateFlow<List<Activity>> =
@@ -99,5 +76,30 @@ class HomeViewModel @Inject constructor(
 
     fun invalidateCache() {
         isCacheValid = false
+    }
+
+    fun addActivity(activity: Activity) {
+        viewModelScope.launch {
+            homeRepository.addActivity(activity)
+        }
+    }
+
+    fun addTransferActivity(
+        equipmentName: String,
+        equipmentCategory: String,
+        userName: String,
+        fromLocation: String,
+        toLocation: String
+    ) {
+        val activity = Activity(
+            id = "", // Firestore akan generate id
+            createdAt = System.currentTimeMillis(),
+            details = "Barang: $equipmentName ($equipmentCategory)\nDari: $userName\nKepada: $fromLocation\nLokasi: $toLocation",
+            equipmentId = "", // isi jika ada
+            locationId = "", // isi jika ada
+            projectId = "", // isi jika ada
+            type = "Transfer"
+        )
+        addActivity(activity)
     }
 }

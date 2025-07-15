@@ -40,6 +40,8 @@ import com.rosaliscagroup.admin.repository.HomeRepositoryImpl
 import com.rosaliscagroup.admin.repository.EquipmentRepository
 import com.google.firebase.firestore.FirebaseFirestore
 import kotlinx.coroutines.tasks.await
+import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.auth.FirebaseUser
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -676,6 +678,8 @@ fun TambahItem(
                                         isSaving = true
                                         saveProgress = 0
                                         try {
+                                            val currentUser: FirebaseUser? = FirebaseAuth.getInstance().currentUser
+                                            val namaUser = currentUser?.displayName ?: currentUser?.email ?: "User Tidak Diketahui"
                                             EquipmentRepository.addEquipmentWithImageUrl(
                                                 context = context,
                                                 nama = nama,
@@ -686,7 +690,8 @@ fun TambahItem(
                                                 sku = sku,
                                                 onProgress = { progress: Float ->
                                                     saveProgress = (progress * 100).toInt()
-                                                }
+                                                },
+                                                namaUser = namaUser
                                             )
                                             SkuRepository.confirmSku(sku, mapOf(
                                                 "nama" to nama,
@@ -789,8 +794,3 @@ fun TambahItemPreview() {
         onShowNavbarChange = {} // Pastikan semua parameter diisi dengan lambda kosong
     )
 }
-
-
-
-
-

@@ -151,17 +151,11 @@ fun CekBarangScreen(
     var lokasiList by remember { mutableStateOf<List<Location>>(emptyList()) }
     var loading by remember { mutableStateOf(true) }
     var searchQuery by remember { mutableStateOf("") }
-    val kategoriOptions = listOf(
-        "Semua",
-        "Alat berat",
-        "Generator",
-        "Alat personel",
-        "Alat Tambahan",
-        "Lain-lain"
-    )
+    var kategoriList by remember { mutableStateOf(listOf("Semua")) }
     var selectedKategori by remember { mutableStateOf("Semua") }
     var selectedBarang by remember { mutableStateOf<EquipmentUi?>(null) }
     var showTambahSheet by remember { mutableStateOf(false) }
+    var showKategoriDropdown by remember { mutableStateOf(false) }
 
     LaunchedEffect(Unit) {
         loading = true
@@ -183,6 +177,9 @@ fun CekBarangScreen(
                     updatedAt = eq.updatedAt?.toDate()?.toString() ?: ""
                 )
             }
+            // Fetch categories from Firebase (suspend function)
+            val categories = EquipmentRepository.getAllCategories()
+            kategoriList = mutableListOf("Semua").apply { addAll(categories) }
         } catch (e: Exception) {
             Toast.makeText(context, "Gagal mengambil data: ${e.message}", Toast.LENGTH_SHORT).show()
         }
@@ -406,47 +403,22 @@ fun CekBarangScreen(
                     shape = RoundedCornerShape(12.dp)
                 )
                 Spacer(modifier = Modifier.height(8.dp))
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(horizontal = 16.dp),
-                    horizontalArrangement = Arrangement.spacedBy(16.dp)
-                ) {
-                    Column(
-                        modifier = Modifier.weight(1f),
-                        verticalArrangement = Arrangement.spacedBy(8.dp)
-                    ) {
-                        kategoriOptions.take(3).forEach { kategori ->
-                            val selected = selectedKategori == kategori
-                            Button(
-                                onClick = { selectedKategori = kategori },
-                                colors = ButtonDefaults.buttonColors(
-                                    containerColor = if (selected) Color(0xFF1976D2) else Color(0xFFF5F5F5),
-                                    contentColor = if (selected) Color.White else Color(0xFF1976D2)
-                                ),
-                                shape = RoundedCornerShape(8.dp),
-                                modifier = Modifier.fillMaxWidth()
-                            ) {
-                                Text(kategori, maxLines = 1)
-                            }
-                        }
+                // UI: Button to show all categories in a modal
+                Box(modifier = Modifier.padding(8.dp)) {
+                    Button(onClick = { showKategoriDropdown = true }) {
+                        Text("Kategori: $selectedKategori")
                     }
-                    Column(
-                        modifier = Modifier.weight(1f),
-                        verticalArrangement = Arrangement.spacedBy(8.dp)
-                    ) {
-                        kategoriOptions.drop(3).forEach { kategori ->
-                            val selected = selectedKategori == kategori
-                            Button(
-                                onClick = { selectedKategori = kategori },
-                                colors = ButtonDefaults.buttonColors(
-                                    containerColor = if (selected) Color(0xFF1976D2) else Color(0xFFF5F5F5),
-                                    contentColor = if (selected) Color.White else Color(0xFF1976D2)
-                                ),
-                                shape = RoundedCornerShape(8.dp),
-                                modifier = Modifier.fillMaxWidth()
-                            ) {
-                                Text(kategori, maxLines = 1)
+                    if (showKategoriDropdown) {
+                        ModalBottomSheet(onDismissRequest = { showKategoriDropdown = false }) {
+                            Column {
+                                kategoriList.forEach { kategori ->
+                                    TextButton(onClick = {
+                                        selectedKategori = kategori
+                                        showKategoriDropdown = false
+                                    }) {
+                                        Text(kategori)
+                                    }
+                                }
                             }
                         }
                     }
