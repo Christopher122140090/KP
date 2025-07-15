@@ -15,10 +15,6 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
-import coil.compose.rememberAsyncImagePainter
-import androidx.compose.ui.focus.onFocusChanged
-import androidx.compose.foundation.border
 import androidx.compose.ui.text.font.FontWeight
 import com.rosaliscagroup.admin.data.entity.Location
 import com.rosaliscagroup.admin.repository.HomeRepositoryImpl
