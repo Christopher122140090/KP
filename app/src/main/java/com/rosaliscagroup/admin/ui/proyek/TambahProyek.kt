@@ -35,7 +35,7 @@ fun TambahProyek(
     var namaProyekError by remember { mutableStateOf(false) }
     var lokasiError by remember { mutableStateOf(false) }
     var tipeLokasiError by remember { mutableStateOf(false) }
-    val tipeOptions = listOf("Gudang", "Proyek")
+    val tipeOptions = listOf("Gudang", "Proyek","Gudang Maintenance")
     var tipeLokasiExpanded by remember { mutableStateOf(false) }
     val snackbarHostState = remember { SnackbarHostState() }
     val coroutineScope = rememberCoroutineScope()
