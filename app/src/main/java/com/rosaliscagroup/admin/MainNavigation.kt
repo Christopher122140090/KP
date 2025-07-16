@@ -604,11 +604,11 @@ fun MainNavigation() {
                             val viewModel: com.rosaliscagroup.admin.ui.home.HomeViewModel = androidx.hilt.navigation.compose.hiltViewModel()
                             TransferItem(
                                 equipment = equipment,
-                                onSimpan = { id, lokasiBaru, pengirim, penerima ->
+                                onSimpan = { id, lokasiBaru, pengirim, penerima, tanggalKirim ->
                                     scope.launch {
                                         try {
                                             com.rosaliscagroup.admin.repository.EquipmentRepository.updateEquipmentLocation(id, lokasiBaru)
-                                            android.widget.Toast.makeText(context, "Lokasi berhasil diupdate oleh $pengirim ke $penerima", android.widget.Toast.LENGTH_SHORT).show()
+                                            android.widget.Toast.makeText(context, "Lokasi berhasil diupdate oleh $pengirim ke $penerima pada tanggal $tanggalKirim", android.widget.Toast.LENGTH_SHORT).show()
                                             navController.navigateUp()
                                         } catch (e: Exception) {
                                             android.widget.Toast.makeText(context, "Gagal update lokasi: ${e.message}", android.widget.Toast.LENGTH_SHORT).show()

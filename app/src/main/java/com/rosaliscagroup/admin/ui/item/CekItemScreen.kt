@@ -283,6 +283,16 @@ fun CekBarangScreen(
                     ) {
                         Text("Edit Item", color = Color.White)
                     }
+                    Button(
+                        onClick = {
+                            navController.navigate("itemHistory/${selectedBarang!!.id}")
+                            selectedBarang = null
+                        },
+                        colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF1976D2)),
+                        shape = RoundedCornerShape(8.dp)
+                    ) {
+                        Text("Item History", color = Color.White)
+                    }
                 }
             },
             confirmButton = {
