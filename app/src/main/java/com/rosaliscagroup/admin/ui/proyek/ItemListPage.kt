@@ -199,14 +199,7 @@ fun CekBarangScreenTransfer(
     val lokasiListState = remember { mutableStateOf<List<Location>>(emptyList()) }
     val loadingState = remember { mutableStateOf(true) }
     val searchQueryState = remember { mutableStateOf("") }
-    val kategoriOptions = listOf(
-        "Semua",
-        "Alat berat",
-        "Generator",
-        "Alat personel",
-        "Alat Tambahan",
-        "Lain-lain"
-    )
+    val kategoriListState = remember { mutableStateOf<List<String>>(listOf("Semua")) }
     val selectedKategoriState = remember { mutableStateOf("Semua") }
     val selectedBarangState = remember { mutableStateOf<EquipmentUi?>(null) }
 
@@ -214,6 +207,7 @@ fun CekBarangScreenTransfer(
     val lokasiList = lokasiListState.value
     val loading = loadingState.value
     val searchQuery = searchQueryState.value
+    val kategoriList = kategoriListState.value
     val selectedKategori = selectedKategoriState.value
     val selectedBarang = selectedBarangState.value
 
@@ -236,6 +230,9 @@ fun CekBarangScreenTransfer(
                     updatedAt = eq.updatedAt?.toDate()?.toString() ?: ""
                 )
             }
+            // Ambil kategori unik dari data barang yang hanya ada di lokasi ini
+            val categories = result.filter { it.lokasiId == lokasiId }.map { it.kategori }.distinct().sorted()
+            kategoriListState.value = listOf("Semua") + categories
         } catch (e: Exception) {
             Toast.makeText(context, "Gagal mengambil data: ${e.message}", Toast.LENGTH_SHORT).show()
         }
@@ -397,50 +394,18 @@ fun CekBarangScreenTransfer(
                     .padding(horizontal = 16.dp),
                 horizontalArrangement = Arrangement.spacedBy(16.dp)
             ) {
-                Column(
-                    modifier = Modifier.weight(1f),
-                    verticalArrangement = Arrangement.spacedBy(8.dp)
-                ) {
-                    kategoriOptions.take(3).forEach { kategori ->
-                        val selected = selectedKategori == kategori
-                        Button(
-                            onClick = { selectedKategoriState.value = kategori },
-                            colors = ButtonDefaults.buttonColors(
-                                containerColor = if (selected) Color(0xFF1976D2) else Color(
-                                    0xFFF5F5F5
-                                ),
-                                contentColor = if (selected) Color.White else Color(
-                                    0xFF1976D2
-                                )
-                            ),
-                            shape = RoundedCornerShape(8.dp),
-                            modifier = Modifier.fillMaxWidth()
-                        ) {
-                            Text(kategori, maxLines = 1)
-                        }
-                    }
-                }
-                Column(
-                    modifier = Modifier.weight(1f),
-                    verticalArrangement = Arrangement.spacedBy(8.dp)
-                ) {
-                    kategoriOptions.drop(3).forEach { kategori ->
-                        val selected = selectedKategori == kategori
-                        Button(
-                            onClick = { selectedKategoriState.value = kategori },
-                            colors = ButtonDefaults.buttonColors(
-                                containerColor = if (selected) Color(0xFF1976D2) else Color(
-                                    0xFFF5F5F5
-                                ),
-                                contentColor = if (selected) Color.White else Color(
-                                    0xFF1976D2
-                                )
-                            ),
-                            shape = RoundedCornerShape(8.dp),
-                            modifier = Modifier.fillMaxWidth()
-                        ) {
-                            Text(kategori, maxLines = 1)
-                        }
+                kategoriList.forEach { kategori ->
+                    val selected = selectedKategori == kategori
+                    Button(
+                        onClick = { selectedKategoriState.value = kategori },
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = if (selected) Color(0xFF1976D2) else Color(0xFFF5F5F5),
+                            contentColor = if (selected) Color.White else Color(0xFF1976D2)
+                        ),
+                        shape = RoundedCornerShape(8.dp),
+                        modifier = Modifier.weight(1f)
+                    ) {
+                        Text(kategori, maxLines = 1)
                     }
                 }
             }

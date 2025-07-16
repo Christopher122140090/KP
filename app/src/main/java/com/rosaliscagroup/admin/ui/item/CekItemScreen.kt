@@ -52,10 +52,12 @@ data class EquipmentUi(
     val deskripsi: String = "",
     val kategori: String = "",
     val lokasiId: String = "",
+    val lokasiNama: String = "",
     val sku: String = "",
     val gambarUri: String = "",
     val createdAt: String = "",
-    val updatedAt: String = ""
+    val updatedAt: String = "",
+    val kondisi: String = ""
 )
 
 @Composable
@@ -112,13 +114,15 @@ fun BarangTable(
                                 Spacer(modifier = Modifier.height(4.dp))
                                 Text("Kategori: " + (barang.kategori.trim().ifBlank { "Tidak diketahui" }.replaceFirstChar { it.uppercase() }), color = Color(0xFF000000))
                                 Spacer(modifier = Modifier.height(4.dp))
-                                Text("Lokasi: ${barang.lokasiId}", color = Color(0xFF000000))
+                                Text("Lokasi: ${barang.lokasiNama}", color = Color(0xFF000000))
                                 if (barang.deskripsi.isNotBlank()) {
                                     Text("Deskripsi: ${barang.deskripsi}", color = Color(0xFF000000))
                                 }
                                 Text("SKU: ${barang.sku}", color = Color(0xFF000000))
                                 Text("Created: ${barang.createdAt}", color = Color.Gray, style = MaterialTheme.typography.bodySmall)
                                 Text("Updated: ${barang.updatedAt}", color = Color.Gray, style = MaterialTheme.typography.bodySmall)
+                                Spacer(modifier = Modifier.height(8.dp))
+                    Text("Kondisi: " + (barang.kondisi.ifBlank { "Tidak diketahui" }), color = Color(0xFF000000))
                                 Spacer(modifier = Modifier.height(8.dp))
                                 Row(
                                     horizontalArrangement = Arrangement.End,
@@ -180,11 +184,12 @@ fun CekBarangScreen(
                     nama = eq.nama,
                     deskripsi = eq.deskripsi,
                     kategori = eq.kategori,
-                    lokasiId = lokasiNama,
-                    sku = eq.sku,
+                    lokasiId = eq.lokasiId, // tetap simpan id
+                    lokasiNama = lokasiNama,
                     gambarUri = eq.gambarUri,
                     createdAt = eq.createdAt?.toDate()?.toString() ?: "",
-                    updatedAt = eq.updatedAt?.toDate()?.toString() ?: ""
+                    updatedAt = eq.updatedAt?.toDate()?.toString() ?: "",
+                    kondisi = eq.kondisi ?: ""
                 )
             }
             // Fetch categories from Firebase (suspend function)
@@ -233,8 +238,9 @@ fun CekBarangScreen(
                     )
                     Spacer(modifier = Modifier.height(8.dp))
                     Text("Kategori: ${selectedBarang!!.kategori}", style = MaterialTheme.typography.bodyMedium)
-                    Text("Lokasi: ${selectedBarang!!.lokasiId}", style = MaterialTheme.typography.bodyMedium)
+                    Text("Lokasi: ${selectedBarang!!.lokasiNama}", style = MaterialTheme.typography.bodyMedium)
                     Text("SKU: ${selectedBarang!!.sku}", style = MaterialTheme.typography.bodyMedium)
+                    Text("Kondisi: " + (selectedBarang!!.kondisi.ifBlank { "Tidak diketahui" }), style = MaterialTheme.typography.bodyMedium)
                     if (!selectedBarang!!.deskripsi.isNullOrBlank()) {
                         Spacer(modifier = Modifier.height(8.dp))
                         Text("Deskripsi:", style = MaterialTheme.typography.labelMedium, color = Color.Gray)

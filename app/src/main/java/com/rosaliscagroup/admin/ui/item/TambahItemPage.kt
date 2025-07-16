@@ -235,6 +235,12 @@ fun TambahItem(
         }
     }
 
+    // Kondisi alat
+    val kondisiOptions = listOf("Baik", "Rusak", "Maintenance")
+    var kondisi by remember { mutableStateOf("") }
+    var kondisiExpanded by remember { mutableStateOf(false) }
+    var kondisiError by remember { mutableStateOf(false) }
+
     Scaffold(
         modifier = Modifier.fillMaxSize().background(Color(0xFFF5F7FA)),
         snackbarHost = { SnackbarHost(hostState = snackbarHostState) }
@@ -633,6 +639,67 @@ fun TambahItem(
                         }
                     }
 
+                    // Kondisi Alat
+                    Box(modifier = Modifier.fillMaxWidth()) {
+                        Text(
+                            text = "Kondisi Alat",
+                            fontSize = 12.sp,
+                            color = Color(0xFF757575),
+                            modifier = Modifier
+                                .align(Alignment.BottomStart)
+                                .padding(start = 4.dp)
+                        )
+                    }
+                    Box(modifier = Modifier.fillMaxWidth()) {
+                        ExposedDropdownMenuBox(
+                            expanded = kondisiExpanded,
+                            onExpandedChange = { kondisiExpanded = !kondisiExpanded }
+                        ) {
+                            OutlinedTextField(
+                                value = kondisi,
+                                onValueChange = {},
+                                readOnly = true,
+                                label = null,
+                                trailingIcon = {
+                                    ExposedDropdownMenuDefaults.TrailingIcon(expanded = kondisiExpanded)
+                                },
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .menuAnchor()
+                                    .onFocusChanged { focusState ->
+                                        // Update fokus state untuk kondisi
+                                        isLokasiFocused = focusState.isFocused
+                                    },
+                                isError = kondisiError,
+                                colors = OutlinedTextFieldDefaults.colors(
+                                    focusedBorderColor = Color(0xFF1E88E5),
+                                    cursorColor = if (isLokasiFocused) Color(0xFF9CA3AF) else Color.Unspecified,
+                                    unfocusedBorderColor = Color(0xFF757575),
+                                    errorBorderColor = Color(0xFFF44336),
+                                    focusedContainerColor = Color(0x1E88E5FF),
+                                    unfocusedContainerColor = Color(0xFFF5F5F5)
+                                )
+                            )
+                            ExposedDropdownMenu(
+                                expanded = kondisiExpanded,
+                                onDismissRequest = { kondisiExpanded = false },
+                                modifier = Modifier.background(Color(0xFFF5F5F5))
+                            ) {
+                                kondisiOptions.forEach { option ->
+                                    DropdownMenuItem(
+                                        text = { Text(option, color = Color(0xFF757575)) },
+                                        modifier = Modifier.fillMaxWidth(),
+                                        onClick = {
+                                            kondisi = option
+                                            kondisiExpanded = false
+                                            kondisiError = false
+                                        }
+                                    )
+                                }
+                            }
+                        }
+                    }
+
                     // Informasi Sistem
                     Column(
                         modifier = Modifier.fillMaxWidth(),
@@ -673,7 +740,8 @@ fun TambahItem(
                                 kategoriError = kategori.isBlank()
                                 lokasiError = lokasi.isBlank()
                                 gambarError = gambarUri == null
-                                if (!namaError && !deskripsiError && !kategoriError && !lokasiError && !gambarError && sku.isNotBlank()) {
+                                kondisiError = kondisi.isBlank()
+                                if (!namaError && !deskripsiError && !kategoriError && !lokasiError && !gambarError && sku.isNotBlank() && !kondisiError) {
                                     coroutineScope.launch {
                                         isSaving = true
                                         saveProgress = 0
@@ -691,7 +759,8 @@ fun TambahItem(
                                                 onProgress = { progress: Float ->
                                                     saveProgress = (progress * 100).toInt()
                                                 },
-                                                namaUser = namaUser
+                                                namaUser = namaUser,
+                                                kondisi = kondisi
                                             )
                                             SkuRepository.confirmSku(sku, mapOf(
                                                 "nama" to nama,
@@ -699,7 +768,8 @@ fun TambahItem(
                                                 "kategori" to kategori,
                                                 "lokasi" to lokasi,
                                                 "sku" to sku,
-                                                "gambarUri" to (gambarUri?.toString() ?: "")
+                                                "gambarUri" to (gambarUri?.toString() ?: ""),
+                                                "kondisi" to kondisi
                                             ))
                                             skuJob?.cancel()
                                             onSimpan(nama, deskripsi, kategori, lokasi, gambarUri!!, sku)
@@ -712,85 +782,25 @@ fun TambahItem(
                                         }
                                     }
                                 }
-                            },
-                            modifier = Modifier.weight(1f),
-                            colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF2563EB))
+                            }
                         ) {
-                            Text("Simpan Barang")
+                            Text("Simpan")
                         }
                     }
                 }
             }
         }
-        // Progress Dialog
-        if (isSaving) {
-            AlertDialog(
-                onDismissRequest = {},
-                confirmButton = {},
-                title = { Text("Menyimpan...") },
-                text = {
-                    Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                        LinearProgressIndicator(progress = { saveProgress / 100f }, modifier = Modifier.fillMaxWidth())
-                        Spacer(modifier = Modifier.height(8.dp))
-                        Text("${saveProgress}%")
-                    }
-                }
-            )
-        }
-        // Snackbar Host
-        Box(modifier = Modifier.fillMaxSize()) {
-            SnackbarHost(hostState = snackbarHostState, modifier = Modifier.align(Alignment.BottomCenter))
-        }
-
-        // Tampilkan dialog jika showKategoriDialog true
-        if (showKategoriDialog) {
-            KategoriInputDialog(
-                onDismiss = { showKategoriDialog = false },
-                onConfirm = { newKategori ->
-                    showKategoriDialog = false
-                    coroutineScope.launch {
-                        kategoriLoading = true
-                        tambahKategoriBaru(newKategori)
-                        kategori = newKategori
-                        kategoriError = false
-                        kategoriLoading = false
-                        // Generate SKU untuk kategori baru
-                        skuLoading = true
-                        skuError = false
-                        sku = ""
-                        skuJob?.cancel()
-                        try {
-                            val generatedSku = SkuRepository.generateAndReserveSku(newKategori)
-                            if (generatedSku != null) {
-                                sku = generatedSku
-                                skuLoading = false
-                                skuJob = launch {
-                                    delay(5 * 60 * 1000)
-                                    SkuRepository.releaseSku(generatedSku)
-                                    sku = ""
-                                }
-                            } else {
-                                skuError = true
-                                skuLoading = false
-                            }
-                        } catch (e: Exception) {
-                            skuError = true
-                            skuLoading = false
-                        }
-                    }
-                }
-            )
-        }
     }
-}
-
-// Preview harus berada di paling bawah file, setelah semua fungsi utama
-@Preview(showBackground = true)
-@Composable
-fun TambahItemPreview() {
-    TambahItem(
-        onSimpan = { _, _, _, _, _, _ -> },
-        onCancel = {},
-        onShowNavbarChange = {} // Pastikan semua parameter diisi dengan lambda kosong
-    )
+    if (showKategoriDialog) {
+        KategoriInputDialog(
+            onDismiss = { showKategoriDialog = false },
+            onConfirm = { kategoriBaru ->
+                coroutineScope.launch {
+                    tambahKategoriBaru(kategoriBaru)
+                    kategori = kategoriBaru
+                    showKategoriDialog = false
+                }
+            }
+        )
+    }
 }

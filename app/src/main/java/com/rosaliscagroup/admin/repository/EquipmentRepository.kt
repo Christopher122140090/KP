@@ -11,6 +11,7 @@ import kotlinx.coroutines.tasks.await
 object EquipmentRepository {
     private val db = FirebaseFirestore.getInstance()
 
+    // region: Add Equipment
     suspend fun addEquipment(
         nama: String,
         deskripsi: String,
@@ -18,7 +19,8 @@ object EquipmentRepository {
         lokasiId: String,
         gambarUri: Uri,
         sku: String,
-        namaUser: String // Tambahkan parameter namaUser
+        namaUser: String, // Tambahkan parameter namaUser
+        kondisi: String // Tambahkan parameter kondisi
     ) {
         val now = Timestamp.now()
         val data = hashMapOf(
@@ -29,7 +31,8 @@ object EquipmentRepository {
             "sku" to sku,
             "gambarUri" to gambarUri.toString(),
             "createdAt" to now,
-            "updatedAt" to now
+            "updatedAt" to now,
+            "kondisi" to kondisi // Simpan kondisi ke Firestore
         )
         val equipmentRef = db.collection("equipments").add(data).await()
         // Tambahkan aktivitas ke koleksi activities
@@ -45,6 +48,7 @@ object EquipmentRepository {
         // Tambahkan log/Toast untuk debug
         android.util.Log.d("EquipmentRepository", "Activity berhasil ditambahkan ke /activities")
     }
+    // endregion
 
     suspend fun addEquipmentWithImageUrl(
         context: android.content.Context,
@@ -55,7 +59,8 @@ object EquipmentRepository {
         gambarUri: Uri,
         sku: String,
         onProgress: (Float) -> Unit,
-        namaUser: String // Tambahkan parameter namaUser
+        namaUser: String, // Tambahkan parameter namaUser
+        kondisi: String // Tambahkan parameter kondisi
     ) {
         // Upload gambar ke Firebase Storage
         val storageRef = com.google.firebase.storage.FirebaseStorage.getInstance().reference
@@ -69,7 +74,7 @@ object EquipmentRepository {
         val downloadUrl = imageRef.downloadUrl.await().toString()
         onProgress(0.9f)
         // Simpan data equipment dengan URL gambar dari Storage
-        addEquipment(nama, deskripsi, kategori, lokasiId, Uri.parse(downloadUrl), sku, namaUser)
+        addEquipment(nama, deskripsi, kategori, lokasiId, Uri.parse(downloadUrl), sku, namaUser, kondisi)
         onProgress(1.0f)
     }
 
@@ -81,8 +86,9 @@ object EquipmentRepository {
         val lokasiId: String = "",
         val sku: String = "",
         val gambarUri: String = "",
-        val createdAt: com.google.firebase.Timestamp? = null,
-        val updatedAt: com.google.firebase.Timestamp? = null
+        val createdAt: Timestamp? = null,
+        val updatedAt: Timestamp? = null,
+        val kondisi: String = "" // Tambahkan field kondisi
     )
 
     suspend fun getAllEquipments(): List<Equipment> {
@@ -97,8 +103,9 @@ object EquipmentRepository {
                 lokasiId = data["lokasiId"] as? String ?: "",
                 sku = data["sku"] as? String ?: "",
                 gambarUri = data["gambarUri"] as? String ?: "",
-                createdAt = data["createdAt"] as? com.google.firebase.Timestamp,
-                updatedAt = data["updatedAt"] as? com.google.firebase.Timestamp
+                createdAt = data["createdAt"] as? Timestamp,
+                updatedAt = data["updatedAt"] as? Timestamp,
+                kondisi = data["kondisi"] as? String ?: "" // Ambil kondisi dari Firestore
             )
         }
     }
@@ -128,8 +135,8 @@ object EquipmentRepository {
                     lokasiId = data["lokasiId"] as? String ?: "",
                     sku = data["sku"] as? String ?: "",
                     gambarUri = data["gambarUri"] as? String ?: "",
-                    createdAt = data["createdAt"] as? com.google.firebase.Timestamp,
-                    updatedAt = data["updatedAt"] as? com.google.firebase.Timestamp
+                    createdAt = data["createdAt"] as? Timestamp,
+                    updatedAt = data["updatedAt"] as? Timestamp
                 ) else null
                 trySend(equipment)
             }
@@ -137,7 +144,7 @@ object EquipmentRepository {
     }
 
     suspend fun updateEquipmentLocation(equipmentId: String, lokasiBaru: String) {
-        val now = com.google.firebase.Timestamp.now()
+        val now = Timestamp.now()
         db.collection("equipments").document(equipmentId)
             .update(mapOf(
                 "lokasiId" to lokasiBaru,
@@ -152,6 +159,27 @@ object EquipmentRepository {
             "updatedAt" to now
         )
         db.collection("equipments").document(itemId).update(updates).await()
+    }
+
+    // Fungsi baru untuk update seluruh data item kecuali kategori dan SKU
+    suspend fun updateEquipment(
+        equipmentId: String,
+        nama: String,
+        deskripsi: String,
+        lokasiId: String,
+        gambarUri: Uri,
+        kondisi: String
+    ) {
+        val now = Timestamp.now()
+        val updates = mapOf(
+            "nama" to nama,
+            "deskripsi" to deskripsi,
+            "lokasiId" to lokasiId,
+            "gambarUri" to gambarUri.toString(),
+            "kondisi" to kondisi,
+            "updatedAt" to now
+        )
+        db.collection("equipments").document(equipmentId).update(updates).await()
     }
 
     fun getEquipmentsRealtime(): Flow<List<Equipment>> = callbackFlow {
@@ -171,8 +199,8 @@ object EquipmentRepository {
                         lokasiId = data["lokasiId"] as? String ?: "",
                         sku = data["sku"] as? String ?: "",
                         gambarUri = data["gambarUri"] as? String ?: "",
-                        createdAt = data["createdAt"] as? com.google.firebase.Timestamp,
-                        updatedAt = data["updatedAt"] as? com.google.firebase.Timestamp
+                        createdAt = data["createdAt"] as? Timestamp,
+                        updatedAt = data["updatedAt"] as? Timestamp
                     )
                 } ?: emptyList()
                 trySend(equipments)
@@ -180,8 +208,13 @@ object EquipmentRepository {
         awaitClose { listener.remove() }
     }
 
-    suspend fun logTransferActivity(equipmentId: String, locationId: String, projectId: String = "", details: String = "") {
-        val now = com.google.firebase.Timestamp.now()
+    suspend fun logTransferActivity(
+        equipmentId: String,
+        locationId: String,
+        projectId: String = "",
+        details: String = ""
+    ) {
+        val now = Timestamp.now()
         val activity = hashMapOf(
             "type" to "Transfer",
             "createdAt" to now,
