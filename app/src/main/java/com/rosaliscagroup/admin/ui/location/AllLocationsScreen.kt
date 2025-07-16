@@ -117,13 +117,30 @@ fun AllLocationsScreen(
                     }
                 },
                 confirmButton = {
-                    Button(onClick = {
-                        if (proyek.id.isNotBlank() && navController != null) {
-                            navController.navigate("proyekItemListPage?lokasi=${proyek.id}&kategori=Semua")
+                    Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
+                        TextButton(onClick = {
+                            if (proyek.id.isNotBlank() && navController != null) {
+                                navController.navigate("editProyekScreen?locationId=${proyek.id}")
+                            } else {
+                                // Log or handle the case where navController or proyek.id is invalid
+                            }
+                            selectedProyek.value = null
+                        }) {
+                            Text("Edit Proyek")
                         }
-                        selectedProyek.value = null
-                    }) {
-                        Text("Lihat Item")
+                        Button(onClick = {
+                            if (proyek.id.isNotBlank() && navController != null) {
+                                navController.navigate("proyekItemListPage?lokasi=${proyek.id}&kategori=Semua")
+                            }
+                            selectedProyek.value = null
+                        }) {
+                            Text("Lihat Item")
+                        }
+                    }
+                },
+                dismissButton = {
+                    TextButton(onClick = { selectedProyek.value = null }) {
+                        Text("Tutup")
                     }
                 }
             )

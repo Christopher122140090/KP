@@ -3,6 +3,7 @@ package com.rosaliscagroup.admin.ui.transfer
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -14,10 +15,6 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
-import coil.compose.rememberAsyncImagePainter
-import androidx.compose.ui.focus.onFocusChanged
-import androidx.compose.foundation.border
 import androidx.compose.ui.text.font.FontWeight
 import com.rosaliscagroup.admin.data.entity.Location
 import com.rosaliscagroup.admin.repository.HomeRepositoryImpl
@@ -28,7 +25,7 @@ import com.rosaliscagroup.admin.ui.item.EquipmentUi
 @Composable
 fun TransferItem(
     equipment: EquipmentUi, // Tambahkan parameter equipment
-    onSimpan: (String, String) -> Unit, // id barang, lokasi baru
+    onSimpan: (String, String,String, String) -> Unit, // id barang, lokasi baru
     onCancel: (() -> Unit)? = null,
     userName: String, // Tambahkan parameter userName
     viewModel: com.rosaliscagroup.admin.ui.home.HomeViewModel, // Tambahkan parameter viewModel
@@ -38,6 +35,8 @@ fun TransferItem(
     var lokasiLoading by remember { mutableStateOf(true) }
     val scrollState = rememberScrollState()
     var lokasiExpanded by remember { mutableStateOf(false) }
+    var pengirim by remember { mutableStateOf("") }
+    var penerima by remember { mutableStateOf("") }
 
     // Fetch lokasi dari Firestore
     LaunchedEffect(Unit) {
@@ -121,19 +120,47 @@ fun TransferItem(
                 }
             }
         }
+        Spacer(modifier = Modifier.height(8.dp))
+        // Pengirim (editable)
+        OutlinedTextField(
+            value = pengirim,
+            onValueChange = { pengirim = it },
+            label = { Text("Pengirim") },
+            modifier = Modifier.fillMaxWidth(),
+            singleLine = true,
+            keyboardOptions = KeyboardOptions.Default.copy(imeAction = ImeAction.Next),
+            isError = pengirim.isBlank()
+        )
+        if (pengirim.isBlank()) {
+            Text("Nama pengirim harus diisi", color = Color.Red, style = MaterialTheme.typography.bodySmall)
+        }
+        Spacer(modifier = Modifier.height(8.dp))
+        // Penerima (editable)
+        OutlinedTextField(
+            value = penerima,
+            onValueChange = { penerima = it },
+            label = { Text("Penerima") },
+            modifier = Modifier.fillMaxWidth(),
+            singleLine = true,
+            keyboardOptions = KeyboardOptions.Default.copy(imeAction = ImeAction.Done),
+            isError = penerima.isBlank()
+        )
+        if (penerima.isBlank()) {
+            Text("Nama penerima harus diisi", color = Color.Red, style = MaterialTheme.typography.bodySmall)
+        }
         Spacer(modifier = Modifier.height(16.dp))
         Row {
             Button(
                 onClick = {
-                    onSimpan(equipment.id, lokasiId)
+                    onSimpan(equipment.id, lokasiId, pengirim, penerima)
                     viewModel.addTransferActivity(
                         equipmentName = equipment.nama,
                         equipmentCategory = equipment.kategori,
                         userName = userName,
                         fromLocation = lokasiList.find { it.id == equipment.lokasiId }?.name ?: "",
                         toLocation = lokasiList.find { it.id == lokasiId }?.name ?: ""
-                    )
-                },
+                                )
+                          },
                 enabled = !lokasiLoading,
                 colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF1976D2)),
                 shape = RoundedCornerShape(8.dp)
@@ -148,7 +175,6 @@ fun TransferItem(
     }
 }
 
-// Preview harus berada di paling bawah file, setelah semua fungsi utama
 @Preview(showBackground = true)
 @Composable
 fun TransferItemPreview() {
@@ -162,9 +188,10 @@ fun TransferItemPreview() {
             lokasiId = "Lokasi A",
             sku = "SKU123"
         ),
-        onSimpan = { _, _ -> },
-        onCancel = {},
+        onSimpan = { _, _, _, _ -> },
+        onCancel = {} ,
         userName = "John Doe",
         viewModel = viewModel
     )
 }
+

@@ -48,6 +48,8 @@ import kotlinx.coroutines.launch
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.decodeFromString
 import kotlinx.serialization.json.Json
+import com.rosaliscagroup.admin.ui.proyek.EditProyekScreen
+import com.rosaliscagroup.admin.ui.item.EditItemScreen
 
 // Data class untuk state login
 data class LoginState(
@@ -507,6 +509,11 @@ fun MainNavigation() {
                         onTransfer = { equipmentUi ->
                             val equipmentJson = java.net.URLEncoder.encode(Json.encodeToString(equipmentUi), "UTF-8")
                             navController.navigate("transfer?equipment=$equipmentJson")
+                        },
+                        onEdit = { equipmentUi ->
+                            val itemId = equipmentUi.id.ifBlank { "unknown" }
+                            val initialDescription = equipmentUi.deskripsi.ifBlank { "No description available" }
+                            navController.navigate("editItem/$itemId/$initialDescription")
                         }
                     )
                 },
@@ -597,11 +604,11 @@ fun MainNavigation() {
                             val viewModel: com.rosaliscagroup.admin.ui.home.HomeViewModel = androidx.hilt.navigation.compose.hiltViewModel()
                             TransferItem(
                                 equipment = equipment,
-                                onSimpan = { id, lokasiBaru ->
+                                onSimpan = { id, lokasiBaru, pengirim, penerima ->
                                     scope.launch {
                                         try {
                                             com.rosaliscagroup.admin.repository.EquipmentRepository.updateEquipmentLocation(id, lokasiBaru)
-                                            android.widget.Toast.makeText(context, "Lokasi berhasil diupdate", android.widget.Toast.LENGTH_SHORT).show()
+                                            android.widget.Toast.makeText(context, "Lokasi berhasil diupdate oleh $pengirim ke $penerima", android.widget.Toast.LENGTH_SHORT).show()
                                             navController.navigateUp()
                                         } catch (e: Exception) {
                                             android.widget.Toast.makeText(context, "Gagal update lokasi: ${e.message}", android.widget.Toast.LENGTH_SHORT).show()
@@ -652,6 +659,24 @@ fun MainNavigation() {
             com.rosaliscagroup.admin.ui.activities.ViewActivitiesPage(
                 homeViewModel = homeViewModel,
                 modifier = Modifier.fillMaxSize()
+            )
+        }
+        composable("editProyekScreen?locationId={locationId}")  {
+            val locationId = it.arguments?.getString("locationId") ?: ""
+            EditProyekScreen(locationId = locationId, navController = navController, onBack = { navController.popBackStack() })
+        }
+        composable("editItem/{itemId}/{initialDescription}") { backStackEntry ->
+            val itemId = backStackEntry.arguments?.getString("itemId") ?: ""
+            val initialDescription = backStackEntry.arguments?.getString("initialDescription") ?: ""
+            EditItemScreen(
+                itemId = itemId,
+                initialDescription = initialDescription,
+                onSave = { description ->
+                    navController.popBackStack()
+                },
+                onCancel = {
+                    navController.popBackStack()
+                }
             )
         }
     }
