@@ -64,7 +64,8 @@ data class EquipmentUi(
 fun BarangTable(
     barangList: List<EquipmentUi>,
     onEdit: (EquipmentUi) -> Unit = {},
-    onDelete: (EquipmentUi) -> Unit = {}
+    onDelete: (EquipmentUi) -> Unit = {},
+    history: (EquipmentUi) -> Unit = {}
 ) {
     Scaffold(
         containerColor = Color(0xFFE3F2FD)
@@ -149,7 +150,8 @@ fun BarangTable(
 fun CekBarangScreen(
     onDetail: (EquipmentUi) -> Unit = {},
     onTransfer: (EquipmentUi) -> Unit = {},
-    onEdit: (EquipmentUi) -> Unit = {}
+    onEdit: (EquipmentUi) -> Unit = {},
+    history: (EquipmentUi) -> Unit = {}
 ) {
     val navController = rememberNavController()
 
@@ -285,7 +287,7 @@ fun CekBarangScreen(
                     }
                     Button(
                         onClick = {
-                            navController.navigate("itemHistory/${selectedBarang!!.id}")
+                            history(selectedBarang!!)
                             selectedBarang = null
                         },
                         colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF1976D2)),

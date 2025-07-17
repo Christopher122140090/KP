@@ -50,6 +50,7 @@ import kotlinx.serialization.decodeFromString
 import kotlinx.serialization.json.Json
 import com.rosaliscagroup.admin.ui.proyek.EditProyekScreen
 import com.rosaliscagroup.admin.ui.item.EditItemScreen
+import com.rosaliscagroup.admin.ui.item.ItemHistoryScreen
 
 // Data class untuk state login
 data class LoginState(
@@ -514,6 +515,10 @@ fun MainNavigation() {
                             val itemId = equipmentUi.id.ifBlank { "unknown" }
                             val initialDescription = equipmentUi.deskripsi.ifBlank { "No description available" }
                             navController.navigate("editItem/$itemId/$initialDescription")
+                        },
+                        history = { equipmentUi ->
+                            val itemId = equipmentUi.id.ifBlank { "unknown" }
+                            navController.navigate("itemHistory/$itemId")
                         }
                     )
                 },
@@ -678,6 +683,10 @@ fun MainNavigation() {
                     navController.popBackStack()
                 }
             )
+        }
+        composable("itemHistory/{itemId}") { backStackEntry ->
+            val equipmentId = backStackEntry.arguments?.getString("itemId") ?: "unknown"
+            ItemHistoryScreen(equipmentId = equipmentId)
         }
     }
 }
