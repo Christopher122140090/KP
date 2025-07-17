@@ -513,8 +513,10 @@ fun MainNavigation() {
                         },
                         onEdit = { equipmentUi ->
                             val itemId = equipmentUi.id.ifBlank { "unknown" }
-                            val initialDescription = equipmentUi.deskripsi.ifBlank { "No description available" }
-                            navController.navigate("editItem/$itemId/$initialDescription")
+                            val name = java.net.URLEncoder.encode(equipmentUi.nama.ifBlank { "unknown" }, "UTF-8")
+                            val description = java.net.URLEncoder.encode(equipmentUi.deskripsi.ifBlank { "No description available" }, "UTF-8")
+                            val status = java.net.URLEncoder.encode(equipmentUi.kondisi.ifBlank { "unknown" }, "UTF-8")
+                            navController.navigate("editItem/$itemId/$name/$description/$status")
                         },
                         history = { equipmentUi ->
                             val itemId = equipmentUi.id.ifBlank { "unknown" }
@@ -670,13 +672,17 @@ fun MainNavigation() {
             val locationId = it.arguments?.getString("locationId") ?: ""
             EditProyekScreen(locationId = locationId, navController = navController, onBack = { navController.popBackStack() })
         }
-        composable("editItem/{itemId}/{initialDescription}") { backStackEntry ->
+        composable("editItem/{itemId}/{name}/{description}/{status}") { backStackEntry ->
             val itemId = backStackEntry.arguments?.getString("itemId") ?: ""
-            val initialDescription = backStackEntry.arguments?.getString("initialDescription") ?: ""
+            val name = backStackEntry.arguments?.getString("name") ?: ""
+            val description = backStackEntry.arguments?.getString("description") ?: ""
+            val status = backStackEntry.arguments?.getString("status") ?: ""
             EditItemScreen(
                 itemId = itemId,
-                initialDescription = initialDescription,
-                onSave = { description ->
+                name = name,
+                description = description,
+                status = status,
+                onSave = { updatedName, updatedDescription, updatedStatus ->
                     navController.popBackStack()
                 },
                 onCancel = {
