@@ -16,19 +16,25 @@ import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.foundation.clickable
+import androidx.compose.material3.TextFieldDefaults
+import androidx.compose.material3.MenuAnchorType
 import com.rosaliscagroup.admin.data.entity.Location
 import com.rosaliscagroup.admin.repository.HomeRepositoryImpl
 import com.rosaliscagroup.admin.repository.EquipmentRepository
 import com.rosaliscagroup.admin.ui.item.EquipmentUi
+import java.util.Calendar
+import android.app.DatePickerDialog
+import android.util.Log
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun TransferItem(
-    equipment: EquipmentUi, // Tambahkan parameter equipment
-    onSimpan: (String, String,String, String) -> Unit, // id barang, lokasi baru
+    equipment: EquipmentUi,
+    onSimpan: (String, String, String, String, String) -> Unit, // id barang, lokasi baru, pengirim, penerima, tanggal kirim
     onCancel: (() -> Unit)? = null,
-    userName: String, // Tambahkan parameter userName
-    viewModel: com.rosaliscagroup.admin.ui.home.HomeViewModel, // Tambahkan parameter viewModel
+    userName: String,
+    viewModel: com.rosaliscagroup.admin.ui.home.HomeViewModel,
 ) {
     var lokasiId by remember { mutableStateOf(equipment.lokasiId) }
     var lokasiList by remember { mutableStateOf(listOf<Location>()) }
@@ -37,14 +43,46 @@ fun TransferItem(
     var lokasiExpanded by remember { mutableStateOf(false) }
     var pengirim by remember { mutableStateOf("") }
     var penerima by remember { mutableStateOf("") }
+    var tanggalKirim by remember { mutableStateOf("") }
+    var showDatePicker by remember { mutableStateOf(false) }
 
-    // Fetch lokasi dari Firestore
+    if (tanggalKirim.isEmpty()) {
+        val calendar = Calendar.getInstance()
+        tanggalKirim = "${calendar.get(Calendar.DAY_OF_MONTH)}-${calendar.get(Calendar.MONTH) + 1}-${calendar.get(Calendar.YEAR)}"
+    }
+
+    if (showDatePicker) {
+        val context = LocalContext.current
+        val calendar = Calendar.getInstance()
+        DatePickerDialog(
+            context,
+            { _, year, month, dayOfMonth ->
+                tanggalKirim = "$dayOfMonth-${month + 1}-$year"
+                showDatePicker = false
+            },
+            calendar.get(Calendar.YEAR),
+            calendar.get(Calendar.MONTH),
+            calendar.get(Calendar.DAY_OF_MONTH)
+        ).apply {
+            setOnCancelListener { showDatePicker = false }
+        }.show()
+    }
+
+    // Ensure lokasiList is populated correctly and handle errors
     LaunchedEffect(Unit) {
         lokasiLoading = true
         try {
             val lokasiRepo = HomeRepositoryImpl()
-            lokasiList = lokasiRepo.getLocations()
-        } catch (_: Exception) {}
+            val fetchedLocations = lokasiRepo.getLocations()
+            if (fetchedLocations.isNotEmpty()) {
+                lokasiList = fetchedLocations
+                Log.d("TransferPage", "Locations fetched: ${lokasiList.map { it.name }}")
+            } else {
+                Log.e("TransferPage", "No locations found")
+            }
+        } catch (e: Exception) {
+            Log.e("TransferPage", "Error fetching locations: ${e.message}")
+        }
         lokasiLoading = false
     }
 
@@ -95,7 +133,9 @@ fun TransferItem(
         // Lokasi (editable)
         ExposedDropdownMenuBox(
             expanded = lokasiExpanded,
-            onExpandedChange = { lokasiExpanded = !lokasiExpanded }
+            onExpandedChange = {
+                lokasiExpanded = !lokasiExpanded
+            }
         ) {
             OutlinedTextField(
                 value = lokasiList.find { it.id == lokasiId }?.name ?: "",
@@ -103,20 +143,31 @@ fun TransferItem(
                 label = { Text("Lokasi Baru") },
                 readOnly = true,
                 modifier = Modifier.fillMaxWidth().menuAnchor(),
-                trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = lokasiExpanded) }
+                trailingIcon = {
+                    ExposedDropdownMenuDefaults.TrailingIcon(expanded = lokasiExpanded)
+                }
             )
             ExposedDropdownMenu(
                 expanded = lokasiExpanded,
-                onDismissRequest = { lokasiExpanded = false }
+                onDismissRequest = {
+                    lokasiExpanded = false
+                }
             ) {
-                lokasiList.forEach { l ->
+                if (lokasiList.isEmpty()) {
                     DropdownMenuItem(
-                        text = { Text(l.name) },
-                        onClick = {
-                            lokasiId = l.id
-                            lokasiExpanded = false
-                        }
+                        text = { Text("No locations available") },
+                        onClick = {}
                     )
+                } else {
+                    lokasiList.forEach { l ->
+                        DropdownMenuItem(
+                            text = { Text(l.name) },
+                            onClick = {
+                                lokasiId = l.id
+                                lokasiExpanded = false
+                            }
+                        )
+                    }
                 }
             }
         }
@@ -148,19 +199,44 @@ fun TransferItem(
         if (penerima.isBlank()) {
             Text("Nama penerima harus diisi", color = Color.Red, style = MaterialTheme.typography.bodySmall)
         }
+        Spacer(modifier = Modifier.height(8.dp))
+        // Tanggal Kirim (editable)
+        OutlinedTextField(
+            value = tanggalKirim,
+            onValueChange = {},
+            label = { Text("Tanggal Kirim") },
+            modifier = Modifier.fillMaxWidth(),
+            readOnly = true,
+            colors = TextFieldDefaults.colors(
+                disabledTextColor = Color.Black,
+                disabledLabelColor = Color.Gray
+            )
+        )
+        Spacer(modifier = Modifier.height(8.dp))
+        Button(
+            onClick = { showDatePicker = true },
+            modifier = Modifier.fillMaxWidth(),
+            colors = ButtonDefaults.buttonColors(containerColor = Color.Blue)
+        ) {
+            Text("Set", color = Color.White)
+        }
         Spacer(modifier = Modifier.height(16.dp))
         Row {
             Button(
                 onClick = {
-                    onSimpan(equipment.id, lokasiId, pengirim, penerima)
+                    onSimpan(equipment.id, lokasiId, pengirim, penerima, tanggalKirim)
                     viewModel.addTransferActivity(
                         equipmentName = equipment.nama,
+                        equipmentId = equipment.id,
                         equipmentCategory = equipment.kategori,
                         userName = userName,
                         fromLocation = lokasiList.find { it.id == equipment.lokasiId }?.name ?: "",
-                        toLocation = lokasiList.find { it.id == lokasiId }?.name ?: ""
-                                )
-                          },
+                        toLocation = lokasiList.find { it.id == lokasiId }?.name ?: "",
+                        sender = pengirim,
+                        receiver = penerima,
+                        sendDate = tanggalKirim
+                    )
+                },
                 enabled = !lokasiLoading,
                 colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF1976D2)),
                 shape = RoundedCornerShape(8.dp)
@@ -188,8 +264,8 @@ fun TransferItemPreview() {
             lokasiId = "Lokasi A",
             sku = "SKU123"
         ),
-        onSimpan = { _, _, _, _ -> },
-        onCancel = {} ,
+        onSimpan = { _, _, _, _, _ -> },
+        onCancel = {},
         userName = "John Doe",
         viewModel = viewModel
     )

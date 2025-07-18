@@ -50,6 +50,7 @@ import kotlinx.serialization.decodeFromString
 import kotlinx.serialization.json.Json
 import com.rosaliscagroup.admin.ui.proyek.EditProyekScreen
 import com.rosaliscagroup.admin.ui.item.EditItemScreen
+import com.rosaliscagroup.admin.ui.item.ItemHistoryScreen
 
 // Data class untuk state login
 data class LoginState(
@@ -512,8 +513,14 @@ fun MainNavigation() {
                         },
                         onEdit = { equipmentUi ->
                             val itemId = equipmentUi.id.ifBlank { "unknown" }
-                            val initialDescription = equipmentUi.deskripsi.ifBlank { "No description available" }
-                            navController.navigate("editItem/$itemId/$initialDescription")
+                            val name = java.net.URLEncoder.encode(equipmentUi.nama.ifBlank { "unknown" }, "UTF-8")
+                            val description = java.net.URLEncoder.encode(equipmentUi.deskripsi.ifBlank { "No description available" }, "UTF-8")
+                            val status = java.net.URLEncoder.encode(equipmentUi.kondisi.ifBlank { "unknown" }, "UTF-8")
+                            navController.navigate("editItem/$itemId/$name/$description/$status")
+                        },
+                        history = { equipmentUi ->
+                            val itemId = equipmentUi.id.ifBlank { "unknown" }
+                            navController.navigate("itemHistory/$itemId")
                         }
                     )
                 },
@@ -604,11 +611,11 @@ fun MainNavigation() {
                             val viewModel: com.rosaliscagroup.admin.ui.home.HomeViewModel = androidx.hilt.navigation.compose.hiltViewModel()
                             TransferItem(
                                 equipment = equipment,
-                                onSimpan = { id, lokasiBaru, pengirim, penerima ->
+                                onSimpan = { id, lokasiBaru, pengirim, penerima, tanggalKirim ->
                                     scope.launch {
                                         try {
                                             com.rosaliscagroup.admin.repository.EquipmentRepository.updateEquipmentLocation(id, lokasiBaru)
-                                            android.widget.Toast.makeText(context, "Lokasi berhasil diupdate oleh $pengirim ke $penerima", android.widget.Toast.LENGTH_SHORT).show()
+                                            android.widget.Toast.makeText(context, "Lokasi berhasil diupdate oleh $pengirim ke $penerima pada tanggal $tanggalKirim", android.widget.Toast.LENGTH_SHORT).show()
                                             navController.navigateUp()
                                         } catch (e: Exception) {
                                             android.widget.Toast.makeText(context, "Gagal update lokasi: ${e.message}", android.widget.Toast.LENGTH_SHORT).show()
@@ -665,19 +672,27 @@ fun MainNavigation() {
             val locationId = it.arguments?.getString("locationId") ?: ""
             EditProyekScreen(locationId = locationId, navController = navController, onBack = { navController.popBackStack() })
         }
-        composable("editItem/{itemId}/{initialDescription}") { backStackEntry ->
+        composable("editItem/{itemId}/{name}/{description}/{status}") { backStackEntry ->
             val itemId = backStackEntry.arguments?.getString("itemId") ?: ""
-            val initialDescription = backStackEntry.arguments?.getString("initialDescription") ?: ""
+            val name = backStackEntry.arguments?.getString("name") ?: ""
+            val description = backStackEntry.arguments?.getString("description") ?: ""
+            val status = backStackEntry.arguments?.getString("status") ?: ""
             EditItemScreen(
                 itemId = itemId,
-                initialDescription = initialDescription,
-                onSave = { description ->
+                name = name,
+                description = description,
+                status = status,
+                onSave = { updatedName, updatedDescription, updatedStatus ->
                     navController.popBackStack()
                 },
                 onCancel = {
                     navController.popBackStack()
                 }
             )
+        }
+        composable("itemHistory/{itemId}") { backStackEntry ->
+            val equipmentId = backStackEntry.arguments?.getString("itemId") ?: "unknown"
+            ItemHistoryScreen(equipmentId = equipmentId)
         }
     }
 }

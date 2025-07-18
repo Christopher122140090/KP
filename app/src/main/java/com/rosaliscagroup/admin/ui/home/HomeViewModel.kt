@@ -2,6 +2,7 @@ package com.rosaliscagroup.admin.ui.home
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.google.type.Date
 import com.rosaliscagroup.admin.data.entity.Activity
 import com.rosaliscagroup.admin.data.entity.Location
 import com.rosaliscagroup.admin.repository.EquipmentRepository
@@ -86,16 +87,20 @@ class HomeViewModel @Inject constructor(
 
     fun addTransferActivity(
         equipmentName: String,
+        equipmentId: String,
         equipmentCategory: String,
         userName: String,
         fromLocation: String,
-        toLocation: String
+        toLocation: String,
+        sender: String,
+        receiver: String,
+        sendDate: String
     ) {
         val activity = Activity(
             id = "", // Firestore akan generate id
             createdAt = System.currentTimeMillis(),
-            details = "Barang: $equipmentName ($equipmentCategory)\nDari: $userName\nKepada: $fromLocation\nLokasi: $toLocation",
-            equipmentId = "", // isi jika ada
+            details = "Barang: $equipmentName ($equipmentCategory)\nPost by: $userName\nPengirim : $sender\nPenerima: $receiver\nLokasi: $fromLocation -> $toLocation\nTanggal Kirim: $sendDate",
+            equipmentId = equipmentId, // isi jika ada
             locationId = "", // isi jika ada
             projectId = "", // isi jika ada
             type = "Transfer"
