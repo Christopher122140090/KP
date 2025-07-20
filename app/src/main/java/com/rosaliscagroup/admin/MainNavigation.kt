@@ -723,3 +723,4 @@ fun BottomNavigationBarPreview() {
         BottomNavigationBar(navController = navController)
     }
 }
+
