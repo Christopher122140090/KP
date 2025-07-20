@@ -215,9 +215,9 @@ private fun HomeScreen(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.spacedBy(16.dp)
                 ) {
-                    QuickActionButton(icon = Icons.Default.QrCodeScanner, text = "Scan Item", onClick = {})
-                    QuickActionButton(icon = Icons.Default.Add, text = "Add Item", onClick = {})
-                    QuickActionButton(icon = Icons.Default.SwapHoriz, text = "Transfer", onClick = { navController.navigate("transfer") })
+//                    QuickActionButton(icon = Icons.Default.QrCodeScanner, text = "Scan Item", onClick = {})
+                    QuickActionButton(icon = Icons.Default.Add, text = "Add Item", onClick = { navController.navigate("TambahItemPage") })
+                    QuickActionButton(icon = Icons.Default.SwapHoriz, text = "Cek Item", onClick = { navController.navigate("Cek_Barang")  })
                 }
 
                 Spacer(modifier = Modifier.height(24.dp))
