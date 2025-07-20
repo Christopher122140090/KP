@@ -1,17 +1,14 @@
 package com.rosaliscagroup.admin.ui.item
 
 import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -19,25 +16,15 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import com.google.firebase.auth.FirebaseAuth
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Edit
-import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Search
-import androidx.compose.material.icons.filled.Add
-import androidx.compose.material.icons.filled.LocationOn
-import androidx.compose.material.icons.filled.Inventory
-import androidx.compose.material.icons.filled.KeyboardArrowRight
-import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.TextButton
 import android.widget.Toast
-import kotlinx.coroutines.launch
 import androidx.compose.runtime.LaunchedEffect
-import androidx.hilt.navigation.compose.hiltViewModel
 import coil.compose.rememberAsyncImagePainter
 import com.rosaliscagroup.admin.repository.EquipmentRepository
 import com.rosaliscagroup.admin.data.entity.Location
@@ -60,11 +47,10 @@ data class EquipmentUi(
     val kondisi: String = ""
 )
 
-
-@OptIn(androidx.compose.material3.ExperimentalMaterial3Api::class)
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun CekBarangScreen(
-    onDetail: (EquipmentUi) -> Unit = {},
+    locationId: String? = null,
     onTransfer: (EquipmentUi) -> Unit = {},
     onEdit: (EquipmentUi) -> Unit = {},
     history: (EquipmentUi) -> Unit = {}
@@ -72,7 +58,6 @@ fun CekBarangScreen(
     val navController = rememberNavController()
 
     val context = LocalContext.current
-    val coroutineScope = rememberCoroutineScope()
     var barangList by remember { mutableStateOf<List<EquipmentUi>>(emptyList()) }
     var lokasiList by remember { mutableStateOf<List<Location>>(emptyList()) }
     var loading by remember { mutableStateOf(true) }
@@ -80,38 +65,49 @@ fun CekBarangScreen(
     var kategoriList by remember { mutableStateOf(listOf("Semua")) }
     var selectedKategori by remember { mutableStateOf("Semua") }
     var selectedBarang by remember { mutableStateOf<EquipmentUi?>(null) }
-    var showTambahSheet by remember { mutableStateOf(false) }
     var showKategoriDropdown by remember { mutableStateOf(false) }
 
-    val handleEdit: (EquipmentUi) -> Unit = { equipmentUi ->
-        val itemId = equipmentUi.id.ifBlank { "unknown" }
-        val initialDescription = equipmentUi.deskripsi.ifBlank { "No description available" }
-        navController.navigate("editItem/$itemId/$initialDescription")
-    }
-
-    LaunchedEffect(Unit) {
+    LaunchedEffect(locationId) {
         loading = true
         try {
             val lokasiRepo = HomeRepositoryImpl()
             lokasiList = lokasiRepo.getLocations()
             val result = EquipmentRepository.getAllEquipments()
-            barangList = result.map { eq ->
-                val lokasiNama = lokasiList.find { it.id == eq.lokasiId }?.name ?: "-"
-                EquipmentUi(
-                    id = eq.id,
-                    nama = eq.nama,
-                    deskripsi = eq.deskripsi,
-                    kategori = eq.kategori,
-                    lokasiId = eq.lokasiId, // tetap simpan id
-                    lokasiNama = lokasiNama,
-                    gambarUri = eq.gambarUri,
-                    createdAt = eq.createdAt?.toDate()?.toString() ?: "",
-                    updatedAt = eq.updatedAt?.toDate()?.toString() ?: "",
-                    kondisi = eq.kondisi ?: "",
-                    sku = eq.sku
-                )
+            barangList = if (locationId == null) {
+                result.map { eq ->
+                    val lokasiNama = lokasiList.find { it.id == eq.lokasiId }?.name ?: "-"
+                    EquipmentUi(
+                        id = eq.id,
+                        nama = eq.nama,
+                        deskripsi = eq.deskripsi,
+                        kategori = eq.kategori,
+                        lokasiId = eq.lokasiId,
+                        lokasiNama = lokasiNama,
+                        gambarUri = eq.gambarUri,
+                        createdAt = eq.createdAt?.toDate()?.toString() ?: "",
+                        updatedAt = eq.updatedAt?.toDate()?.toString() ?: "",
+                        kondisi = eq.kondisi ?: "",
+                        sku = eq.sku
+                    )
+                }
+            } else {
+                result.filter { it.lokasiId == locationId }.map { eq ->
+                    val lokasiNama = lokasiList.find { it.id == eq.lokasiId }?.name ?: "-"
+                    EquipmentUi(
+                        id = eq.id,
+                        nama = eq.nama,
+                        deskripsi = eq.deskripsi,
+                        kategori = eq.kategori,
+                        lokasiId = eq.lokasiId,
+                        lokasiNama = lokasiNama,
+                        gambarUri = eq.gambarUri,
+                        createdAt = eq.createdAt?.toDate()?.toString() ?: "",
+                        updatedAt = eq.updatedAt?.toDate()?.toString() ?: "",
+                        kondisi = eq.kondisi ?: "",
+                        sku = eq.sku
+                    )
+                }
             }
-            // Fetch categories from Firebase (suspend function)
             val categories = EquipmentRepository.getAllCategories()
             kategoriList = mutableListOf("Semua").apply { addAll(categories) }
         } catch (e: Exception) {
@@ -138,7 +134,7 @@ fun CekBarangScreen(
                         .fillMaxWidth()
                         .background(Color.White)
                 ) {
-                    if (!selectedBarang!!.gambarUri.isNullOrBlank()) {
+                    if (selectedBarang!!.gambarUri.isNotBlank()) {
                         androidx.compose.foundation.Image(
                             painter = rememberAsyncImagePainter(selectedBarang!!.gambarUri),
                             contentDescription = "Gambar Barang",
@@ -160,7 +156,7 @@ fun CekBarangScreen(
                     Text("Lokasi: ${selectedBarang!!.lokasiNama}", style = MaterialTheme.typography.bodyMedium)
                     Text("SKU: ${selectedBarang!!.sku}", style = MaterialTheme.typography.bodyMedium)
                     Text("Kondisi: " + (selectedBarang!!.kondisi.ifBlank { "Tidak diketahui" }), style = MaterialTheme.typography.bodyMedium)
-                    if (!selectedBarang!!.deskripsi.isNullOrBlank()) {
+                    if (selectedBarang!!.deskripsi.isNotBlank()) {
                         Spacer(modifier = Modifier.height(8.dp))
                         Text("Deskripsi:", style = MaterialTheme.typography.labelMedium, color = Color.Gray)
                         Text(selectedBarang!!.deskripsi, style = MaterialTheme.typography.bodyMedium)
@@ -413,27 +409,10 @@ fun CekBarangScreen(
     }
 }
 
-@Composable
-fun Chip(text: String) {
-    Box(
-        modifier = Modifier
-            .background(Color(0xFFF3F4F6), RoundedCornerShape(50))
-            .padding(horizontal = 14.dp, vertical = 6.dp),
-        contentAlignment = Alignment.Center
-    ) {
-        Text(
-            text,
-            style = MaterialTheme.typography.labelMedium.copy(fontWeight = FontWeight.Medium),
-            color = Color(0xFF23272E)
-        )
-    }
-}
-
 @Preview(showBackground = true)
 @Composable
 fun PreviewPopupDetailItem() {
     CekBarangScreen(
-        onDetail = {},
         onTransfer = {},
         onEdit = {}
     )
