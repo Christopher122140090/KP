@@ -118,7 +118,7 @@ fun CekBarangScreen(
 
     val filteredBarang = barangList.filter {
         (selectedKategori == "Semua" || it.kategori.equals(selectedKategori, ignoreCase = true)) &&
-        (searchQuery.isBlank() || it.nama.contains(searchQuery, ignoreCase = true) || it.sku.contains(searchQuery, ignoreCase = true))
+                (searchQuery.isBlank() || it.nama.contains(searchQuery, ignoreCase = true) || it.sku.contains(searchQuery, ignoreCase = true))
     }
 
     if (selectedBarang != null) {
