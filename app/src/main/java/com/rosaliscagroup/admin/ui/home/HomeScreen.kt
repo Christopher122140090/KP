@@ -160,14 +160,14 @@ private fun HomeScreen(
                                 Icon(Icons.Default.Warehouse, contentDescription = "Total Equipment Icon", tint = Color(0xFF2196F3))
                             }
                             val totalEquipments = equipments.size
-                            Text("$totalEquipments", style = MaterialTheme.typography.headlineMedium)
+                            Text("$totalEquipments", style = MaterialTheme.typography.displayMedium)
                             Row(
                                 modifier = Modifier.fillMaxWidth(),
                                 horizontalArrangement = Arrangement.SpaceBetween,
                                 verticalAlignment = Alignment.CenterVertically
                             ) {
                                 val newEquipmentsThisWeek = if (uiState is HomeScreenUiState.Success) uiState.newEquipmentsThisWeek else 0
-                                Text("+$newEquipmentsThisWeek this week", style = MaterialTheme.typography.bodySmall, color = Color(0xFF4CAF50))
+//                                Text("+$newEquipmentsThisWeek this week", style = MaterialTheme.typography.bodySmall, color = Color(0xFF4CAF50))
                                 Text("", style = MaterialTheme.typography.bodySmall, color = Color(0xFFF44336))
                             }
                         }
@@ -190,7 +190,7 @@ private fun HomeScreen(
                             }
                             // Active Projects: jumlah lokasi dengan status == "active"
                             val activeProjects = locations.size
-                            Text("$activeProjects", style = MaterialTheme.typography.headlineMedium)
+                            Text("$activeProjects", style = MaterialTheme.typography.displayMedium)
                             Row(
                                 modifier = Modifier.fillMaxWidth(),
                                 horizontalArrangement = Arrangement.SpaceBetween,
@@ -199,7 +199,7 @@ private fun HomeScreen(
                                 // Tambahan: jumlah proyek baru dalam 1 minggu
                                 val oneWeekAgo = System.currentTimeMillis() - 7 * 24 * 60 * 60 * 1000L
                                 val newProjectsThisWeek = locations.count { it.createdAt >= oneWeekAgo }
-                                Text("+$newProjectsThisWeek this week", style = MaterialTheme.typography.bodySmall, color = Color(0xFF4CAF50))
+//                                Text("+$newProjectsThisWeek this week", style = MaterialTheme.typography.bodySmall, color = Color(0xFF4CAF50))
                                 Text("", style = MaterialTheme.typography.bodySmall, color = Color(0xFFF44336))
                             }
                         }
