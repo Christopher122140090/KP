@@ -67,6 +67,11 @@ fun AllLocationsScreen(
                             }) {
                                 Text("Lihat Item")
                             }
+                            Button(onClick = {
+                                navController?.navigate("editProyekScreen?locationId=${location.id}")
+                            }) {
+                                Text("Edit Proyek")
+                            }
                         }
                     }
                 }
