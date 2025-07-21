@@ -298,7 +298,7 @@ fun EditItemScreen(
                     // Log activity in /activities
                     val changes = mutableMapOf<String, String>()
                     changes["Name"] = "${initialName.value} -> ${name}" // Example: oldName -> newName
-                    changes["Description"] = "${initialDescription.value} -> ${description}" // Example: pop -> popps
+                    changes["Description"] = "${initialDescription.value} -> ${description}"
                     changes["Kondisi"] = "${initialStatus.value} -> ${kondisi}" // Example: inactive -> active
                     newImageUri.value?.let { changes["Image"] = it.toString() }
 
@@ -343,7 +343,9 @@ fun logEditActivity(context: android.content.Context, itemId: String, locationId
         "createdAt" to com.google.firebase.Timestamp.now(),
         "equipmentId" to itemId,
         "locationId" to locationId,
-        "details" to changes.entries.joinToString("\n") { "${it.key}: ${it.value}" }
+        "details" to changes.entries.joinToString("\n") { entry ->
+            if (entry.key == "Image") "Image changed" else "${entry.key}: ${entry.value}"
+        }
     )
 
     CoroutineScope(Dispatchers.IO).launch {
