@@ -146,15 +146,26 @@ fun EditItemScreen(
 
         Box(modifier = Modifier
             .fillMaxWidth()
-            .height(200.dp)
+            .height(350.dp)
             .clickable {
                 imagePickerLauncher.launch("image/*")
             }) {
-            imageUri.value?.let { uri ->
+            if (newImageUri.value != null) {
                 Image(
-                    painter = rememberAsyncImagePainter(uri),
-                    contentDescription = "Item Image",
-                    modifier = Modifier.fillMaxSize(),
+                    painter = rememberAsyncImagePainter(newImageUri.value),
+                    contentDescription = "New Image",
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(350.dp),
+                    contentScale = ContentScale.Crop
+                )
+            } else if (imageUri.value != null) {
+                Image(
+                    painter = rememberAsyncImagePainter(imageUri.value),
+                    contentDescription = "Existing Image",
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(350.dp),
                     contentScale = ContentScale.Crop
                 )
             }
