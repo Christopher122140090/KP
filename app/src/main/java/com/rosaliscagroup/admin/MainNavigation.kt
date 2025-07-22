@@ -43,10 +43,8 @@ import androidx.compose.ui.platform.LocalContext
 import com.rosaliscagroup.admin.ui.transfer.TransferItem
 import androidx.navigation.NavType
 import androidx.navigation.navArgument
-import com.rosaliscagroup.admin.ui.proyek.CekBarangScreenTransfer
 import kotlinx.coroutines.launch
 import kotlinx.serialization.encodeToString
-import kotlinx.serialization.decodeFromString
 import kotlinx.serialization.json.Json
 import com.rosaliscagroup.admin.ui.proyek.EditProyekScreen
 import com.rosaliscagroup.admin.ui.item.EditItemScreen
@@ -531,6 +529,45 @@ fun MainNavigation() {
                 }
             )
         }
+        composable("Cek_Barang") {
+            Scaffold(
+                topBar = {
+                    AppBar(
+                        title = "Cek Barang",
+                        navController = navController,
+                        drawerState = rememberDrawerState(DrawerValue.Closed),
+                        scope = scope,
+                        showMenuIcon = false,
+                        userName = userName,
+                        userPhotoUrl = userPhotoUrl
+                    )
+                },
+                content = { padding ->
+                    CekBarangScreen(
+                        onTransfer = { equipmentUi ->
+                            val equipmentJson = java.net.URLEncoder.encode(Json.encodeToString(equipmentUi), "UTF-8")
+                            navController.navigate("transfer?equipment=$equipmentJson")
+                        },
+                        onEdit = { equipmentUi ->
+                            val itemId = equipmentUi.id.ifBlank { "unknown" }
+                            val name = java.net.URLEncoder.encode(equipmentUi.nama.ifBlank { "unknown" }, "UTF-8")
+                            val description = java.net.URLEncoder.encode(equipmentUi.deskripsi.ifBlank { "No description available" }, "UTF-8")
+                            val status = java.net.URLEncoder.encode(equipmentUi.kondisi.ifBlank { "unknown" }, "UTF-8")
+                            navController.navigate("editItem/$itemId/$name/$description/$status")
+                        },
+                        history = { equipmentUi ->
+                            val itemId = equipmentUi.id.ifBlank { "unknown" }
+                            navController.navigate("itemHistory/$itemId")
+                        }
+                    )
+                },
+                bottomBar = {
+                    if (isLoggedIn && showNavbar) {
+                        BottomNavigationBar(navController = navController)
+                    }
+                }
+            )
+        }
         composable("setting") {
             Scaffold(
                 topBar = {
@@ -646,7 +683,7 @@ fun MainNavigation() {
             )
         ) { backStackEntry ->
             val lokasi = backStackEntry.arguments?.getString("lokasi") ?: ""
-            CekBarangScreenTransfer(lokasiId = lokasi)
+            CekBarangScreen(locationId = lokasi)
         }
         composable(
             "proyekItemListPage?lokasi={lokasi}&kategori={kategori}",
@@ -656,7 +693,7 @@ fun MainNavigation() {
             )
         ) { backStackEntry ->
             val lokasi = backStackEntry.arguments?.getString("lokasi") ?: ""
-            com.rosaliscagroup.admin.ui.proyek.CekBarangScreenTransfer(lokasiId = lokasi)
+            CekBarangScreen(locationId = lokasi)
         }
         composable("ViewActivitiesPage") { backStackEntry ->
             val parentEntry = remember(backStackEntry) {
@@ -693,6 +730,27 @@ fun MainNavigation() {
         composable("itemHistory/{itemId}") { backStackEntry ->
             val equipmentId = backStackEntry.arguments?.getString("itemId") ?: "unknown"
             ItemHistoryScreen(equipmentId = equipmentId)
+        }
+        composable("cekBarang/{locationId}") { backStackEntry ->
+            val locationId = backStackEntry.arguments?.getString("locationId")
+            CekBarangScreen(
+                locationId = locationId,
+                onTransfer = { equipmentUi ->
+                    val equipmentJson = java.net.URLEncoder.encode(Json.encodeToString(equipmentUi), "UTF-8")
+                    navController.navigate("transfer?equipment=$equipmentJson")
+                },
+                onEdit = { equipmentUi ->
+                    val itemId = equipmentUi.id.ifBlank { "unknown" }
+                    val name = java.net.URLEncoder.encode(equipmentUi.nama.ifBlank { "unknown" }, "UTF-8")
+                    val description = java.net.URLEncoder.encode(equipmentUi.deskripsi.ifBlank { "No description available" }, "UTF-8")
+                    val status = java.net.URLEncoder.encode(equipmentUi.kondisi.ifBlank { "unknown" }, "UTF-8")
+                    navController.navigate("editItem/$itemId/$name/$description/$status")
+                },
+                history = { equipmentUi ->
+                    val itemId = equipmentUi.id.ifBlank { "unknown" }
+                    navController.navigate("itemHistory/$itemId")
+                }
+            )
         }
     }
 }

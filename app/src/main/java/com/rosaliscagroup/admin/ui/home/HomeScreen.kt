@@ -1,6 +1,5 @@
 package com.rosaliscagroup.admin.ui.home
 
-import android.widget.Toast
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
@@ -34,13 +33,10 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import coil.compose.rememberAsyncImagePainter
 import com.google.accompanist.systemuicontroller.rememberSystemUiController
 import com.google.accompanist.swiperefresh.SwipeRefresh
 import com.google.accompanist.swiperefresh.rememberSwipeRefreshState
@@ -160,14 +156,14 @@ private fun HomeScreen(
                                 Icon(Icons.Default.Warehouse, contentDescription = "Total Equipment Icon", tint = Color(0xFF2196F3))
                             }
                             val totalEquipments = equipments.size
-                            Text("$totalEquipments", style = MaterialTheme.typography.headlineMedium)
+                            Text("$totalEquipments", style = MaterialTheme.typography.displayMedium)
                             Row(
                                 modifier = Modifier.fillMaxWidth(),
                                 horizontalArrangement = Arrangement.SpaceBetween,
                                 verticalAlignment = Alignment.CenterVertically
                             ) {
                                 val newEquipmentsThisWeek = if (uiState is HomeScreenUiState.Success) uiState.newEquipmentsThisWeek else 0
-                                Text("+$newEquipmentsThisWeek this week", style = MaterialTheme.typography.bodySmall, color = Color(0xFF4CAF50))
+//                                Text("+$newEquipmentsThisWeek this week", style = MaterialTheme.typography.bodySmall, color = Color(0xFF4CAF50))
                                 Text("", style = MaterialTheme.typography.bodySmall, color = Color(0xFFF44336))
                             }
                         }
@@ -190,7 +186,7 @@ private fun HomeScreen(
                             }
                             // Active Projects: jumlah lokasi dengan status == "active"
                             val activeProjects = locations.size
-                            Text("$activeProjects", style = MaterialTheme.typography.headlineMedium)
+                            Text("$activeProjects", style = MaterialTheme.typography.displayMedium)
                             Row(
                                 modifier = Modifier.fillMaxWidth(),
                                 horizontalArrangement = Arrangement.SpaceBetween,
@@ -199,7 +195,7 @@ private fun HomeScreen(
                                 // Tambahan: jumlah proyek baru dalam 1 minggu
                                 val oneWeekAgo = System.currentTimeMillis() - 7 * 24 * 60 * 60 * 1000L
                                 val newProjectsThisWeek = locations.count { it.createdAt >= oneWeekAgo }
-                                Text("+$newProjectsThisWeek this week", style = MaterialTheme.typography.bodySmall, color = Color(0xFF4CAF50))
+//                                Text("+$newProjectsThisWeek this week", style = MaterialTheme.typography.bodySmall, color = Color(0xFF4CAF50))
                                 Text("", style = MaterialTheme.typography.bodySmall, color = Color(0xFFF44336))
                             }
                         }
@@ -215,9 +211,9 @@ private fun HomeScreen(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.spacedBy(16.dp)
                 ) {
-                    QuickActionButton(icon = Icons.Default.QrCodeScanner, text = "Scan Item", onClick = {})
-                    QuickActionButton(icon = Icons.Default.Add, text = "Add Item", onClick = {})
-                    QuickActionButton(icon = Icons.Default.SwapHoriz, text = "Transfer", onClick = { navController.navigate("transfer") })
+//                    QuickActionButton(icon = Icons.Default.QrCodeScanner, text = "Scan Item", onClick = {})
+                    QuickActionButton(icon = Icons.Default.Add, text = "Add Item", onClick = { navController.navigate("TambahItemPage") })
+                    QuickActionButton(icon = Icons.Default.SwapHoriz, text = "Cek Item", onClick = { navController.navigate("Cek_Barang")  })
                 }
 
                 Spacer(modifier = Modifier.height(24.dp))

@@ -182,15 +182,25 @@ object EquipmentRepository {
         db.collection("equipments").document(equipmentId).update(updates).await()
     }
 
-    suspend fun updateItem(itemId: String, name: String, description: String, status: String) {
+    suspend fun updateItem(itemId: String, name: String, description: String, kondisi: String) {
         val now = Timestamp.now()
         val data = mapOf(
             "nama" to name,
             "deskripsi" to description,
-            "status" to status,
+            "kondisi" to kondisi, // Updated to match the correct field name
             "updatedAt" to now
         )
         db.collection("equipments").document(itemId).update(data).await()
+    }
+
+    suspend fun updateImageUri(itemId: String, newImageUri: String) {
+        try {
+            db.collection("equipments").document(itemId)
+                .update("gambarUri", newImageUri)
+                .await()
+        } catch (e: Exception) {
+            android.util.Log.e("EquipmentRepository", "Failed to update image URI", e)
+        }
     }
 
     fun getEquipmentsRealtime(): Flow<List<Equipment>> = callbackFlow {
@@ -235,5 +245,15 @@ object EquipmentRepository {
             "projectId" to projectId
         )
         db.collection("activities").add(activity).await()
+    }
+
+    suspend fun getItemImageUri(itemId: String): String? {
+        return try {
+            val document = db.collection("equipments").document(itemId).get().await()
+            document.getString("gambarUri")
+        } catch (e: Exception) {
+            android.util.Log.e("EquipmentRepository", "Error fetching image URI", e)
+            null
+        }
     }
 }
